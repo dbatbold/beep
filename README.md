@@ -13,9 +13,9 @@ Usage: beep [options]
   -d="default": audio device (hw:0,0)
   -f=0.088: frequency
   -h: help
-  -l: beep per line via pipe
+  -l: beep per line via pipe input
   -t=1: time duration (1-100)
-  -v=100: volume (1-100)
+  -v=100: volume (0-100)
 
 Examples:
 $ cp -vr directory target; beep

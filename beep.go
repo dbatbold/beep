@@ -24,7 +24,7 @@ var (
 	flagVolume   = flag.Int("v", 100, "volume (1-100)")
 	flagDuration = flag.Int("t", 1, "time duration (1-100)")
 	flagDevice   = flag.String("d", "default", "audio device (hw:0,0)")
-	flagLine     = flag.Bool("l", false, "beep per line via pipe")
+	flagLine     = flag.Bool("l", false, "beep per line via pipe input")
 )
 
 func main() {
@@ -73,7 +73,7 @@ func main() {
 	}
 
 	if lineBeep {
-		beepPerLine(handle, volume, freq)
+		beepPerLine(handle, volume, freq, duration)
 		return
 	}
 
@@ -93,12 +93,12 @@ func main() {
 	}
 }
 
-func beepPerLine(handle *C.snd_pcm_t, volume int, freq float64) {
-	buf := make([]byte, 1024*7)
+func beepPerLine(handle *C.snd_pcm_t, volume int, freq float64, duration int) {
+	buf := make([]byte, 1024*7*duration)
 	bar := 127.0 * (float64(volume) / 100.0)
 	var last byte
 	for i, _ := range buf[:] {
-		if i < 1024*4 {
+		if i < 1024*4*duration {
 			buf[i] = byte(127 + (bar * math.Sin(float64(i)*freq)))
 			last = buf[i]
 		} else {
