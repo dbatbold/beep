@@ -19,7 +19,7 @@ import "C"
 var (
 	flagHelp  = flag.Bool("h", false, "help")
 	flagCount = flag.Int("c", 1, "count")
-	flagFreq = flag.Float64("f", 0.055, "frequency")
+	flagFreq  = flag.Float64("f", 0.055, "frequency")
 )
 
 func main() {
@@ -43,13 +43,13 @@ func main() {
 	defer C.snd_pcm_close(handle)
 
 	code = C.snd_pcm_set_params(
-			handle,
-			C.SND_PCM_FORMAT_U8,
-			C.SND_PCM_ACCESS_RW_INTERLEAVED,
-			1,
-			48000,
-			1,
-			0)
+		handle,
+		C.SND_PCM_FORMAT_U8,
+		C.SND_PCM_ACCESS_RW_INTERLEAVED,
+		1,
+		48000,
+		1,
+		0)
 	if code < 0 {
 		fmt.Println("snd_pcm_set_params:", C.GoString(C.snd_strerror(code)))
 		os.Exit(1)
@@ -63,8 +63,7 @@ func main() {
 	for i := 0; i < count; i++ {
 		n := C.snd_pcm_writei(handle, unsafe.Pointer(&buf[0]), C.snd_pcm_uframes_t(len(buf)))
 		if n < 0 {
-			fmt.Println("snd_pcm_writei:", C.GoString(C.snd_strerror(code)))
-			os.Exit(1)
+			fmt.Printf("snd_pcm_writei: wrote %d/%d\n", n, len(buf))
 		}
 		C.snd_pcm_writei(handle, unsafe.Pointer(&space[0]), C.snd_pcm_uframes_t(len(space)))
 	}
