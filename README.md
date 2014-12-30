@@ -9,5 +9,5 @@ $ cp beep /usr/bin/
 
 Usage example:
 $ cp -vr directory target; beep
-$ ffmpeg -i video.mp4 -vn -acodec libmp3lame sound.mp3; beep -c 10
+$ ffmpeg -i video.mp4 -vn -acodec libmp3lame sound.mp3; beep -c 10 -f 0.046
 ```
