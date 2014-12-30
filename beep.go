@@ -3,10 +3,10 @@ package main
 import (
 	"flag"
 	"fmt"
-	"os"
-	"unsafe"
 	"math"
+	"os"
 	"time"
+	"unsafe"
 )
 
 /*
@@ -19,6 +19,7 @@ import "C"
 var (
 	flagHelp  = flag.Bool("h", false, "help")
 	flagCount = flag.Int("c", 1, "count")
+	flagFreq = flag.Float64("f", 0.055, "frequency")
 )
 
 func main() {
@@ -26,6 +27,8 @@ func main() {
 	var device = C.CString("default")
 
 	flag.Parse()
+	var freq = *flagFreq
+	var count = *flagCount
 
 	if *flagHelp {
 		flag.PrintDefaults()
@@ -55,9 +58,9 @@ func main() {
 	buf := make([]byte, 1024*10)
 	space := make([]byte, 1024*5)
 	for i, _ := range buf[:] {
-		buf[i] = byte(255 * math.Sin(float64(i)*0.055))
+		buf[i] = byte(255 * math.Sin(float64(i)*freq))
 	}
-	for i := 0; i < *flagCount; i++ {
+	for i := 0; i < count; i++ {
 		n := C.snd_pcm_writei(handle, unsafe.Pointer(&buf[0]), C.snd_pcm_uframes_t(len(buf)))
 		if n < 0 {
 			fmt.Println("snd_pcm_writei:", C.GoString(C.snd_strerror(code)))
