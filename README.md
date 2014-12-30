@@ -18,8 +18,9 @@ Usage: beep [options]
   -v=100: volume (0-100)
 
 Examples:
-$ cp -vr directory target; beep
-$ curl -O http://host.com/bigfile.tgz; beep -c 4
+$ cp -vr directory target; beep  # copy is complete
+$ curl -O http://host.com/bigfile.tgz; beep -c 4  # alarm for download completion
 $ ffmpeg -i video.mp4 -vn -acodec libmp3lame sound.mp3; beep -t 3 -f 0.076
-$ find ~ -name '*.txt' | beep -l
+$ find ~ -name '*.txt' | beep -l  # beep for every text file found under home
+$ sh -c 'sleep 60; beep -t 3 -c 6' &  # set an alarm for 1 hour from now
 ```
