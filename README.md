@@ -6,7 +6,7 @@ Simple Go program useful for alerting end of a long running command execution.
 Compiling:
 $ go build beep.go
 $ strip beep
-$ cp beep /usr/bin/
+$ sudo cp beep /usr/bin/
 
 Usage: beep [options]
   -c=1: count
@@ -19,6 +19,7 @@ Usage: beep [options]
 
 Examples:
 $ cp -vr directory target; beep
-$ ffmpeg -i video.mp4 -vn -acodec libmp3lame sound.mp3; beep -c 10 -f 0.046
+$ curl -O http://host.com/bigfile.tgz; beep -c 4
+$ ffmpeg -i video.mp4 -vn -acodec libmp3lame sound.mp3; beep -t 3 -f 0.076
 $ find ~ -name '*.txt' | beep -l
 ```

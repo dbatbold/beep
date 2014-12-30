@@ -96,9 +96,10 @@ func main() {
 func beepPerLine(handle *C.snd_pcm_t, volume int, freq float64, duration int) {
 	buf := make([]byte, 1024*7*duration)
 	bar := 127.0 * (float64(volume) / 100.0)
+	gap := 1024*4*duration
 	var last byte
 	for i, _ := range buf[:] {
-		if i < 1024*4*duration {
+		if i < gap {
 			buf[i] = byte(127 + (bar * math.Sin(float64(i)*freq)))
 			last = buf[i]
 		} else {
