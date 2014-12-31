@@ -1,3 +1,9 @@
+/*
+ beep - A simple sound notifer with a music note player
+ Batbold Dashzeveg
+ 2014-12 GPL v2
+*/
+
 package main
 
 import (
@@ -24,7 +30,31 @@ var (
 	flagDuration = flag.Int("t", 1, "time duration (1-100)")
 	flagDevice   = flag.String("d", "default", "audio device (hw:0,0)")
 	flagLine     = flag.Bool("l", false, "beep per line via pipe input")
+	flagMusic    = flag.Bool("m", false, "play music notes via pipe input (see piano key map)")
+	flagPrintDemo = flag.Bool("p", false, "print demo music (Mozart K33b)")
 )
+
+var pianoKeys = `
+  | | | | | | | | | | | | | | | | | | | | | | |
+  |2|3| |5|6|7| |9|0| |=|a|s| |f|g| |j|k|l| |'|
+ | | | | | | | | | | | | | | | | | | | | | | |
+ |q|w|e|r|t|y|u|i|o|p|[|]|z|x|c|v|b|n|m|,|.|/|
+
+ ' ' - whole rest
+ ':' - half rest
+ '!' - quarter rest
+ 'others' - whole rest
+`
+
+// Mozart K33b
+var demoMusic = `
+ c c cszsc z [!
+ c c cszsc z [!
+ v v vcscv s ] v!
+ c c cszsc z [ c!
+ s s sz]zs ] p!
+ s sz][z][ppp !i:y:rr
+`
 
 func main() {
 	var handle *C.snd_pcm_t
@@ -37,10 +67,18 @@ func main() {
 	duration := *flagDuration
 	device := *flagDevice
 	lineBeep := *flagLine
+	playMusic := *flagMusic
+	printDemo := *flagPrintDemo
 
 	if help {
 		fmt.Println("beep [options]")
 		flag.PrintDefaults()
+		fmt.Println("\nPiano key map:")
+		fmt.Println(pianoKeys)
+		return
+	}
+	if printDemo {
+		fmt.Print(demoMusic)
 		return
 	}
 	if volume < 0 || volume > 100 {
@@ -76,13 +114,18 @@ func main() {
 		return
 	}
 
+	if playMusic {
+		playMusicNotes(handle, volume)
+		return
+	}
+
 	buf := make([]byte, 1024*10*duration)
 	bar := 127.0 * (float64(volume) / 100.0)
-	for i, _ := range buf[:] {
+	for i, _ := range buf {
 		buf[i] = byte(127 + (bar * math.Sin(float64(i)*freq)))
 	}
 	bufLow := make([]byte, 1024*5)
-	for i, _ := range bufLow[:] {
+	for i, _ := range bufLow {
 		bufLow[i] = 127
 	}
 	for i := 0; i < count; i++ {
@@ -97,7 +140,7 @@ func beepPerLine(handle *C.snd_pcm_t, volume int, freq float64, duration int) {
 	bar := 127.0 * (float64(volume) / 100.0)
 	gap := 1024*4*duration
 	var last byte
-	for i, _ := range buf[:] {
+	for i, _ := range buf {
 		if i < gap {
 			buf[i] = byte(127 + (bar * math.Sin(float64(i)*freq)))
 			last = buf[i]
@@ -121,6 +164,105 @@ func beepPerLine(handle *C.snd_pcm_t, volume int, freq float64, duration int) {
 		}
 	}
 	C.snd_pcm_drain(handle)
+}
+
+func playMusicNotes(handle *C.snd_pcm_t, volume int) {
+	cnote := 0.0373 // C1
+	tune := []float64{
+		22, // C1#
+		24, // D1
+		24, // D1#
+		26, // E1
+		28, // F1
+		30, // F1#
+		32, // G1
+		33, // G1#
+		35, // A1
+		37, // A1#
+		40, // B1
+		42, // C2
+		44, // C2#
+		48, // D2
+		48, // D2#
+		53, // E2
+		56, // F2
+		58, // F2#
+		64, // G2
+		64, // G2#
+		72, // A2
+		74, // A2#
+		80, // B2
+		84, // C3
+		87, // C3#
+		97, // D3
+		98, // D3#
+		104, // E3
+		112, // F3
+		120, // F3#
+		127, // G3
+		125, // G3#
+		148, // A3
+		150, // A3#
+		157, // B3
+		163, // C4
+		180, // C4#
+		0,
+	}
+	keys := "q2w3er5t6y7ui9o0p[=]azsxcfvgbnjmk,l./'"
+	freqMap := make(map[int32]float64)
+	node := cnote
+	for i, key := range keys {
+		freqMap[key] = node
+		node += tune[i] / 10000.0
+	}
+	bufMap := make(map[int32][]byte)
+
+	for key, freq := range freqMap {
+		bufMap[key] = keyFreq(freq, volume)
+	}
+
+	bufRest := make([]byte, 10240)
+	for i, _ := range bufRest {
+		bufRest[i] = 127
+	}
+	bufMap[' '] = bufRest
+	bufMap[':'] = bufRest[:5120]
+	bufMap['!'] = bufRest[:2560]
+
+	reader := bufio.NewReader(os.Stdin)
+	for {
+		line, _, err := reader.ReadLine()
+		if err != nil {
+			break
+		}
+		for _, key := range string(line) {
+			if buf, ok := bufMap[key]; ok {
+				playback(handle, buf)
+			} else {
+				playback(handle, bufRest)
+			}
+		}
+	}
+	C.snd_pcm_drain(handle)
+}
+
+func keyFreq(freq float64, volume int) []byte {
+	buf := make([]byte, 10240)
+	bar := 127.0 * (float64(volume) / 100.0)
+	fade := bar
+	for i, _ := range buf {
+		if i > len(buf) - 127 {
+			if fade < 127 {
+				fade++
+			}
+		} else {
+			if fade > 0 {
+				fade--
+			}
+		}
+		buf[i] = byte(127 + ((bar - fade) * math.Sin(float64(i)*freq)))
+	}
+	return buf
 }
 
 func playback(handle *C.snd_pcm_t, buf []byte) {

@@ -15,6 +15,8 @@ Usage: beep [options]
   -f=0.088: frequency
   -h: help
   -l: beep per line via pipe input
+  -m: play music notes via pipe input
+  -p: print demo music
   -t=1: time duration (1-100)
   -v=100: volume (0-100)
 
@@ -31,4 +33,7 @@ $ find ~ -name '*.txt' | beep -l
 
 # set an alarm for 1 hour from now
 $ sh -c 'sleep 3600; beep -t 3 -c 6' &
+
+# play demo music (Mozart K33b)
+$ beep -p | beep -m
 ```
