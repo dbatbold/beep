@@ -1,13 +1,13 @@
 beep
 ====
 
-Simple Go program useful for alerting end of a long running command execution.
+A simple Go program that is useful for alerting the end of a long running command execution.
 ```
 Compiling:
-$ apt-get install libasound2-dev
+$ apt-get install libasound2-dev  # for Debian and Ubuntu
 $ go build beep.go
 $ strip beep
-$ sudo cp beep /usr/bin/
+$ cp beep /usr/bin/  # as root
 
 Usage: beep [options]
   -c=1: count
@@ -18,7 +18,7 @@ Usage: beep [options]
   -t=1: time duration (1-100)
   -v=100: volume (0-100)
 
-Usage examples:
+Usage Examples:
 
 $ cp -vr directory target; beep
 $ ffmpeg -i video.mp4 -vn -acodec libmp3lame sound.mp3; beep -t 3 -f 0.076
