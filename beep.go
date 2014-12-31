@@ -1,5 +1,5 @@
 /*
- beep - A simple sound notifer with a music note player
+ beep - A simple sound notifier with a music note player
  Batbold Dashzeveg
  2014-12 GPL v2
 */
