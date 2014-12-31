@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"math"
 	"os"
-	"time"
 	"unsafe"
 )
 
@@ -57,7 +56,6 @@ func main() {
 		os.Exit(1)
 	}
 	defer C.snd_pcm_close(handle)
-	defer time.Sleep(time.Millisecond * 100)
 
 	code = C.snd_pcm_set_params(
 		handle,
@@ -91,6 +89,7 @@ func main() {
 		playback(handle, buf)
 		playback(handle, bufLow)
 	}
+	C.snd_pcm_drain(handle)
 }
 
 func beepPerLine(handle *C.snd_pcm_t, volume int, freq float64, duration int) {

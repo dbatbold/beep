@@ -4,6 +4,7 @@ beep
 Simple Go program useful for alerting end of a long running command execution.
 ```
 Compiling:
+$ apt-get install libasound2-dev
 $ go build beep.go
 $ strip beep
 $ sudo cp beep /usr/bin/
