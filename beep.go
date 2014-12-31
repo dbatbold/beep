@@ -53,7 +53,7 @@ var demoMusic = `
  v v vcscv s ] v!
  c c cszsc z [ c!
  s s sz]zs ] p!
- s sz][z][ppp !i:y:rr
+ s sz][z][pp:i!y!rr
 `
 
 func main() {
