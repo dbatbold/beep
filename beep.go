@@ -31,7 +31,7 @@ var (
 	flagDevice   = flag.String("d", "default", "audio device (hw:0,0)")
 	flagLine     = flag.Bool("l", false, "beep per line via pipe input")
 	flagMusic    = flag.Bool("m", false, "play music notes via pipe input (see piano key map)")
-	flagPrintDemo = flag.Bool("p", false, "print demo music (Mozart K33b)")
+	flagPrintDemo = flag.Bool("p", false, "print demo music by Mozart")
 )
 
 var pianoKeys = `
@@ -44,7 +44,8 @@ var pianoKeys = `
  ':' - half rest
  '!' - quarter rest
  'others' - whole rest
-`
+
+Demo music Mozart K33b:`
 
 // Mozart K33b
 var demoMusic = `
@@ -54,6 +55,9 @@ var demoMusic = `
  c c cszsc z [ c!
  s s sz]zs ] p!
  s sz][z][pp:i!y!rr
+`
+var demoHelp = `To play a demo music, run:
+ $ beep -m | beep -p
 `
 
 func main() {
@@ -74,7 +78,9 @@ func main() {
 		fmt.Println("beep [options]")
 		flag.PrintDefaults()
 		fmt.Println("\nPiano key map:")
-		fmt.Println(pianoKeys)
+		fmt.Print(pianoKeys)
+		fmt.Println(demoMusic)
+		fmt.Println(demoHelp)
 		return
 	}
 	if printDemo {
