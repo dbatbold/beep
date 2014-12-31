@@ -17,7 +17,7 @@ Usage: beep [options]
   -h: help
   -l: beep per line via pipe input
   -m: play music notes via pipe input
-  -p: print demo music
+  -p: print demo music by Mozart
   -t=1: time duration (1-100)
   -v=100: volume (0-100)
 
@@ -32,7 +32,7 @@ Piano Key Map:
  '!' - quarter rest
  'others' - whole rest
 
-Demo Music: Mozart K33b
+Demo Music Mozart K33b:
  c c cszsc z [!
  c c cszsc z [!
  v v vcscv s ] v!
@@ -54,6 +54,9 @@ $ find ~ -name '*.txt' | beep -l
 # set an alarm for 1 hour from now
 $ sh -c 'sleep 3600; beep -t 3 -c 6' &
 
-# play demo music by Mozart
+# play all music notes
+# echo "q2w3er5t6y7ui9o0p[=]azsxcfvgbnjmk,l./'" | beep -m
+
+# play Mozart K33b
 $ beep -p | beep -m
 ```
