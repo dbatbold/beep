@@ -18,10 +18,17 @@ Usage: beep [options]
   -t=1: time duration (1-100)
   -v=100: volume (0-100)
 
-Examples:
-$ cp -vr directory target; beep  # copy is complete
-$ curl -O http://host.com/bigfile.tgz; beep -c 4  # alarm for download completion
+Usage examples:
+
+$ cp -vr directory target; beep
 $ ffmpeg -i video.mp4 -vn -acodec libmp3lame sound.mp3; beep -t 3 -f 0.076
-$ find ~ -name '*.txt' | beep -l  # beep for every text file found under home
-$ sh -c 'sleep 60; beep -t 3 -c 6' &  # set an alarm for 1 hour from now
+
+# alarm for download completion
+$ curl -O http://host.com/bigfile.tgz; beep -c 4
+
+# beep for every text file found under home
+$ find ~ -name '*.txt' | beep -l
+
+# set an alarm for 1 hour from now
+$ sh -c 'sleep 60; beep -t 3 -c 6' &
 ```

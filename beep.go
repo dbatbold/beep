@@ -84,7 +84,6 @@ func main() {
 	for i, _ := range bufLow[:] {
 		bufLow[i] = 127
 	}
-	playback(handle, bufLow)
 	for i := 0; i < count; i++ {
 		playback(handle, buf)
 		playback(handle, bufLow)
@@ -120,6 +119,7 @@ func beepPerLine(handle *C.snd_pcm_t, volume int, freq float64, duration int) {
 			playback(handle, buf)
 		}
 	}
+	C.snd_pcm_drain(handle)
 }
 
 func playback(handle *C.snd_pcm_t, buf []byte) {
