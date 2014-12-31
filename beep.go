@@ -55,6 +55,7 @@ func main() {
 		fmt.Println("snd_pcm_open:", strerror(code))
 		os.Exit(1)
 	}
+	C.snd_pcm_drop(handle)
 	defer C.snd_pcm_close(handle)
 
 	code = C.snd_pcm_set_params(

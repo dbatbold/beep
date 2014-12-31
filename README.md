@@ -4,9 +4,9 @@ beep
 A simple Go program that is useful for alerting the end of a long running command execution.
 ```
 Compiling:
-$ apt-get install libasound2-dev  # for Debian and Ubuntu
+$ apt-get install golang libasound2-dev  # for Debian and Ubuntu
 $ go build beep.go
-$ strip beep
+$ strip beep  # optional
 $ cp beep /usr/bin/  # as root
 
 Usage: beep [options]
