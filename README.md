@@ -30,5 +30,5 @@ $ curl -O http://host.com/bigfile.tgz; beep -c 4
 $ find ~ -name '*.txt' | beep -l
 
 # set an alarm for 1 hour from now
-$ sh -c 'sleep 60; beep -t 3 -c 6' &
+$ sh -c 'sleep 3600; beep -t 3 -c 6' &
 ```
