@@ -16,8 +16,8 @@ Compiling:
 
 Usage: beep [options]
   -c=1: count
-  -d="default": audio device (hw:0,0)
-  -f=0.088: frequency
+  -d="default": audio device, example: "hw:0,0"
+  -f=0.07459: frequency
   -h: help
   -l: beep per line from stdin
   -m: play music notes from stdin (see beep notation)

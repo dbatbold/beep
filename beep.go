@@ -29,7 +29,7 @@ var (
 
 	middleC     = 0.0373
 	boundary    = make([]byte, 256)
-	quarterNote = 1024*18
+	quarterNote = 1024 * 18
 	wholeNote   = quarterNote * 4
 )
 
@@ -118,7 +118,7 @@ func main() {
 		fmt.Print(demoMusic)
 		return
 	}
-	if volume < 0 || volume > 100 {
+	if volume <= 0 || volume > 100 {
 		volume = 100
 	}
 	if duration < 1 || duration > 100 {
@@ -176,7 +176,7 @@ func beepPerLine(volume int, freq float64, duration int) {
 			last = buf[i]
 		} else {
 			buf[i] = last
-			if last > 127 {
+			if last > bar {
 				last--
 			}
 		}
@@ -196,7 +196,7 @@ func beepPerLine(volume int, freq float64, duration int) {
 	flushSoundBuffer()
 }
 
-func playMusicNotes(volume int) {
+func playMusicNotes(volume100 int) {
 	octaveLeft := []float64{
 		// C, C#, D, D#, E, F, F#, G, G#, A, A#, B
 		0, 22, 24, 24, 26, 28, 30, 32, 33, 35, 37, 40, // octave 1
@@ -204,6 +204,7 @@ func playMusicNotes(volume int) {
 		84, 87, 97, 98, 104, 112, 120, 127, 125, 148, 150, 157, // octave 3
 	}
 	keys := "q2w3er5t6y7ui9o0p[=]azsxcfvgbnjmk,l."
+	volume := byte(127.0 * (float64(volume100) / 100.0))
 	freqMap := make(map[rune]float64)
 	freq := middleC
 	for i, key := range keys {
@@ -220,7 +221,7 @@ func playMusicNotes(volume int) {
 	// rest buffer map
 	bufRW := make([]byte, wholeNote)
 	for i, _ := range bufRW {
-		bufRW[i] = 127
+		bufRW[i] = volume
 	}
 	bufRW[0] = 0 // boundary byte
 	bufRH := bufRW[:wholeNote/2]
@@ -335,7 +336,7 @@ func playMusicNotes(volume int) {
 				}
 				for r := 0; r < repeat; r++ {
 					cut := len(buf) / divide
-					buf = trimWave(buf[:cut])
+					buf = trimWave(buf[:cut], volume)
 					bufPlay.Write(buf)
 					if last != key {
 						bufPlay.Write(boundary)
@@ -352,7 +353,7 @@ func playMusicNotes(volume int) {
 			continue
 		}
 		bufWave := bufPlay.Bytes()
-		mergeNotes(bufWave)
+		mergeNotes(bufWave, volume)
 		playback(bufWave)
 
 		if DEBUG {
@@ -366,7 +367,7 @@ func playMusicNotes(volume int) {
 }
 
 // Merges two wave form by fading for playing smooth
-func mergeNotes(buf []byte) {
+func mergeNotes(buf []byte, volume byte) {
 	half := len(boundary) / 2
 	buflen := len(buf)
 	var c int // count
@@ -385,23 +386,27 @@ func mergeNotes(buf []byte) {
 			}
 			if c == half {
 				middle = i
-				buf[i] = 127
+				buf[i] = volume
 				f = 0
 			}
 			if middle > 0 {
 				// fill left
-				s := middle - half + f
-				t := middle - half - f - 1
-				buf[s] = fade(-buf[t], f)
+				s := middle - half - f - 1
+				t := middle - half + f
+				if buf[t] == 0 {
+					rev := reverse(buf[s], volume)
+					buf[t] = fade(rev, f, volume)
+				}
 
 				// fill right
 				s = middle + half + f
 				t = middle + half - f
-				if buflen > s {
-					buf[t] = fade(-buf[s], f)
-				} else {
-					if buflen > t {
-						buf[t] = 127
+				if t < buflen && buf[t] == 0 {
+					if buflen > s {
+						rev := reverse(buf[s], volume)
+						buf[t] = fade(rev, f, volume)
+					} else {
+						buf[t] = volume
 					}
 				}
 			}
@@ -428,36 +433,43 @@ func mergeNotes(buf []byte) {
 	}
 }
 
-func fade(bar byte, i int) byte {
-	step := float64(i)
-	gap := 127.0
-	if step < gap {
-		b := byte(step + float64(bar)*((gap-step)/gap))
-		if b == 0 {
-			b = 1
+func fade(bar byte, i int, volume byte) byte {
+	i64:= float64(i)
+	gap := float64(volume)
+	bar64 := float64(bar)
+	if i64 < gap && gap > 0 {
+		bar = byte(gap -(gap-i64) + bar64*((gap-i64)/gap))
+		if bar == 0 {
+			bar = 1
 		}
-		return b
+		return bar
 	}
 	return byte(gap)
 }
 
-// Generates sine wave for music notes
-func keyFreq(freq float64, volume int) []byte {
-	buf := make([]byte, quarterNote)
-	bar := byte(127.0 * (float64(volume) / 100.0))
-	barfloat := float64(bar)
-	for i, _ := range buf {
-		b := bar + byte(barfloat*math.Sin(float64(i)*freq))
-		if b == 0 {
-			b = 1
-		}
-		buf[i] = b
+func reverse(bar, volume byte) byte {
+	if volume < bar {
+		return volume - (bar - volume)
 	}
-	return trimWave(buf)
+	return volume + (volume - bar)
+}
+
+// Generates sine wave for music notes
+func keyFreq(freq float64, volume byte) []byte {
+	buf := make([]byte, quarterNote)
+	vol64 := float64(volume)
+	for i, _ := range buf {
+		bar := volume + byte(vol64 * math.Sin(float64(i) * freq))
+		if bar == 0 {
+			bar = 1
+		}
+		buf[i] = bar
+	}
+	return trimWave(buf, volume)
 }
 
 // Trims sharp edge from wave for smooth play
-func trimWave(buf []byte) []byte {
+func trimWave(buf []byte, volume byte) []byte {
 	cut := len(buf) - 1
 	var last byte
 	DEBUG := false
@@ -467,7 +479,7 @@ func trimWave(buf []byte) []byte {
 		}
 		if buf[cut] < last {
 			// falling
-			if buf[cut]-127 < 6 {
+			if buf[cut] - volume < 6 {
 				break
 			}
 		}
@@ -479,6 +491,8 @@ func trimWave(buf []byte) []byte {
 		}
 		cut--
 		if cut == 0 {
+			// volume must be low
+			cut = len(buf) - 1
 			break
 		}
 	}
