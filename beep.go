@@ -1,69 +1,100 @@
 /*
- beep - A simple sound notifier with a music note player
+ beep - A simple sound notifier with a music note engine
  Batbold Dashzeveg
- 2014-12 GPL v2
+ 2014-12-31 GPL v2
 */
 
 package main
 
 import (
 	"bufio"
+	"bytes"
 	"flag"
 	"fmt"
 	"math"
 	"os"
-	"unsafe"
+	"strings"
 )
-
-/*
-#cgo LDFLAGS: -lasound
-
-#include <alsa/asoundlib.h>
-*/
-import "C"
 
 var (
-	flagHelp     = flag.Bool("h", false, "help")
-	flagCount    = flag.Int("c", 1, "count")
-	flagFreq     = flag.Float64("f", 0.088, "frequency")
-	flagVolume   = flag.Int("v", 100, "volume (1-100)")
-	flagDuration = flag.Int("t", 1, "time duration (1-100)")
-	flagDevice   = flag.String("d", "default", "audio device (hw:0,0)")
-	flagLine     = flag.Bool("l", false, "beep per line via pipe input")
-	flagMusic    = flag.Bool("m", false, "play music notes via pipe input (see piano key map)")
-	flagPrintDemo = flag.Bool("p", false, "print demo music by Mozart")
+	flagHelp      = flag.Bool("h", false, "help")
+	flagCount     = flag.Int("c", 1, "count")
+	flagFreq      = flag.Float64("f", 0.07459, "frequency")
+	flagVolume    = flag.Int("v", 100, "volume (1-100)")
+	flagDuration  = flag.Int("t", 1, "time duration (1-100)")
+	flagDevice    = flag.String("d", "default", "audio device (hw:0,0)")
+	flagLine      = flag.Bool("l", false, "beep per line from stdin")
+	flagMusic     = flag.Bool("m", false, "play music notes from stdin (see beep notation)")
+	flagPrintDemo = flag.Bool("p", false, "print a demo music by Mozart")
+
+	middleC     = 0.0373
+	boundary    = make([]byte, 256)
+	quarterNote = 1024*18
+	wholeNote   = quarterNote * 4
 )
 
-var pianoKeys = `
-  | | | | | | | | | | | | | | | | | | | | | | |
-  |2|3| |5|6|7| |9|0| |=|a|s| |f|g| |j|k|l| |'|
- | | | | | | | | | | | | | | | | | | | | | | |
- |q|w|e|r|t|y|u|i|o|p|[|]|z|x|c|v|b|n|m|,|.|/|
+var beepNotation = `
+Beep notation:
+  | | | | | | | | | | | | | | | | | | | | | | 
+  |2|3| |5|6|7| |9|0| |=|a|s| |f|g| |j|k|l| |
+ | | | | | | | | | | | | | | | | | | | | | | 
+ |q|w|e|r|t|y|u|i|o|p|[|]|z|x|c|v|b|n|m|,|.|
 
- ' ' - whole rest
- ':' - half rest
- '!' - quarter rest
- 'others' - whole rest
+ q - middle C (261.6 hertz)
+
+ Left and right hand keys are same. Uppercase 
+ letters are control keys. Lower case letters
+ are music notes. Space bar is currect duration
+ rest. Spaces after first space are ignored.
+
+ Control keys:
+
+ Rest:
+ RW     - whole rest
+ RH     - half rest
+ RQ     - quarter rest
+ RE     - eighth rest
+ RS     - sixteenth rest
+ RT     - thirty-second rest
+ Space  - duration rest
+
+ Durations:
+ DW     - whole note
+ DH     - half note
+ DQ     - quarter note
+ DE     - eighth note
+ DS     - sixteenth note
+ DT     - thirty-second note
+
+ Octave: (not implemented yet)
+ HL     - swich to left hand keys
+ HR     - swich to right hand keys
+
+ Clef: (not implemented yet)
+ CB     - G and F clef partition (Base)
+
+ Measures:
+ |      - bar (ignored)
 
 Demo music Mozart K33b:`
 
-// Mozart K33b
 var demoMusic = `
- c c cszsc z [!
- c c cszsc z [!
- v v vcscv s ] v!
- c c cszsc z [ c!
- s s sz]zs ] p!
- s sz][z][pp:i!y!rr
+# Mozart K33b
+ DEc c DSc s z s |DEc DQz DE[
+ DEc c DSc s z s |DEc DQz DE[
+ DEv v DSv c s c |DEv s ] v
+ DEc c DSc s z s |DEc z [ c
+ DEs s DSs z ] z |DEs ] p s
+ DSs z ] [ z ] [ p |DE[ DSi y DQr
 `
+
 var demoHelp = `To play a demo music, run:
  $ beep -m | beep -p
 `
 
 func main() {
-	var handle *C.snd_pcm_t
-
 	flag.Parse()
+
 	help := *flagHelp
 	freq := *flagFreq
 	count := *flagCount
@@ -78,7 +109,7 @@ func main() {
 		fmt.Println("beep [options]")
 		flag.PrintDefaults()
 		fmt.Println("\nPiano key map:")
-		fmt.Print(pianoKeys)
+		fmt.Print(beepNotation)
 		fmt.Println(demoMusic)
 		fmt.Println(demoHelp)
 		return
@@ -94,61 +125,54 @@ func main() {
 		duration = 1
 	}
 
-	code := C.snd_pcm_open(&handle, C.CString(device), C.SND_PCM_STREAM_PLAYBACK, 0)
-	if code < 0 {
-		fmt.Println("snd_pcm_open:", strerror(code))
-		os.Exit(1)
-	}
-	C.snd_pcm_drop(handle)
-	defer C.snd_pcm_close(handle)
-
-	code = C.snd_pcm_set_params(
-		handle,
-		C.SND_PCM_FORMAT_U8,
-		C.SND_PCM_ACCESS_RW_INTERLEAVED,
-		1,
-		44100,
-		1,
-		500000)
-	if code < 0 {
-		fmt.Println("snd_pcm_set_params:", strerror(code))
-		os.Exit(1)
-	}
+	openSoundDevice(device)
+	initSoundDevice()
+	defer closeSoundDevice()
 
 	if lineBeep {
-		beepPerLine(handle, volume, freq, duration)
+		beepPerLine(volume, freq, duration)
 		return
 	}
 
 	if playMusic {
-		playMusicNotes(handle, volume)
+		playMusicNotes(volume)
 		return
 	}
 
-	buf := make([]byte, 1024*10*duration)
-	bar := 127.0 * (float64(volume) / 100.0)
-	for i, _ := range buf {
-		buf[i] = byte(127 + (bar * math.Sin(float64(i)*freq)))
-	}
-	bufLow := make([]byte, 1024*5)
-	for i, _ := range bufLow {
-		bufLow[i] = 127
-	}
-	for i := 0; i < count; i++ {
-		playback(handle, buf)
-		playback(handle, bufLow)
-	}
-	C.snd_pcm_drain(handle)
-}
-
-func beepPerLine(handle *C.snd_pcm_t, volume int, freq float64, duration int) {
-	buf := make([]byte, 1024*7*duration)
-	bar := 127.0 * (float64(volume) / 100.0)
-	gap := 1024*4*duration
+	// beep
+	buf := make([]byte, 1024*15*duration)
+	bar := byte(127.0 * (float64(volume) / 100.0))
+	gap := 1024 * 10 * duration
 	var last byte
 	for i, _ := range buf {
 		if i < gap {
-			buf[i] = byte(127 + (bar * math.Sin(float64(i)*freq)))
+			buf[i] = bar + byte(float64(bar)*math.Sin(float64(i)*freq))
+			last = buf[i]
+		} else {
+			if last != bar {
+				if last > bar {
+					last--
+				} else {
+					last++
+				}
+			}
+			buf[i] = last
+		}
+	}
+	for i := 0; i < count; i++ {
+		playback(buf)
+	}
+	flushSoundBuffer()
+}
+
+func beepPerLine(volume int, freq float64, duration int) {
+	buf := make([]byte, 1024*7*duration)
+	bar := byte(127.0 * (float64(volume) / 100.0))
+	gap := 1024 * 4 * duration
+	var last byte
+	for i, _ := range buf {
+		if i < gap {
+			buf[i] = bar + byte(float64(bar)*math.Sin(float64(i)*freq))
 			last = buf[i]
 		} else {
 			buf[i] = last
@@ -166,121 +190,309 @@ func beepPerLine(handle *C.snd_pcm_t, volume int, freq float64, duration int) {
 		fmt.Print(string(line))
 		if !isPrefix {
 			fmt.Println()
-			playback(handle, buf)
+			playback(buf)
 		}
 	}
-	C.snd_pcm_drain(handle)
+	flushSoundBuffer()
 }
 
-func playMusicNotes(handle *C.snd_pcm_t, volume int) {
-	cnote := 0.0373 // C1
-	tune := []float64{
-		22, // C1#
-		24, // D1
-		24, // D1#
-		26, // E1
-		28, // F1
-		30, // F1#
-		32, // G1
-		33, // G1#
-		35, // A1
-		37, // A1#
-		40, // B1
-		42, // C2
-		44, // C2#
-		48, // D2
-		48, // D2#
-		53, // E2
-		56, // F2
-		58, // F2#
-		64, // G2
-		64, // G2#
-		72, // A2
-		74, // A2#
-		80, // B2
-		84, // C3
-		87, // C3#
-		97, // D3
-		98, // D3#
-		104, // E3
-		112, // F3
-		120, // F3#
-		127, // G3
-		125, // G3#
-		148, // A3
-		150, // A3#
-		157, // B3
-		163, // C4
-		180, // C4#
-		0,
+func playMusicNotes(volume int) {
+	octaveLeft := []float64{
+		// C, C#, D, D#, E, F, F#, G, G#, A, A#, B
+		0, 22, 24, 24, 26, 28, 30, 32, 33, 35, 37, 40, // octave 1
+		42, 44, 48, 48, 53, 56, 58, 64, 64, 72, 74, 80, // octave 2
+		84, 87, 97, 98, 104, 112, 120, 127, 125, 148, 150, 157, // octave 3
 	}
-	keys := "q2w3er5t6y7ui9o0p[=]azsxcfvgbnjmk,l./'"
-	freqMap := make(map[int32]float64)
-	node := cnote
+	keys := "q2w3er5t6y7ui9o0p[=]azsxcfvgbnjmk,l."
+	freqMap := make(map[rune]float64)
+	freq := middleC
 	for i, key := range keys {
-		freqMap[key] = node
-		node += tune[i] / 10000.0
+		freq += octaveLeft[i] / 10000.0
+		freqMap[key] = freq
 	}
-	bufMap := make(map[int32][]byte)
 
+	// wave buffer map
+	bufMap := make(map[rune][]byte)
 	for key, freq := range freqMap {
 		bufMap[key] = keyFreq(freq, volume)
 	}
 
-	bufRest := make([]byte, 10240)
-	for i, _ := range bufRest {
-		bufRest[i] = 127
+	// rest buffer map
+	bufRW := make([]byte, wholeNote)
+	for i, _ := range bufRW {
+		bufRW[i] = 127
 	}
-	bufMap[' '] = bufRest
-	bufMap[':'] = bufRest[:5120]
-	bufMap['!'] = bufRest[:2560]
+	bufRW[0] = 0 // boundary byte
+	bufRH := bufRW[:wholeNote/2]
+	bufRQ := bufRW[:wholeNote/4]
+	bufRE := bufRW[:wholeNote/8]
+	bufRS := bufRW[:wholeNote/16]
+	bufRT := bufRW[:wholeNote/32]
+	bufMap[' '] = bufRE
 
+	// read lines
 	reader := bufio.NewReader(os.Stdin)
+	bufPlayLimit := 1024 * 1024 * 100
+	bufLineLimit := 1024 * 100
+	ctrlKeys := "RDH"
+	measures := "WHQEST"
+	DEBUG := false
+	var bufPlay bytes.Buffer
+	var bufLine bytes.Buffer
+	var duration = 'Q' // default note duration
+	var rest rune
+	var ctrl rune
+	var last rune
+	var done bool
 	for {
-		line, _, err := reader.ReadLine()
-		if err != nil {
+		bufPlay.Reset()
+		bufLine.Reset()
+		for {
+			part, isPrefix, err := reader.ReadLine()
+			if err != nil {
+				done = true
+				break
+			}
+			bufLine.Write(part)
+			if bufLine.Len() > bufLineLimit {
+				fmt.Println("Line exceeds 100KB limit.")
+				return
+			}
+			if !isPrefix {
+				break
+			}
+		}
+		if done {
 			break
 		}
-		for _, key := range string(line) {
-			if buf, ok := bufMap[key]; ok {
-				playback(handle, buf)
-			} else {
-				playback(handle, bufRest)
+		if bufLine.Len() == 0 {
+			continue
+		}
+		line := bufLine.String()
+		fmt.Println(line)
+		if strings.HasPrefix(line, "#") {
+			// ignore comments
+			continue
+		}
+		for _, key := range line {
+			keystr := string(key)
+			if key == ' ' && last == ' ' {
+				// spaces after first space are ignored
+				continue
+			}
+			if strings.ContainsAny(keystr, ctrlKeys) {
+				ctrl = key
+				continue
+			}
+			if ctrl > 0 {
+				switch ctrl {
+				case 'D':
+					if strings.ContainsAny(keystr, measures) {
+						duration = key
+					}
+				case 'R':
+					if strings.ContainsAny(keystr, measures) {
+						rest = key
+					}
+				}
+				ctrl = 0
+				continue
+			}
+			if rest > 0 {
+				switch rest {
+				case 'W':
+					bufPlay.Write(bufRW)
+				case 'H':
+					bufPlay.Write(bufRH)
+				case 'Q':
+					bufPlay.Write(bufRQ)
+				case 'E':
+					bufPlay.Write(bufRE)
+				case 'S':
+					bufPlay.Write(bufRS)
+				case 'T':
+					bufPlay.Write(bufRT)
+				}
+				rest = 0
+			}
+			if buf, found := bufMap[key]; found {
+				if last == 0 {
+					last = key
+				}
+				repeat := 1
+				divide := 1
+				switch duration {
+				case 'W':
+					repeat = 4
+				case 'H':
+					repeat = 2
+				case 'E':
+					divide = 2
+				case 'S':
+					divide = 4
+				case 'T':
+					divide = 8
+				}
+				for r := 0; r < repeat; r++ {
+					cut := len(buf) / divide
+					buf = trimWave(buf[:cut])
+					bufPlay.Write(buf)
+					if last != key {
+						bufPlay.Write(boundary)
+					}
+					if bufPlay.Len() > bufPlayLimit {
+						fmt.Println("Line wave buffer exceeds 100MB limit.")
+						return
+					}
+				}
+				last = key
+			}
+		}
+		if bufPlay.Len() == 0 {
+			continue
+		}
+		bufWave := bufPlay.Bytes()
+		mergeNotes(bufWave)
+		playback(bufWave)
+
+		if DEBUG {
+			fmt.Println("LINE")
+			for i, bar := range bufWave {
+				fmt.Printf("%d|%s\n", i, strings.Repeat("=", int(bar/4)))
 			}
 		}
 	}
-	C.snd_pcm_drain(handle)
+	flushSoundBuffer()
 }
 
+// Merges two wave form by fading for playing smooth
+func mergeNotes(buf []byte) {
+	half := len(boundary) / 2
+	buflen := len(buf)
+	var c int // count
+	var f int // fill
+	var middle int
+	var found bool
+	var first int
+	DEBUG := false
+	for i, bar := range buf {
+		if bar == 0 && i > 0 {
+			found = true
+		}
+		if found {
+			if first == 0 {
+				first = i
+			}
+			if c == half {
+				middle = i
+				buf[i] = 127
+				f = 0
+			}
+			if middle > 0 {
+				// fill left
+				s := middle - half + f
+				t := middle - half - f - 1
+				buf[s] = fade(-buf[t], f)
+
+				// fill right
+				s = middle + half + f
+				t = middle + half - f
+				if buflen > s {
+					buf[t] = fade(-buf[s], f)
+				} else {
+					if buflen > t {
+						buf[t] = 127
+					}
+				}
+			}
+			c++
+			f++
+			if f > half {
+				found = false
+				middle = 0
+				f = 0
+				c = 0
+			}
+		}
+	}
+
+	if DEBUG {
+		for i, bar := range buf {
+			if i > first-20 && i < first+half*2+20 {
+				if i == first || i == first+half*2 {
+					fmt.Println("BOUNDRY")
+				}
+				fmt.Printf("|%s\n", i, strings.Repeat("=", int(bar/4)))
+			}
+		}
+	}
+}
+
+func fade(bar byte, i int) byte {
+	step := float64(i)
+	gap := 127.0
+	if step < gap {
+		b := byte(step + float64(bar)*((gap-step)/gap))
+		if b == 0 {
+			b = 1
+		}
+		return b
+	}
+	return byte(gap)
+}
+
+// Generates sine wave for music notes
 func keyFreq(freq float64, volume int) []byte {
-	buf := make([]byte, 10240)
-	bar := 127.0 * (float64(volume) / 100.0)
-	fade := bar
+	buf := make([]byte, quarterNote)
+	bar := byte(127.0 * (float64(volume) / 100.0))
+	barfloat := float64(bar)
 	for i, _ := range buf {
-		if i > len(buf) - 127 {
-			if fade < 127 {
-				fade++
-			}
-		} else {
-			if fade > 0 {
-				fade--
+		b := bar + byte(barfloat*math.Sin(float64(i)*freq))
+		if b == 0 {
+			b = 1
+		}
+		buf[i] = b
+	}
+	return trimWave(buf)
+}
+
+// Trims sharp edge from wave for smooth play
+func trimWave(buf []byte) []byte {
+	cut := len(buf) - 1
+	var last byte
+	DEBUG := false
+	for i, _ := range buf {
+		if i == 0 {
+			last = buf[cut]
+		}
+		if buf[cut] < last {
+			// falling
+			if buf[cut]-127 < 6 {
+				break
 			}
 		}
-		buf[i] = byte(127 + ((bar - fade) * math.Sin(float64(i)*freq)))
+		last = buf[cut]
+		if i > 1024 {
+			// too long
+			cut = len(buf) - 1
+			break
+		}
+		cut--
+		if cut == 0 {
+			break
+		}
 	}
+	buf = buf[:cut]
+
+	if DEBUG {
+		for i, _ := range buf {
+			if i < 50 {
+				bar := buf[len(buf)-1-i]
+				fmt.Printf("%03d %s\n", i, strings.Repeat("=", int(bar/4)))
+			}
+		}
+		fmt.Println()
+	}
+
 	return buf
-}
-
-func playback(handle *C.snd_pcm_t, buf []byte) {
-	n := C.snd_pcm_writei(handle, unsafe.Pointer(&buf[0]), C.snd_pcm_uframes_t(len(buf)))
-	if n < 0 {
-		code := C.snd_pcm_recover(handle, C.int(n), 0)
-		if code < 0 {
-			fmt.Println("snd_pcm_recover:", strerror(code))
-		}
-	}
-}
-
-func strerror(code C.int) string {
-	return C.GoString(C.snd_strerror(code))
 }
