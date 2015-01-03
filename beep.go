@@ -54,7 +54,7 @@ func main() {
 		fmt.Print(demoMusic)
 		return
 	}
-	if volume <= 0 || volume > 100 {
+	if volume < 1 || volume > 100 {
 		volume = 100
 	}
 	if duration < 1 || duration > 100 {

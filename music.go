@@ -65,7 +65,7 @@ var demoMusic = `
 `
 
 var demoHelp = `To play a demo music, run:
- $ beep -m | beep -p
+ $ beep -p | beep -m
 `
 var (
 	middleC     = 0.0373
