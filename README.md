@@ -23,7 +23,8 @@ Usage: beep [options]
   -m: play music notes from stdin (see beep notation)
   -p: print a demo music by Mozart
   -t=1: time duration (1-100)
-  -v=100: volume (0-100)
+  -v=100: volume (1-100)
+  -b: send bell to PC speaker
 
 Beep notation:
   | | | | | | | | | | | | | | | | | | | | | | 
@@ -35,7 +36,7 @@ Beep notation:
 
  Left and right hand keys are same. Uppercase 
  letters are control keys. Lower case letters
- are music notes. Space bar is currect duration
+ are music notes. Space bar is current duration
  rest. Spaces after first space are ignored.
 
  Control keys:
@@ -58,8 +59,8 @@ Beep notation:
  DT     - thirty-second note
 
  Octave: (not implemented yet)
- HL     - swich to left hand keys
- HR     - swich to right hand keys
+ HL     - switch to left hand keys
+ HR     - switch to right hand keys
 
  Clef: (not implemented yet)
  CB     - G and F clef partition (Base)
@@ -67,7 +68,7 @@ Beep notation:
  Measures:
  |      - bar (ignored)
 
-Demo Music Mozart K33b:
+Demo Music: Mozart K33b:
  DEc c DSc s z s |DEc DQz DE[
  DEc c DSc s z s |DEc DQz DE[
  DEv v DSv c s c |DEv s ] v

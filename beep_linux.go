@@ -1,3 +1,5 @@
+// +build linux
+
 package main
 
 /*
@@ -47,7 +49,7 @@ func playback(buf []byte) {
 			fmt.Println("snd_pcm_recover:", strerror(code))
 		}
 	} else if int(n) != len(buf) {
-		fmt.Println("snd_pcm_writei: underrun", int(n) - len(buf))
+		fmt.Println("snd_pcm_writei: underrun", int(n)-len(buf))
 	}
 }
 
@@ -61,4 +63,19 @@ func strerror(code C.int) string {
 
 func closeSoundDevice() {
 	C.snd_pcm_close(pcm_handle)
+}
+
+func sendBell() {
+	bell := []byte{7}
+	os.Stdout.Write(bell)
+
+	console, err := os.OpenFile("/dev/console", os.O_WRONLY, 0644)
+	if err != nil {
+		console, err = os.OpenFile("/dev/tty0", os.O_WRONLY, 0644)
+		if err != nil {
+			return
+		}
+	}
+	defer console.Close()
+	console.Write(bell)
 }
