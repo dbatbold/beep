@@ -48,7 +48,8 @@ Beep notation:
  RE     - eighth rest
  RS     - sixteenth rest
  RT     - thirty-second rest
- Space  - duration rest
+
+ Space  - eighth rest, depends on current duration
 
  Durations:
  DW     - whole note

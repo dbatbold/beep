@@ -32,7 +32,8 @@ Beep notation:
  RE     - eighth rest
  RS     - sixteenth rest
  RT     - thirty-second rest
- Space  - duration rest
+
+ Space  - eighth rest, depends on current duration
 
  Durations:
  DW     - whole note
@@ -75,7 +76,7 @@ var (
 )
 
 func playMusicNotes(volume100 int) {
-	octaveLeft := []float64{
+	octaveRight := []float64{
 		// C, C#, D, D#, E, F, F#, G, G#, A, A#, B
 		0, 22, 24, 24, 26, 28, 30, 32, 33, 35, 37, 40, // octave 1
 		42, 44, 48, 48, 53, 56, 58, 64, 64, 72, 74, 80, // octave 2
@@ -86,7 +87,7 @@ func playMusicNotes(volume100 int) {
 	freqMap := make(map[rune]float64)
 	freq := middleC
 	for i, key := range keys {
-		freq += octaveLeft[i] / 10000.0
+		freq += octaveRight[i] / 10000.0
 		freqMap[key] = freq
 	}
 

@@ -42,12 +42,13 @@ func main() {
 	writeBell := *flagBell
 
 	if help {
-		fmt.Println("beep [options]")
+		fmt.Fprintf(os.Stderr, "Usage: beep [options]\n")
 		flag.PrintDefaults()
-		fmt.Println("\nPiano key map:")
-		fmt.Print(beepNotation)
-		fmt.Println(demoMusic)
-		fmt.Println(demoHelp)
+		fmt.Fprintf(os.Stderr, "%s\n%s\n%s",
+			beepNotation,
+			demoMusic,
+			demoHelp,
+			)
 		return
 	}
 	if printDemo {
