@@ -47,11 +47,11 @@ Beep notation:
  DS     - sixteenth note
  DT     - thirty-second note
 
- Octave: (not implemented yet)
+ Octave:
  HL     - switch to left hand keys
  HR     - switch to right hand keys
 
- Clef: (not implemented yet)
+ Clef:
  CB     - G and F clef partition (Base)
 
  Measures:
