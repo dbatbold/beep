@@ -59,19 +59,23 @@ Beep notation:
  DS     - sixteenth note
  DT     - thirty-second note
 
- Octave: (not implemented yet)
+ Octave:
  HL     - switch to left hand keys
  HR     - switch to right hand keys
 
- Clef: (not implemented yet)
+ Clef:
  CB     - G and F clef partition (Base)
 
  Measures:
  |      - bar (ignored)
 
 Demo Music: Mozart K33b:
- DEc c DSc s z s |DEc DQz DE[
- DEc c DSc s z s |DEc DQz DE[
+ HRDEc c DSc s z s |DEc DQz DE[CB
+ HLDE[ n   x   ,      v HRq HL, v
+
+ HRDEc c DSc s z s |DEc DQz DE[CB
+ HLDE[ n   x   ,      v HRq HL, v
+
  DEv v DSv c s c |DEv s ] v
  DEc c DSc s z s |DEc z [ c
  DEs s DSs z ] z |DEs ] p s
