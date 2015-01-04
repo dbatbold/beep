@@ -1,3 +1,7 @@
+// music.go - beep music note engine
+// Batbold Dashzeveg
+// GPL v2
+
 package main
 
 import (
@@ -57,44 +61,66 @@ Demo music: Mozart K33b:`
 
 var demoMusic = `
 # Mozart K33b
- DEc c DSc s z s |DEc DQz DE[
- DEc c DSc s z s |DEc DQz DE[
- DEv v DSv c s c |DEv s ] v
- DEc c DSc s z s |DEc z [ c
- DEs s DSs z ] z |DEs ] p s
- DSs z ] [ z ] [ p |DE[ DSi y DQr
+ HRDEc c DSc s z s |DEc DQz DE[CB
+ HLDE[ n   x   ,      v HRq HL, v
+
+ HRDEc c DSc s z s |DEc DQz DE[CB
+ HLDE[ n   x   ,      v HRq HL, v
+
+ HRDEv v DSv c s c |DEv s ] v
+ HRDEc c DSc s z s |DEc z [ c
+ HRDEs s DSs z ] z |DEs ] p s
+ HRDSs z ] [ z ] [ p |DE[ DSi y DQr
 `
 
 var demoHelp = `To play a demo music, run:
  $ beep -p | beep -m
 `
-var (
-	middleC     = 0.0373
-	boundary    = make([]byte, 256)
-	quarterNote = 1024 * 18
-	wholeNote   = quarterNote * 4
-)
 
-func playMusicNotes(volume100 int) {
+func playMusicNotes(volume100 int, debug string) {
 	octaveRight := []float64{
 		// C, C#, D, D#, E, F, F#, G, G#, A, A#, B
 		0, 22, 24, 24, 26, 28, 30, 32, 33, 35, 37, 40, // octave 1
 		42, 44, 48, 48, 53, 56, 58, 64, 64, 72, 74, 80, // octave 2
 		84, 87, 97, 98, 104, 112, 120, 127, 125, 148, 150, 157, // octave 3
 	}
-	keys := "q2w3er5t6y7ui9o0p[=]azsxcfvgbnjmk,l."
+	octaveLeft := []float64{
+		// B, A#, A, G#, G, F#, F, E, D#, D, C#, C
+		22, 19, 18, 18, 17, 15, 15, 14, 13, 12, 12, 12, // octave 4
+		10, 10, 9.5, 9, 8, 7.8, 7.5, 7.0, 6.5, 6.3, 5.9, 5.6, // octave 5
+		5, 4.1, 3.8, 3.5, 3.1, 2.8, 2.4, 2.0, 1.7, 1.3, 1.0, 0.5, // octave 6  (too low to tune!)
+	}
+	keysRight := "q2w3er5t6y7ui9o0p[=]azsxcfvgbnjmk,l."
+	keysLeft := ".l,kmjnbgvfcxsza]=[p0o9iu7y6t5re3w2q"
 	volume := byte(127.0 * (float64(volume100) / 100.0))
 	freqMap := make(map[rune]float64)
+	boundary := make([]byte, 256)
+	quarterNote := 1024 * 18
+	wholeNote := quarterNote * 4
+	middleC := 0.0373
+	DEBUG := false  // print wave form
+
+	var test bool
+	if len(debug) > 0 {
+		test = true
+	}
+
+	// freq map
 	freq := middleC
-	for i, key := range keys {
+	for i, key := range keysRight {
 		freq += octaveRight[i] / 10000.0
 		freqMap[key] = freq
+	}
+	freq = middleC
+	for i, key := range keysLeft {
+		freq -= octaveLeft[i] / 10000.0
+		freqMap[-key] = freq
 	}
 
 	// wave buffer map
 	bufMap := make(map[rune][]byte)
 	for key, freq := range freqMap {
-		bufMap[key] = keyFreq(freq, volume)
+		bufMap[key] = keyFreq(freq, quarterNote, volume)
 	}
 
 	// rest buffer map
@@ -102,151 +128,221 @@ func playMusicNotes(volume100 int) {
 	for i, _ := range bufRW {
 		bufRW[i] = volume
 	}
-	bufRW[0] = 0 // boundary byte
+	bufRW[0] = 0 // boundary mark
 	bufRH := bufRW[:wholeNote/2]
 	bufRQ := bufRW[:wholeNote/4]
 	bufRE := bufRW[:wholeNote/8]
 	bufRS := bufRW[:wholeNote/16]
 	bufRT := bufRW[:wholeNote/32]
-	bufMap[' '] = bufRE
+	bufMap[32] = bufRE  // space
+
+	// fade buffer
+	bufStart := make([]byte, 125)
+	bufEnd := make([]byte, 125)
+	for i, _ := range bufStart {
+		bar := byte(i)
+		bufStart[i] = bar
+		bufEnd[i] = 125 - bar
+	}
 
 	// read lines
 	reader := bufio.NewReader(os.Stdin)
 	bufPlayLimit := 1024 * 1024 * 100
-	bufLineLimit := 1024 * 100
 	ctrlKeys := "RDH"
 	measures := "WHQEST"
-	DEBUG := false
+	hands := "RL"
+	ignored := "|CB"
 	var bufPlay bytes.Buffer
-	var bufLine bytes.Buffer
+	var bufBase bytes.Buffer
 	var duration = 'Q' // default note duration
 	var rest rune
 	var ctrl rune
 	var last rune
+	var hand rune = 'R' // default: right hand
 	var done bool
+	var count int    // line counter
+	var line string  // G clef notes
+	var base string  // F clef notes
+	var hasBase bool
 	for {
 		bufPlay.Reset()
-		bufLine.Reset()
-		for {
-			part, isPrefix, err := reader.ReadLine()
-			if err != nil {
+		bufBase.Reset()
+		if count == 0 {
+			bufPlay.Write(bufStart)
+			bufBase.Write(bufStart)
+		}
+		if test {
+			line = debug
+			if count > 0 {
 				done = true
-				break
 			}
-			bufLine.Write(part)
-			if bufLine.Len() > bufLineLimit {
-				fmt.Println("Line exceeds 100KB limit.")
-				return
-			}
-			if !isPrefix {
-				break
-			}
+		} else {
+			line, done = nextMusicLine(reader)
 		}
 		if done {
 			break
 		}
-		if bufLine.Len() == 0 {
+		if len(line) == 0 {
+			fmt.Println()
 			continue
 		}
-		line := bufLine.String()
 		fmt.Println(line)
 		if strings.HasPrefix(line, "#") {
 			// ignore comments
 			continue
 		}
-		for _, key := range line {
-			keystr := string(key)
-			if key == ' ' && last == ' ' {
-				// spaces after first space are ignored
-				continue
+		if strings.HasSuffix(line, "CB") {
+			// Base clef, read base line
+			hasBase = true
+			base, done = nextMusicLine(reader)
+			if done {
+				break
 			}
-			if strings.ContainsAny(keystr, ctrlKeys) {
-				ctrl = key
-				continue
-			}
-			if ctrl > 0 {
-				switch ctrl {
-				case 'D':
-					if strings.ContainsAny(keystr, measures) {
-						duration = key
-					}
-				case 'R':
-					if strings.ContainsAny(keystr, measures) {
-						rest = key
-					}
+			fmt.Println(base)
+		} else {
+			hasBase = false
+		}
+		controller := func(bufWave *bytes.Buffer, notation string) {
+			for _, key := range notation {
+				keystr := string(key)
+				if key == 32 && last == 32 {
+					// spaces after first space are ignored
+					continue
 				}
-				ctrl = 0
-				continue
-			}
-			if rest > 0 {
-				switch rest {
-				case 'W':
-					bufPlay.Write(bufRW)
-				case 'H':
-					bufPlay.Write(bufRH)
-				case 'Q':
-					bufPlay.Write(bufRQ)
-				case 'E':
-					bufPlay.Write(bufRE)
-				case 'S':
-					bufPlay.Write(bufRS)
-				case 'T':
-					bufPlay.Write(bufRT)
+				if ctrl == 0 && strings.ContainsAny(keystr, ctrlKeys) {
+					ctrl = key
+					continue
 				}
-				rest = 0
-			}
-			if buf, found := bufMap[key]; found {
-				if last == 0 {
+				if ctrl > 0 {
+					switch ctrl {
+					case 'D':
+						if strings.ContainsAny(keystr, measures) {
+							duration = key
+						}
+					case 'R':
+						if strings.ContainsAny(keystr, measures) {
+							rest = key
+						}
+					case 'H':
+						if strings.ContainsAny(keystr, hands) {
+							hand = key
+						}
+					}
+					ctrl = 0
+					continue
+				}
+				if rest > 0 {
+					switch rest {
+					case 'W':
+						bufWave.Write(bufRW)
+					case 'H':
+						bufWave.Write(bufRH)
+					case 'Q':
+						bufWave.Write(bufRQ)
+					case 'E':
+						bufWave.Write(bufRE)
+					case 'S':
+						bufWave.Write(bufRS)
+					case 'T':
+						bufWave.Write(bufRT)
+					}
+					rest = 0
+				}
+				if hand == 'L' && key != 32 {
+					key = -key
+				}
+				if buf, found := bufMap[key]; found {
+					repeat := 1
+					divide := 1
+					switch duration {
+					case 'W':
+						repeat = 4
+					case 'H':
+						repeat = 2
+					case 'E':
+						divide = 2
+					case 'S':
+						divide = 4
+					case 'T':
+						divide = 8
+					}
+					for r := 0; r < repeat; r++ {
+						cut := len(buf) / divide
+						buf = trimWave(buf[:cut], volume)
+						bufWave.Write(buf)
+						if last != key && last > 0 {
+							bufWave.Write(boundary)
+						}
+						if bufWave.Len() > bufPlayLimit {
+							fmt.Println("Line wave buffer exceeds 100MB limit.")
+							return
+						}
+					}
 					last = key
+				} else if !strings.ContainsAny(keystr, ignored) {
+					fmt.Printf("invalid note: %s (%d)\n", keystr, key)
 				}
-				repeat := 1
-				divide := 1
-				switch duration {
-				case 'W':
-					repeat = 4
-				case 'H':
-					repeat = 2
-				case 'E':
-					divide = 2
-				case 'S':
-					divide = 4
-				case 'T':
-					divide = 8
-				}
-				for r := 0; r < repeat; r++ {
-					cut := len(buf) / divide
-					buf = trimWave(buf[:cut], volume)
-					bufPlay.Write(buf)
-					if last != key {
-						bufPlay.Write(boundary)
-					}
-					if bufPlay.Len() > bufPlayLimit {
-						fmt.Println("Line wave buffer exceeds 100MB limit.")
-						return
-					}
-				}
-				last = key
 			}
 		}
+		controller(&bufPlay, line)
 		if bufPlay.Len() == 0 {
 			continue
 		}
-		bufWave := bufPlay.Bytes()
-		mergeNotes(bufWave, volume)
-		playback(bufWave)
-
-		if DEBUG {
-			fmt.Println("LINE")
-			for i, bar := range bufWave {
-				fmt.Printf("%d|%s\n", i, strings.Repeat("=", int(bar/4)))
+		bufPlay.Write(bufEnd)
+		gclef := bufPlay.Bytes()
+		mergeNotes(gclef, volume, boundary)
+		var fclef []byte
+		if hasBase {
+			controller(&bufBase, base)
+			bufBase.Write(bufEnd)
+			fclef = bufBase.Bytes()
+			for len(fclef) < len(gclef) {
+				// base buffer is shorter
+				fclef = append(fclef, bufRW...)
 			}
+			mergeNotes(fclef, volume, boundary)
+		} else {
+			fclef = gclef
+		}
+		if test || DEBUG {
+			fmt.Println("LINE")
+			for i, bar := range gclef {
+				fmt.Printf("%d:%03d|%s\n", i, bar, strings.Repeat("=", int(bar/4)))
+			}
+		} else {
+			playback(gclef, fclef)
+		}
+		count++
+	}
+	if !test {
+		playback(bufEnd, bufEnd)
+		flushSoundBuffer()
+	}
+}
+
+// Reads next line from music sheet
+func nextMusicLine(reader *bufio.Reader) (string, bool) {
+	var buf bytes.Buffer
+	limit := 1024 * 100
+	for {
+		part, isPrefix, err := reader.ReadLine()
+		if err != nil {
+			return "", true
+		}
+		buf.Write(part)
+		if buf.Len() > limit {
+			fmt.Println("Line exceeds 100KB limit.")
+			os.Exit(1)
+		}
+		if !isPrefix {
+			break
 		}
 	}
-	flushSoundBuffer()
+	return buf.String(), false
 }
 
 // Merges two wave form by fading for playing smooth
-func mergeNotes(buf []byte, volume byte) {
+func mergeNotes(buf []byte, volume byte, boundary []byte) {
 	half := len(boundary) / 2
 	buflen := len(buf)
 	var c int // count
@@ -334,8 +430,8 @@ func reverse(bar, volume byte) byte {
 }
 
 // Generates sine wave for music notes
-func keyFreq(freq float64, volume byte) []byte {
-	buf := make([]byte, quarterNote)
+func keyFreq(freq float64, duration int, volume byte) []byte {
+	buf := make([]byte, duration)
 	vol64 := float64(volume)
 	for i, _ := range buf {
 		bar := volume + byte(vol64*math.Sin(float64(i)*freq))

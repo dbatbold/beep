@@ -72,7 +72,7 @@ func main() {
 	}
 
 	if playMusic {
-		playMusicNotes(volume)
+		playMusicNotes(volume, "")
 		return
 	}
 
@@ -102,7 +102,7 @@ func main() {
 		}
 	}
 	for i := 0; i < count; i++ {
-		playback(buf)
+		playback(buf, buf)
 	}
 	flushSoundBuffer()
 }
@@ -132,7 +132,7 @@ func beepPerLine(volume int, freq float64, duration int) {
 		fmt.Print(string(line))
 		if !isPrefix {
 			fmt.Println()
-			playback(buf)
+			playback(buf, buf)
 		}
 	}
 	flushSoundBuffer()

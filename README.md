@@ -83,7 +83,7 @@ Usage Examples:
  $ ffmpeg -i video.mp4 -vn -acodec libmp3lame sound.mp3; beep -t 3
  
  # alarm for download completion
- $ curl -O http://host.com/bigfile.tgz; beep -c 4 -f 0.076
+ $ curl -O http://host.com/bigfile.tgz; beep -c 4 -f 0.012
  
  # beep for every text file found under home
  $ find ~ -name '*.txt' | beep -l

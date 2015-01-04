@@ -15,7 +15,9 @@ import (
 	"unsafe"
 )
 
-var pcm_handle *C.snd_pcm_t
+var (
+	pcm_handle *C.snd_pcm_t
+)
 
 func openSoundDevice(device string) {
 	code := C.snd_pcm_open(&pcm_handle, C.CString(device), C.SND_PCM_STREAM_PLAYBACK, 0)
@@ -30,8 +32,8 @@ func initSoundDevice() {
 	code := C.snd_pcm_set_params(
 		pcm_handle,
 		C.SND_PCM_FORMAT_U8,
-		C.SND_PCM_ACCESS_RW_INTERLEAVED,
-		1,
+		C.SND_PCM_ACCESS_RW_NONINTERLEAVED,
+		2,
 		44100,
 		1,
 		500000)
@@ -41,15 +43,32 @@ func initSoundDevice() {
 	}
 }
 
-func playback(buf []byte) {
-	n := C.snd_pcm_writei(pcm_handle, unsafe.Pointer(&buf[0]), C.snd_pcm_uframes_t(len(buf)))
-	if n < 0 {
-		code := C.snd_pcm_recover(pcm_handle, C.int(n), 0)
-		if code < 0 {
-			fmt.Println("snd_pcm_recover:", strerror(code))
+func playback(buf1 []byte, buf2 []byte) {
+	buffers := []unsafe.Pointer{
+		unsafe.Pointer(&buf1[0]),
+		unsafe.Pointer(&buf2[0]),
+	}
+	bufsize := len(buf1)
+	pos := &buffers[0]
+	for {
+		n := C.snd_pcm_writen(pcm_handle, pos, C.snd_pcm_uframes_t(bufsize))
+		written := int(n)
+		if written < 0 {
+			// error
+			fmt.Println("snd_pcm_writen:", written, strerror(C.int(written)))
+			code := C.snd_pcm_recover(pcm_handle, C.int(written), 0)
+			if code < 0 {
+				fmt.Println("snd_pcm_recover:", strerror(code))
+				break
+			}
+			written = 0
+			fmt.Printf("snd_pcm_writen: bufer underrun: %d/%d\n", int(n), bufsize)
+		} 
+		if written == bufsize {
+			break
 		}
-	} else if int(n) != len(buf) {
-		fmt.Println("snd_pcm_writei: underrun", int(n)-len(buf))
+		pos = &buffers[written]
+		bufsize -= written
 	}
 }
 
