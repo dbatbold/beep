@@ -23,7 +23,7 @@ Beep notation:
  q - middle C (261.6 hertz)
 
  Left and right hand keys are same. Uppercase 
- letters are control keys. Lower case letters
+ letters are control keys. Lowercase letters
  are music notes. Space bar is current duration
  rest. Spaces after first space are ignored.
 
@@ -98,7 +98,7 @@ func playMusicNotes(volume100 int, debug string) {
 	quarterNote := 1024 * 18
 	wholeNote := quarterNote * 4
 	middleC := 0.0373
-	DEBUG := false  // print wave form
+	DEBUG := false // print wave form
 
 	var test bool
 	if len(debug) > 0 {
@@ -118,9 +118,9 @@ func playMusicNotes(volume100 int, debug string) {
 	}
 
 	// wave buffer map
-	bufMap := make(map[rune][]byte)
+	bufFreqMap := make(map[rune][]byte)
 	for key, freq := range freqMap {
-		bufMap[key] = keyFreq(freq, quarterNote, volume)
+		bufFreqMap[key] = keyFreq(freq, quarterNote, volume)
 	}
 
 	// rest buffer map
@@ -134,7 +134,7 @@ func playMusicNotes(volume100 int, debug string) {
 	bufRE := bufRW[:wholeNote/8]
 	bufRS := bufRW[:wholeNote/16]
 	bufRT := bufRW[:wholeNote/32]
-	bufMap[32] = bufRE  // space
+	bufFreqMap[32] = bufRE // space
 
 	// fade buffer
 	bufStart := make([]byte, 125)
@@ -160,9 +160,9 @@ func playMusicNotes(volume100 int, debug string) {
 	var last rune
 	var hand rune = 'R' // default: right hand
 	var done bool
-	var count int    // line counter
-	var line string  // G clef notes
-	var base string  // F clef notes
+	var count int   // line counter
+	var line string // G clef notes
+	var base string // F clef notes
 	var hasBase bool
 	for {
 		bufPlay.Reset()
@@ -251,7 +251,7 @@ func playMusicNotes(volume100 int, debug string) {
 				if hand == 'L' && key != 32 {
 					key = -key
 				}
-				if buf, found := bufMap[key]; found {
+				if buf, found := bufFreqMap[key]; found {
 					repeat := 1
 					divide := 1
 					switch duration {

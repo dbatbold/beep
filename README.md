@@ -35,7 +35,7 @@ Beep notation:
  q - middle C (261.6 hertz)
 
  Left and right hand keys are same. Uppercase 
- letters are control keys. Lower case letters
+ letters are control keys. Lowercase letters
  are music notes. Space bar is current duration
  rest. Spaces after first space are ignored.
 
@@ -76,10 +76,10 @@ Demo Music: Mozart K33b:
  HRDEc c DSc s z s |DEc DQz DE[CB
  HLDE[ n   x   ,      v HRq HL, v
 
- DEv v DSv c s c |DEv s ] v
- DEc c DSc s z s |DEc z [ c
- DEs s DSs z ] z |DEs ] p s
- DSs z ] [ z ] [ p |DE[ DSi y DQr
+ HRDEv v DSv c s c |DEv s ] v
+ HRDEc c DSc s z s |DEc z [ c
+ HRDEs s DSs z ] z |DEs ] p s
+ HRDSs z ] [ z ] [ p |DE[ DSi y DQr
 
 Usage Examples:
 
