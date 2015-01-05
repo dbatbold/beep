@@ -27,7 +27,7 @@ Usage: beep [options]
   -b: send bell to PC speaker
   -q: quiet stdout while playing music
   -n: print notes while playing music
-  -o=file: output music wave to file
+  -o=file: output music wave to file (WAV format)
 
 Beep notation:
   | | | | | | | | | | | | | | | | | | | | | | 
