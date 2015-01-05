@@ -67,7 +67,7 @@ func playback(buf1 []byte, buf2 []byte) {
 			}
 			written = 0
 			fmt.Printf("snd_pcm_writen: buffer underrun: %d/%d\n", int(n), bufsize)
-		} 
+		}
 		if written == bufsize {
 			break
 		}

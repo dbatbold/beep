@@ -27,6 +27,7 @@ var (
 	flagBell      = flag.Bool("b", false, "send bell to PC speaker")
 	flagQuiet     = flag.Bool("q", false, "quiet stdout while playing music")
 	flagNotes     = flag.Bool("n", false, "print notes while playing music")
+	flagOutput    = flag.String("o", "", "output music wave to a file")
 )
 
 func main() {
@@ -50,7 +51,7 @@ func main() {
 			beepNotation,
 			demoMusic,
 			demoHelp,
-			)
+		)
 		return
 	}
 	if printDemo {

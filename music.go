@@ -84,6 +84,22 @@ var demoHelp = `To play a demo music, run:
  $ beep -p | beep -m
 `
 
+var waveHeader = []byte{
+	0, 0, 0, 0, // 0 ChunkID
+	0, 0, 0, 0, // 4 ChunkSize
+	0, 0, 0, 0, // 8 Format
+	0, 0, 0, 0, // 12 Subchunk1ID
+	0, 0, 0, 0, // 16 Subchunk1Size
+	0, 0, // 20 AudioFormat
+	0, 0, // 22 NumChannels
+	0, 0, 0, 0, // 24 SampleRate
+	0, 0, 0, 0, // 28 ByteRate
+	0, 0, // 32 BlockAlign
+	0, 0, // 34 BitsPerSample
+	0, 0, 0, 0, // 36 Subchunk2ID
+	0, 0, 0, 0, // 40 Subchunk2Size
+}
+
 func playMusicNotes(volume100 int, debug string) {
 	octaveRight := []float64{
 		// C, C#, D, D#, E, F, F#, G, G#, A, A#, B
@@ -108,10 +124,25 @@ func playMusicNotes(volume100 int, debug string) {
 	DEBUG := false // print wave form
 	printSheet := !*flagQuiet
 	printNotes := *flagNotes
+	outputFileName := *flagOutput
 
+	var outputFile *os.File
 	var test bool
+	var err error
+
 	if len(debug) > 0 {
 		test = true
+	}
+
+	// output file
+	if len(outputFileName) > 0 {
+		opt := os.O_WRONLY | os.O_TRUNC | os.O_CREATE
+		outputFile, err = os.OpenFile(outputFileName, opt, 0644)
+		if err != nil {
+			fmt.Println("Error opening output file:", err)
+			return
+		}
+		defer outputFile.Close()
 	}
 
 	// freq map
@@ -160,6 +191,7 @@ func playMusicNotes(volume100 int, debug string) {
 	ignored := "|CB"
 	var bufPlay bytes.Buffer
 	var bufBase bytes.Buffer
+	var bufOutput bytes.Buffer
 	var duration = 'Q' // default note duration
 	var rest rune
 	var ctrl rune
@@ -330,12 +362,50 @@ func playMusicNotes(volume100 int, debug string) {
 				fmt.Printf("%d:%03d|%s\n", i, bar, strings.Repeat("=", int(bar/4)))
 			}
 		} else {
-			playback(gclef, fclef)
+			if outputFile == nil {
+				playback(gclef, fclef)
+			} else {
+				// saving to file
+				var buf [2]byte
+				for i, bar := range gclef {
+					buf[0] = bar
+					if hasBase {
+						buf[1] = fclef[i]
+					} else {
+						buf[1] = bar
+					}
+					bufOutput.Write(buf[:])
+				}
+			}
 		}
 		count++
 	}
 	if !test {
 		flushSoundBuffer()
+	}
+
+	if outputFile != nil {
+		// save wave to file
+		bufsize := bufOutput.Len()
+		copy(waveHeader[0:], stringToBytes("RIFF"))    // ChunkID
+		copy(waveHeader[4:], int32ToBytes(36+bufsize)) // ChunkSize
+		copy(waveHeader[8:], stringToBytes("WAVE"))    // Format
+		copy(waveHeader[12:], stringToBytes("fmt "))   // Subchunk1ID
+		copy(waveHeader[16:], int32ToBytes(16))        // Subchunk1Size
+		copy(waveHeader[20:], int16ToBytes(1))         // AudioFormat
+		copy(waveHeader[22:], int16ToBytes(2))         // NumChannels
+		copy(waveHeader[24:], int32ToBytes(44100))     // SampleRate
+		copy(waveHeader[28:], int32ToBytes(44100))     // ByteRate
+		copy(waveHeader[32:], int16ToBytes(1))         // BlockAlign
+		copy(waveHeader[34:], int16ToBytes(8))         // BitsPerSample
+		copy(waveHeader[36:], stringToBytes("data"))   // Subchunk2ID
+		copy(waveHeader[40:], int32ToBytes(bufsize))   // Subchunk2Size
+		_, err = outputFile.Write(waveHeader)
+		if err != nil {
+			fmt.Println("Error writing to output file:", err)
+			return
+		}
+		outputFile.Write(bufOutput.Bytes())
 	}
 }
 
@@ -419,7 +489,7 @@ func fadeWave(bar byte, i int, volume byte) byte {
 	gap := float64(volume)
 	bar64 := float64(bar)
 	if i64 < gap && gap > 0 {
-		bar = byte(bar64*((gap-i64)/gap))
+		bar = byte(bar64 * ((gap - i64) / gap))
 		if bar > 0 {
 			return bar
 		}
@@ -461,7 +531,7 @@ func noteLetter(note rune) string {
 	case ' ':
 		return ""
 	}
-	return string(note) +"=?"
+	return string(note) + "=?"
 }
 
 // Generates sine wave for music notes
@@ -519,4 +589,30 @@ func trimWave(buf []byte) []byte {
 	}
 
 	return buf
+}
+
+func stringToBytes(s string) []byte {
+	var buf []byte
+	for _, c := range s {
+		buf = append(buf, byte(c))
+	}
+	return buf
+}
+
+func int32ToBytes(i int) []byte {
+	var buf [4]byte
+	n := int32(i)
+	buf[0] = byte(n)
+	buf[1] = byte(n >> 8)
+	buf[2] = byte(n >> 16)
+	buf[3] = byte(n >> 24)
+	return buf[:]
+}
+
+func int16ToBytes(i int) []byte {
+	n := int32(i)
+	var buf [2]byte
+	buf[0] = byte(n)
+	buf[1] = byte(n >> 8)
+	return buf[:]
 }
