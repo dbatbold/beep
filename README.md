@@ -1,13 +1,14 @@
 beep
 ====
 
-A simple Go program that is useful for alerting the end of a long running command execution.
-It can also play music sheet from stdin. To play a demo music, run: ```$ beep -p | beep -m```
+A Go program that is useful for alerting the end of a long running command execution.
+Beep can also play music sheet. To play a demo music, run: ```$ beep -p | beep -m```
 
 Listen to a demo: [demo-mozart-k33b.mp3](http://angiud.com/beep/demo-mozart-k33b.mp3)
 Compiling
 =========
 ```
+On Linux:
  $ apt-get install golang libasound2-dev  # for Debian and Ubuntu
  $ git clone http://github.com/dbatbold/beep
  $ cd beep
@@ -15,7 +16,10 @@ Compiling
  $ strip beep  # optional
  $ cp beep /usr/bin/  # as root
 
- Windows port is not implemented yet.
+On Windows: (requires MinGW, Go compiler from golang.org)
+ C:\> cd beep
+ C:\beep> build.bat
+ C:\beep> copy beep.exe \windows\system32
 ```
 Usage
 =====
@@ -119,8 +123,18 @@ Usage Examples
  $ sh -c 'sleep 3600; beep -t 3 -c 6' &
  
  # play all music notes
- # echo "q2w3er5t6y7ui9o0p[=]azsxcfvgbnjmk,l." | beep -m
+ $ echo "q2w3er5t6y7ui9o0p[=]azsxcfvgbnjmk,l." | beep -m
  
  # play Mozart K33b
  $ beep -p | beep -m
+ 
+ # dump music waveform to a WAV file
+ $ beep -p | beep -m -o music.wav
+ 
+ # pipe to MP3 decoder
+ $ beep -p | beep -m -o - | lame - music.mp3
+ 
+ # play misic sheet from a file
+ $ beep -m < sheet.txt
+ C:\>beep < sheet.txt  (on Windows)
 ```
