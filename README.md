@@ -4,7 +4,7 @@ beep
 A simple Go program that is useful for alerting the end of a long running command execution.
 It can also play music sheet from stdin. To play a demo music, run: ```$ beep -p | beep -m```
 
-Listen demo: [demo-mozart-k33b.mp3](http://angiud.com/beep/demo-mozart-k33b.mp3)
+Listen to a demo: [demo-mozart-k33b.mp3](http://angiud.com/beep/demo-mozart-k33b.mp3)
 ```
 Compiling:
  $ apt-get install golang libasound2-dev  # for Debian and Ubuntu
@@ -74,7 +74,7 @@ Beep notation:
  Measures:
  |      - bar (ignored)
 
-Demo Music: Mozart K33b:
+Demo Music:
 # Mozart K33b
 HRDEc c DSc s z s |DEc DQz DE[ CB
 HLDE[ n   z   ,      c HRq HLz ,
