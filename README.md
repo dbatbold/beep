@@ -3,6 +3,8 @@ beep
 
 A simple Go program that is useful for alerting the end of a long running command execution.
 It can also play music sheet from stdin. To play a demo music, run: ```$ beep -p | beep -m```
+
+Listen demo: [demo-mozart-k33b.mp3](https://github.com/dbatbold/beep/blob/master/demo-mozart-k33b.mp3))
 ```
 Compiling:
  $ apt-get install golang libasound2-dev  # for Debian and Ubuntu
