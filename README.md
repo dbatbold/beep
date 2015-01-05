@@ -72,16 +72,24 @@ Beep notation:
  |      - bar (ignored)
 
 Demo Music: Mozart K33b:
- HRDEc c DSc s z s |DEc DQz DE[CB
- HLDE[ n   x   ,      v HRq HL, v
+# Mozart K33b
+HRDEc c DSc s z s |DEc DQz DE[ CB
+HLDE[ n   z   ,      c HRq HLz ,
 
- HRDEc c DSc s z s |DEc DQz DE[CB
- HLDE[ n   x   ,      v HRq HL, v
+HRDEc c DSc s z s |DEc DQz DE[ CB
+HLDE[ n   z   ,      c HRq HLz ,
 
- HRDEv v DSv c s c |DEv s ] v
- HRDEc c DSc s z s |DEc z [ c
- HRDEs s DSs z ] z |DEs ] p s
- HRDSs z ] [ z ] [ p |DE[ DSi y DQr
+HRDEv v DSv c s c |DEv s ] v CB
+HLDEs l   z   ,      ] m p b
+
+HRDEc c DSc s z s |DEc z [ c CB
+HLDEz ,   ]   m      [ n o v 
+
+HRDEs s DSs z ] z |DEs ] p s CB
+HLDE] m   [   n      p b i c 
+
+HRDSs z ] [ z ] [ p |DE[ DSi y DQr CB
+HLDEn   z   s   c      n   c     [
 
 Usage Examples:
 
