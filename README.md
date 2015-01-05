@@ -5,7 +5,6 @@ A simple Go program that is useful for alerting the end of a long running comman
 It can also play music sheet from stdin. To play a demo music, run: ```$ beep -p | beep -m```
 
 Listen to a demo: [demo-mozart-k33b.mp3](http://angiud.com/beep/demo-mozart-k33b.mp3)
-
 Compiling
 =========
 ```
@@ -52,7 +51,7 @@ Piano key map:
  are music notes. Space bar is current duration
  rest. Spaces after first space are ignored.
 
- Control keys:
+Control keys:
 
  Rest:
  RW     - whole rest
