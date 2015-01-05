@@ -5,5 +5,5 @@ import (
 )
 
 func TestMusicNotes(t *testing.T) {
-	playMusicNotes(100, "r x b")
+	playMusicNotes(100, "iiii")
 }

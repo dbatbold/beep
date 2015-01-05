@@ -44,9 +44,13 @@ func initSoundDevice() {
 }
 
 func playback(buf1 []byte, buf2 []byte) {
+	var base unsafe.Pointer
+	if buf2 != nil {
+		base = unsafe.Pointer(&buf2[0])
+	}
 	buffers := []unsafe.Pointer{
 		unsafe.Pointer(&buf1[0]),
-		unsafe.Pointer(&buf2[0]),
+		base,
 	}
 	bufsize := len(buf1)
 	pos := &buffers[0]
@@ -62,7 +66,7 @@ func playback(buf1 []byte, buf2 []byte) {
 				break
 			}
 			written = 0
-			fmt.Printf("snd_pcm_writen: bufer underrun: %d/%d\n", int(n), bufsize)
+			fmt.Printf("snd_pcm_writen: buffer underrun: %d/%d\n", int(n), bufsize)
 		} 
 		if written == bufsize {
 			break

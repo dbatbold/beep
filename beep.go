@@ -25,6 +25,8 @@ var (
 	flagMusic     = flag.Bool("m", false, "play music notes from stdin (see beep notation)")
 	flagPrintDemo = flag.Bool("p", false, "print a demo music by Mozart")
 	flagBell      = flag.Bool("b", false, "send bell to PC speaker")
+	flagQuiet     = flag.Bool("q", false, "quiet stdout while playing music")
+	flagNotes     = flag.Bool("n", false, "print notes while playing music")
 )
 
 func main() {

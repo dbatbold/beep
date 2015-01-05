@@ -25,6 +25,8 @@ Usage: beep [options]
   -t=1: time duration (1-100)
   -v=100: volume (1-100)
   -b: send bell to PC speaker
+  -q: quiet stdout while playing music
+  -n: print notes while playing music
 
 Beep notation:
   | | | | | | | | | | | | | | | | | | | | | | 
