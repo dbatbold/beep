@@ -37,7 +37,7 @@ beep [options]
   -b: send bell to PC speaker
   -q: quiet stdout while playing music
   -n: print notes while playing music
-  -o=file: output music wave to file (WAV format)
+  -o=file: output music waveform to a WAV file. Use '-' for stdout
 ```
 Beep notation
 =============
