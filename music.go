@@ -136,11 +136,17 @@ func playMusicNotes(volume100 int, debug string) {
 
 	// output file
 	if len(outputFileName) > 0 {
-		opt := os.O_WRONLY | os.O_TRUNC | os.O_CREATE
-		outputFile, err = os.OpenFile(outputFileName, opt, 0644)
-		if err != nil {
-			fmt.Println("Error opening output file:", err)
-			return
+		if outputFileName == "-" {
+			outputFile = os.Stdout
+			printSheet = false
+			printNotes = false
+		} else {
+			opt := os.O_WRONLY | os.O_TRUNC | os.O_CREATE
+			outputFile, err = os.OpenFile(outputFileName, opt, 0644)
+			if err != nil {
+				fmt.Fprintln(os.Stderr, "Error opening output file:", err)
+				os.Exit(1)
+			}
 		}
 		defer outputFile.Close()
 	}
@@ -318,8 +324,8 @@ func playMusicNotes(volume100 int, debug string) {
 						}
 						bufWave.Write(buf)
 						if bufWave.Len() > bufPlayLimit {
-							fmt.Println("Line wave buffer exceeds 100MB limit.")
-							return
+							fmt.Fprintln(os.Stderr, "Line wave buffer exceeds 100MB limit.")
+							os.Exit(1)
 						}
 					}
 					last = key
@@ -400,8 +406,8 @@ func playMusicNotes(volume100 int, debug string) {
 		copy(waveHeader[40:], int32ToBytes(bufsize))   // Subchunk2Size
 		_, err = outputFile.Write(waveHeader)
 		if err != nil {
-			fmt.Println("Error writing to output file:", err)
-			return
+			fmt.Fprintln(os.Stderr, "Error writing to output file:", err)
+			os.Exit(1)
 		}
 		outputFile.Write(bufOutput.Bytes())
 	}
