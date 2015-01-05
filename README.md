@@ -5,8 +5,10 @@ A simple Go program that is useful for alerting the end of a long running comman
 It can also play music sheet from stdin. To play a demo music, run: ```$ beep -p | beep -m```
 
 Listen to a demo: [demo-mozart-k33b.mp3](http://angiud.com/beep/demo-mozart-k33b.mp3)
+
+Compiling
+=========
 ```
-Compiling:
  $ apt-get install golang libasound2-dev  # for Debian and Ubuntu
  $ git clone http://github.com/dbatbold/beep
  $ cd beep
@@ -15,8 +17,11 @@ Compiling:
  $ cp beep /usr/bin/  # as root
 
  Windows port is not implemented yet.
-
-Usage: beep [options]
+```
+Usage
+=====
+```
+beep [options]
   -c=1: count
   -d="default": audio device, example: "hw:0,0"
   -f=0.07459: frequency
@@ -30,8 +35,11 @@ Usage: beep [options]
   -q: quiet stdout while playing music
   -n: print notes while playing music
   -o=file: output music wave to file (WAV format)
-
-Beep notation:
+```
+Beep notation
+=============
+```
+Piano key map:
   | | | | | | | | | | | | | | | | | | | | | | 
   |2|3| |5|6|7| |9|0| |=|a|s| |f|g| |j|k|l| |
  | | | | | | | | | | | | | | | | | | | | | | 
@@ -73,8 +81,10 @@ Beep notation:
 
  Measures:
  |      - bar (ignored)
-
-Demo Music:
+```
+Demo Music
+==========
+```
 # Mozart K33b
 HRDEc c DSc s z s |DEc DQz DE[ CB
 HLDE[ n   z   ,      c HRq HLz ,
@@ -93,9 +103,10 @@ HLDE] m   [   n      p b i c
 
 HRDSs z ] [ z ] [ p |DE[ DSi y DQr CB
 HLDEn   z   s   c      n   c     [
-
-Usage Examples:
-
+```
+Usage Examples
+==============
+```
  $ cp -vr directory target; beep
  $ ffmpeg -i video.mp4 -vn -acodec libmp3lame sound.mp3; beep -t 3
  
