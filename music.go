@@ -380,9 +380,7 @@ func playMusicNotes(volume100 int, debug string) {
 		}
 		count++
 	}
-	if !test {
-		flushSoundBuffer()
-	}
+	flushSoundBuffer()
 
 	if outputFile != nil {
 		// save wave to file
