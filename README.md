@@ -80,7 +80,8 @@ Control keys:
  HR     - switch to right hand keys
 
  Clef:
- CB     - G and F clef partition (Base)
+ CB     - G and F clef partition (Base). If line ends
+          with 'CB', the next line will be played as base.
 
  Measures:
  |      - bar (ignored)
@@ -105,7 +106,7 @@ HRDEs s DSs z ] z |DEs ] p s CB
 HLDE] m   [   n      p b i c 
 
 HRDSs z ] [ z ] [ p |DE[ DSi y DQr CB
-HLDEn   z   s   c      n   c     [
+HLDEn   z   s   c      n   c   DQ[ 
 ```
 Usage Examples
 ==============

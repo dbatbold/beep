@@ -77,7 +77,7 @@ HRDEs s DSs z ] z |DEs ] p s CB
 HLDE] m   [   n      p b i c 
 
 HRDSs z ] [ z ] [ p |DE[ DSi y DQr CB
-HLDEn   z   s   c      n   c     [
+HLDEn   z   s   c      n   c   DQ[ 
 `
 
 var demoHelp = `To play a demo music, run:
