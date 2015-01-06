@@ -131,7 +131,7 @@ Usage Examples
  # dump music waveform to a WAV file
  $ beep -p | beep -m -o music.wav
  
- # pipe to MP3 decoder
+ # pipe to MP3 encoder
  $ beep -p | beep -m -o - | lame - music.mp3
  
  # play misic sheet from a file
