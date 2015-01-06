@@ -114,6 +114,9 @@ Usage Examples
  $ cp -vr directory target; beep
  $ ffmpeg -i video.mp4 -vn -acodec libmp3lame sound.mp3; beep -t 3
  
+ # use '&' symbol instead of ';' on Windows
+ C:\>dir /s \windows\*.cpl & beep
+ 
  # alarm for download completion
  $ curl -O http://host.com/bigfile.tgz; beep -c 4 -f 0.012
  
