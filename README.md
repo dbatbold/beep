@@ -2,7 +2,7 @@ beep
 ====
 
 A Go program that is useful for alerting the end of a long running command execution.
-Beep can also play music sheet. To play a demo music, run: ```$ beep -p | beep -m```
+Beep can also play piano music sheet. To play a demo music, run: ```$ beep -p | beep -m```
 
 Listen to a demo: [demo-mozart-k33b.mp3](http://angiud.com/beep/demo-mozart-k33b.mp3)
 Compiling
@@ -25,14 +25,14 @@ Usage
 =====
 ```
 beep [options]
-  -c=1: count
-  -d="default": audio device, example: "hw:0,0"
-  -f=0.07459: frequency
-  -h: help
+  -c=1: beep count
+  -d="default": audio device, Linux example: hw:0,0
+  -f=523.25: frequency in Hertz (1-22050)
+  -h: print help
   -l: beep per line from stdin
   -m: play music notes from stdin (see beep notation)
   -p: print a demo music by Mozart
-  -t=1: time duration (1-100)
+  -t=1: beep time duration in millisecond (1-600000)
   -v=100: volume (1-100)
   -b: send bell to PC speaker
   -q: quiet stdout while playing music
@@ -65,7 +65,7 @@ Control keys:
  RS     - sixteenth rest
  RT     - thirty-second rest
 
- Space  - eighth rest, depends on current duration
+ Space  - half of current duration rest
 
  Durations:
  DW     - whole note
@@ -78,6 +78,10 @@ Control keys:
  Octave:
  HL     - switch to left hand keys
  HR     - switch to right hand keys
+ HF     - switch to far right keys (last octave)
+
+ Tempo:
+ T#     - where # is 0-9, default is 4
 
  Clef:
  CB     - G and F clef partition (Base). If line ends
@@ -112,22 +116,24 @@ Usage Examples
 ==============
 ```
  $ cp -vr directory target; beep
- $ ffmpeg -i video.mp4 -vn -acodec libmp3lame sound.mp3; beep -t 3
+ $ ffmpeg -i video.mp4 -vn -acodec libmp3lame sound.mp3; beep -t 3000
  
  # use '&' symbol instead of ';' on Windows
  C:\>dir /s \windows\*.cpl & beep
  
  # alarm for download completion
- $ curl -O http://host.com/bigfile.tgz; beep -c 4 -f 0.012
+ $ curl -O http://host.com/bigfile.tgz; beep -c 4 -f 1000
  
  # beep for every text file found under home
  $ find ~ -name '*.txt' | beep -l
  
  # set an alarm for 1 hour from now
- $ sh -c 'sleep 3600; beep -t 3 -c 6' &
+ $ sh -c 'sleep 3600; beep -t 300 -c 6' &
  
- # play all music notes
- $ echo "q2w3er5t6y7ui9o0p[=]azsxcfvgbnjmk,l." | beep -m
+ # play all piano notes
+ $ echo "HLq2w3er5t6y7ui9o0p[=]azsxcfvgbnjmk,l.\
+         HRq2w3er5t6y7ui9o0p[=]azsxcfvgbnjmk,l.\
+         HFq2w3er5t6y7u" | beep -m
  
  # play Mozart K33b
  $ beep -p | beep -m
@@ -140,5 +146,8 @@ Usage Examples
  
  # play misic sheet from a file
  $ beep -m < sheet.txt
- C:\>beep < sheet.txt  (on Windows)
+ C:\>beep < sheet.txt
+
+ # generate 500Hz sine wave for 10 seconds
+ $ beep -f 500 -t 10000
 ```

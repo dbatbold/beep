@@ -45,7 +45,7 @@ func openSoundDevice(device string) {
 func initSoundDevice() {
 }
 
-func playback(buf1 []byte, buf2 []byte) {
+func playback(buf1 []byte, buf2 []byte, notes string) {
 	var buf [2]byte
 	var bufChannel bytes.Buffer
 	for i, bar := range buf1 {
@@ -76,13 +76,17 @@ func playback(buf1 []byte, buf2 []byte) {
 	if wavehdrLast != nil {
 		wdrsize := C.UINT(unsafe.Sizeof(*wavehdrLast))
 		for wavehdrLast.dwFlags&C.WHDR_DONE == 0 {
-			// still playing
+			// still playing last buffer
 			time.Sleep(time.Millisecond)
 		}
 		res = C.waveOutUnprepareHeader(hwaveout, wavehdrLast, wdrsize)
 		if res != C.MMSYSERR_NOERROR {
 			fmt.Fprintln(os.Stderr, "Error: waveOutUnprepareHeader:", winmmErrorText(res))
 		}
+	}
+
+	if !*flagQuiet && len(notes) > 0 {
+		fmt.Println(notes)
 	}
 
 	wavehdrLast = &wavehdr
@@ -92,7 +96,7 @@ func flushSoundBuffer() {
 	if wavehdrLast != nil {
 		wdrsize := C.UINT(unsafe.Sizeof(*wavehdrLast))
 		for wavehdrLast.dwFlags&C.WHDR_DONE == 0 {
-			// still playing
+			// still playing last buffer
 			time.Sleep(time.Millisecond)
 		}
 		res := C.waveOutUnprepareHeader(hwaveout, wavehdrLast, wdrsize)

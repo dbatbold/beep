@@ -41,39 +41,64 @@ func initSoundDevice() {
 		fmt.Println("snd_pcm_set_params:", strerror(code))
 		os.Exit(1)
 	}
+	code = C.snd_pcm_prepare(pcm_handle)
+	if code < 0 {
+		fmt.Println("snd_pcm_prepare:", strerror(code))
+		os.Exit(1)
+	}
 }
 
-func playback(buf1 []byte, buf2 []byte) {
+func playback(buf1 []byte, buf2 []byte, notes string) {
+	if !*flagQuiet && len(notes) > 0 {
+		fmt.Println(notes)
+	}
+	bufsize := len(buf1)
+	if bufsize < sampleRate {
+		// prevent buffer underrun
+		rest := make([]byte, sampleRate)
+		buf1 = append(buf1, rest...)
+		buf2 = append(buf2, rest...)
+	}
 	buffers := []unsafe.Pointer{
 		unsafe.Pointer(&buf1[0]),
 		unsafe.Pointer(&buf2[0]),
 	}
-	bufsize := len(buf1)
 	pos := &buffers[0]
 	for {
 		n := C.snd_pcm_writen(pcm_handle, pos, C.snd_pcm_uframes_t(bufsize))
 		written := int(n)
 		if written < 0 {
 			// error
-			fmt.Println("snd_pcm_writen:", written, strerror(C.int(written)))
-			code := C.snd_pcm_recover(pcm_handle, C.int(written), 0)
+			code := C.int(written)
+			written = 0
+			fmt.Fprintln(os.Stderr, "snd_pcm_writen:", code, strerror(code))
+			code = C.snd_pcm_recover(pcm_handle, code, 0)
 			if code < 0 {
-				fmt.Println("snd_pcm_recover:", strerror(code))
+				fmt.Fprintln(os.Stderr, "snd_pcm_recover:", strerror(code))
 				break
 			}
-			written = 0
-			fmt.Printf("snd_pcm_writen: buffer underrun: %d/%d\n", int(n), bufsize)
-		} 
+		}
 		if written == bufsize {
 			break
 		}
-		pos = &buffers[written]
+		if written == 0 {
+			C.snd_pcm_wait(pcm_handle, 1000)
+			continue
+		}
+		fmt.Fprintln(os.Stderr, "snd_pcm_writen: wrote: %d/%d\n", written, bufsize)
+		buffers = []unsafe.Pointer{
+			unsafe.Pointer(&buf1[written]),
+			unsafe.Pointer(&buf2[written]),
+		}
+		pos = &buffers[0]
 		bufsize -= written
 	}
 }
 
 func flushSoundBuffer() {
-	C.snd_pcm_drain(pcm_handle)
+	if pcm_handle != nil {
+		C.snd_pcm_drain(pcm_handle)
+	}
 }
 
 func strerror(code C.int) string {
@@ -81,7 +106,10 @@ func strerror(code C.int) string {
 }
 
 func closeSoundDevice() {
-	C.snd_pcm_close(pcm_handle)
+	if pcm_handle != nil {
+		C.snd_pcm_close(pcm_handle)
+		C.snd_pcm_hw_free(pcm_handle)
+	}
 }
 
 func sendBell() {
