@@ -21,7 +21,10 @@ On Windows: (requires MinGW, Go compiler from golang.org)
  C:\beep> build.bat
  C:\beep> copy beep.exe \windows\system32
 ```
- Windows prebuilt binary: [beep.exe](http://angiud.com/beep/binary/windows/beep.exe)
+Prebuilt binary
+===============
+ Windows: [beep.exe](http://angiud.com/beep/binary/windows/beep.exe)<br>
+ Linux 64-bit: [beep](http://angiud.com/beep/binary/linux/beep)
 Usage
 =====
 ```
