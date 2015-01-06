@@ -346,17 +346,15 @@ func playMusicNotes(volume100 int, debug string) {
 					for r := 0; r < repeat; r++ {
 						bufsize := len(buf)
 						cut := bufsize
-						if tempo < 4 {
+						if tempo < 4 && bufsize > 1024 {
 							// slow tempo
 							for t := 0; t < 4-tempo; t++ {
-								if bufsize > 1024 {
-									buf = append(trimWave(buf), trimWave(buf[:1024])...)
-								}
+								buf = append(trimWave(buf), trimWave(buf[:1024])...)
 							}
 						}
 						if tempo > 4 {
 							// fast tempo
-							for t := 0; t < tempo-4; t++ {
+							for t := 0; t < tempo-4 && cut > 1024; t++ {
 								if 1024 < len(buf[:cut]) {
 									cut -= 1024
 								}
@@ -368,7 +366,7 @@ func playMusicNotes(volume100 int, debug string) {
 						if last != key && last > 0 {
 							bufWave.Write(bufMerge)
 						}
-						buf[0] = 0 // note boundary
+						buf[0] = 0 // note boundary mark
 						bufWave.Write(buf)
 						if bufWave.Len() > bufPlayLimit {
 							fmt.Fprintln(os.Stderr, "Line wave buffer exceeds 100MB limit.")
