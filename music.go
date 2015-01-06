@@ -251,7 +251,9 @@ func playMusicNotes(volume100 int, debug string) {
 		}
 		if strings.HasPrefix(line, "#") {
 			// ignore comments
-			fmt.Println(line)
+			if printSheet {
+				fmt.Println(line)
+			}
 			continue
 		}
 		if strings.HasSuffix(line, "CB") {
