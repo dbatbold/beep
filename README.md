@@ -116,6 +116,7 @@ HLDE|] m   [   n   |  p b i c |
 HRDS|s z ] [ z ] [ p |DE[ DSi y DQr |CB
 HLDE|n   z   s   c   |  n    c  DQ[ |
 ```
+[Play](http://angiud.com/beep/demo-mozart-k33b.mp3)
 Usage Examples
 ==============
 ```
