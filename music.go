@@ -66,23 +66,23 @@ Demo music: Mozart K33b:`
 
 var demoMusic = `
 # Mozart K33b
-HRDEc c DSc s z s |DEc DQz DE[ CB
-HLDE[ n   z   ,      c HRq HLz ,
+HRDE|c c DSc s z s |DEc DQz DE[   |CB
+HLDE|[ n   z   ,   |  c HRq HLz , |
 
-HRDEc c DSc s z s |DEc DQz DE[ CB
-HLDE[ n   z   ,      c HRq HLz ,
+HRDE|c c DSc s z s |DEc DQz DE[   |CB
+HLDE|[ n   z   ,   |  c HRq HLz , |
 
-HRDEv v DSv c s c |DEv s ] v CB
-HLDEs l   z   ,      ] m p b
+HRDE|v v DSv c s c |DEv s ] v |CB
+HLDE|s l   z   ,   |  ] m p b |
 
-HRDEc c DSc s z s |DEc z [ c CB
-HLDEz ,   ]   m      [ n o v 
+HRDE|c c DSc s z s |DEc z [ c |CB
+HLDE|z ,   ]   m   |  [ n o v |
 
-HRDEs s DSs z ] z |DEs ] p s CB
-HLDE] m   [   n      p b i c 
+HRDE|s s DSs z ] z |DEs ] p s |CB
+HLDE|] m   [   n   |  p b i c |
 
-HRDSs z ] [ z ] [ p |DE[ DSi y DQr CB
-HLDEn   z   s   c      n   c   DQ[ 
+HRDS|s z ] [ z ] [ p |DE[ DSi y DQr |CB
+HLDE|n   z   s   c   |  n    c  DQ[ |
 `
 
 var demoHelp = `To play a demo music, run:

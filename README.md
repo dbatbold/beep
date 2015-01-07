@@ -98,23 +98,23 @@ Demo Music
 ==========
 ```
 # Mozart K33b
-HRDEc c DSc s z s |DEc DQz DE[ CB
-HLDE[ n   z   ,      c HRq HLz ,
+HRDE|c c DSc s z s |DEc DQz DE[   |CB
+HLDE|[ n   z   ,   |  c HRq HLz , |
 
-HRDEc c DSc s z s |DEc DQz DE[ CB
-HLDE[ n   z   ,      c HRq HLz ,
+HRDE|c c DSc s z s |DEc DQz DE[   |CB
+HLDE|[ n   z   ,   |  c HRq HLz , |
 
-HRDEv v DSv c s c |DEv s ] v CB
-HLDEs l   z   ,      ] m p b
+HRDE|v v DSv c s c |DEv s ] v |CB
+HLDE|s l   z   ,   |  ] m p b |
 
-HRDEc c DSc s z s |DEc z [ c CB
-HLDEz ,   ]   m      [ n o v 
+HRDE|c c DSc s z s |DEc z [ c |CB
+HLDE|z ,   ]   m   |  [ n o v |
 
-HRDEs s DSs z ] z |DEs ] p s CB
-HLDE] m   [   n      p b i c 
+HRDE|s s DSs z ] z |DEs ] p s |CB
+HLDE|] m   [   n   |  p b i c |
 
-HRDSs z ] [ z ] [ p |DE[ DSi y DQr CB
-HLDEn   z   s   c      n   c   DQ[ 
+HRDS|s z ] [ z ] [ p |DE[ DSi y DQr |CB
+HLDE|n   z   s   c   |  n    c  DQ[ |
 ```
 Usage Examples
 ==============
@@ -135,9 +135,9 @@ Usage Examples
  $ sh -c 'sleep 3600; beep -t 300 -c 6' &
  
  # play all piano notes
- $ echo "DEHLq2w3er5t6y7ui9o0p[=]azsxcfvgbnjmk,l.\
-         HRq2w3er5t6y7ui9o0p[=]azsxcfvgbnjmk,l.\
-         HFq2w3er5t6y7u" | beep -m
+ $ echo "HLDEq2w3er5t6y7ui9o0p[=]azsxcfvgbnjmk,l.\
+         HRDEq2w3er5t6y7ui9o0p[=]azsxcfvgbnjmk,l.\
+         HFDEq2w3er5t6y7u" | beep -m
  
  # play Mozart K33b
  $ beep -p | beep -m
