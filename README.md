@@ -151,7 +151,7 @@ Usage Examples
  
  # play misic sheet from a file
  $ beep -m < sheet.txt
- C:\>beep < sheet.txt
+ C:\>beep -m < sheet.txt
 
  # generate 500Hz sine wave for 10 seconds
  $ beep -f 500 -t 10000
