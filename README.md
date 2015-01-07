@@ -21,7 +21,7 @@ On Windows: (requires MinGW, Go compiler from golang.org)
  C:\beep> build.bat
  C:\beep> copy beep.exe \windows\system32
 ```
-Prebuilt binary
+Prebuilt binaries
 ===============
  Windows: [beep.exe](http://angiud.com/beep/binary/windows/beep.exe) &nbsp; MD5: a2ca00a989de1e4046e990d2392bb170<br>
  Linux 64-bit: [beep](http://angiud.com/beep/binary/linux/beep) &nbsp; MD5: 96ded4a378eef7c9f8c23dc350c13cdc
@@ -35,7 +35,7 @@ beep [options]
   -h: print help
   -l: beep per line from stdin
   -m: play music notes from stdin (see beep notation)
-  -p: print a demo music by Mozart
+  -p: print the demo music by Mozart
   -t=1: beep time duration in millisecond (1-600000)
   -v=100: volume (1-100)
   -b: send bell to PC speaker
@@ -135,12 +135,13 @@ Usage Examples
  $ sh -c 'sleep 3600; beep -t 300 -c 6' &
  
  # play all piano notes
- $ echo "HLq2w3er5t6y7ui9o0p[=]azsxcfvgbnjmk,l.\
+ $ echo "DEHLq2w3er5t6y7ui9o0p[=]azsxcfvgbnjmk,l.\
          HRq2w3er5t6y7ui9o0p[=]azsxcfvgbnjmk,l.\
          HFq2w3er5t6y7u" | beep -m
  
  # play Mozart K33b
  $ beep -p | beep -m
+ C:\>beep -p | beep -m
  
  # dump music waveform to a WAV file
  $ beep -p | beep -m -o music.wav
