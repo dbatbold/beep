@@ -154,7 +154,7 @@ Usage Examples
  C:\>beep -m < sheet.txt
 
  # generate 528Hz sine wave for 60 seconds (wine glass frequency)
- $ beep -f 528 -t 10000
+ $ beep -f 528 -t 60000
  
  # middle C note
  $ beep -f 261.625565 -t 1500
