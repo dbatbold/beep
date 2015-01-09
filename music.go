@@ -391,8 +391,8 @@ func playMusicNotes(volume100 int, debug string) {
 						divide = 8
 					}
 					buf := make([]byte, len(bufFreq))
-					applyNoteVolume(buf, volume)
 					copy(buf, bufFreq)
+					applyNoteVolume(buf, volume)
 					bufsize := len(buf)
 					cut := bufsize
 					if tempo < 4 && bufsize > 1024 {
