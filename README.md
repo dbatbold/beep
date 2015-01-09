@@ -23,7 +23,7 @@ On Windows: (requires MinGW, Go compiler from golang.org)
 ```
 Prebuilt binaries
 ===============
- Windows: [beep.exe](http://angiud.com/beep/binary/windows/beep.exe) &nbsp; ```MD5: c919a0bc650ffbaf879247734007c206```<br>
+ Windows: [beep.exe](http://angiud.com/beep/binary/windows/beep.exe) &nbsp; ```MD5: 321fad96132bdcf51c52e86fa19a52e6```<br>
  Linux 64-bit: [beep](http://angiud.com/beep/binary/linux/beep) &nbsp; ```MD5: 0a9cc67f9731be302823d9ac1b53c8f7```
 Usage
 =====
