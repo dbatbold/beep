@@ -74,8 +74,8 @@ Demo music: Mozart K33b:`
 
 var demoMusic = `
 # Mozart K33b
-HRDE cc DScszs|DEc DQzDE[|cc DScszs|DEc DQz DE[|vv DSvcsc|DEvs ]v|cc DScszs|CB
-HLDE [n z,    |cHRq HLz, |[n z,    |cHRq HLz,  |sl z,    |]m   pb|z, ]m    |
+HRDE cc DScszs|DEc DQzDE[|RE cc DScszs|DEc DQz DE[|vv DSvcsc|DEvs ]v|cc DScszs|CB
+HLDE [n z,    |cHRq HLz, |RE [n z,    |cHRq HLz,  |sl z,    |]m   pb|z, ]m    |
 
 HRDE cz [c|ss DSsz]z|DEs] ps|DSsDEzDS][ zDE]DS[p|pDQ[ [  || REDE] DS][p[ |CB
 HLDE [n ov|]m [n    |  pb ic|  n,       lHRq    |HLnc DQ[|| DEcHRq HLvHRw|
@@ -535,7 +535,7 @@ func sustainNote(buf []byte, volume byte, sustainA, sustainD, sustainS, sustainR
 	}
 	buflen := len(buf)
 	volume64 := float64(volume)
-	attack := int(float64(buflen/32) * float64(sustainA))
+	attack := int(float64(buflen/96) * float64(sustainA))
 	decay := (buflen-attack)/10 + ((buflen-attack)/20 * sustainD)
 	sustain := byte(volume64 / 10.0 * float64(sustainS+1))
 	sustainCount := (buflen - attack - decay) / 2
