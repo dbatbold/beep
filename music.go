@@ -74,8 +74,8 @@ Demo music: Mozart K33b:`
 
 var demoMusic = `
 # Mozart K33b
-HRDE cc DScszs|DEc DQzDE[|RE cc DScszs|DEc DQz DE[|vv DSvcsc|DEvs ]v|cc DScszs|CB
-HLDE [n z,    |cHRq HLz, |RE [n z,    |cHRq HLz,  |sl z,    |]m   pb|z, ]m    |
+HRDE cc DScszs|DEc DQzDE[|cc DScszs|DEc DQz DE[|vv DSvcsc|DEvs ]v|cc DScszs|CB
+HLDE [n z,    |cHRq HLz, |[n z,    |cHRq HLz,  |sl z,    |]m   pb|z, ]m    |
 
 HRDE cz [c|ss DSsz]z|DEs] ps|DSsDEzDS][ zDE]DS[p|pDQ[ [  || REDE] DS][p[ |CB
 HLDE [n ov|]m [n    |  pb ic|  n,       lHRq    |HLnc DQ[|| DEcHRq HLvHRw|
