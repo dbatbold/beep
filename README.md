@@ -23,8 +23,8 @@ On Windows: (requires MinGW, Go compiler from golang.org)
 ```
 Prebuilt binaries
 ===============
- Windows: [beep.exe](http://angiud.com/beep/binary/windows/beep.exe) &nbsp; ```MD5: a2ca00a989de1e4046e990d2392bb170```<br>
- Linux 64-bit: [beep](http://angiud.com/beep/binary/linux/beep) &nbsp; ```MD5: 96ded4a378eef7c9f8c23dc350c13cdc```
+ Windows: [beep.exe](http://angiud.com/beep/binary/windows/beep.exe) &nbsp; ```MD5: c919a0bc650ffbaf879247734007c206```<br>
+ Linux 64-bit: [beep](http://angiud.com/beep/binary/linux/beep) &nbsp; ```MD5: afdc4e4164778e3de8bfd42d2e1e4821```
 Usage
 =====
 ```
@@ -58,6 +58,7 @@ Piano key map:
  letters are control keys. Lowercase letters
  are music notes. Space bar is current duration
  rest. Spaces after first space are ignored.
+ Lines start with '#' are ignored.
 
 Control keys:
 
@@ -68,8 +69,6 @@ Control keys:
  RE     - eighth rest
  RS     - sixteenth rest
  RT     - thirty-second rest
-
- Space  - half of current duration rest
 
  Durations:
  DW     - whole note
@@ -87,12 +86,20 @@ Control keys:
  Tempo:
  T#     - where # is 0-9, default is 4
 
+ Sustain:
+ SA#    - attack time, where # is 0-9, default is 4
+ SD#    - decay time, 0-9, default 4
+ SS#    - sustain level, 0-9, default 5
+ SR#    - release time, 0-9, default 4
+
  Clef:
  CB     - G and F clef partition (Base). If line ends
           with 'CB', the next line will be played as base.
 
  Measures:
- |      - bar (ignored)
+ |      - bar, ignored
+ ' '    - space, ignored
+ Tab    - tab, ignored
 ```
 Demo Music
 ==========
@@ -116,6 +123,7 @@ HLDE|] m   [   n   |  p b i c |
 HRDS|s z ] [ z ] [ p |DE[ DSi y DQr |CB
 HLDE|n   z   s   c   |  n    c  DQ[ |
 ```
+[Play&nbsp; ▶](http://angiud.com/beep/demo-mozart-k33b.mp3)
 Usage Examples
 ==============
 ```

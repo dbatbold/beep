@@ -8,6 +8,7 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"io"
 	"math"
 	"os"
 	"strings"
@@ -26,6 +27,7 @@ Beep notation:
  letters are control keys. Lowercase letters
  are music notes. Space bar is current duration
  rest. Spaces after first space are ignored.
+ Lines start with '#' are ignored.
 
  Control keys:
 
@@ -36,8 +38,6 @@ Beep notation:
  RE     - eighth rest
  RS     - sixteenth rest
  RT     - thirty-second rest
-
- Space  - eighth rest, depends on current duration
 
  Durations:
  DW     - whole note
@@ -55,12 +55,20 @@ Beep notation:
  Tempo:
  T#     - where # is 0-9, default is 4
 
+ Sustain:
+ SA#    - attack time, where # is 0-9, default is 4
+ SD#    - decay time, 0-9, default 4
+ SS#    - sustain level, 0-9, default 6
+ SR#    - release time, 0-9, default 4
+
  Clef:
  CB     - G and F clef partition (Base). If line ends
           with 'CB', the next line will be played as base.
 
  Measures:
- |      - bar (ignored)
+ |      - bar, ignored
+ ' '    - space, ignored
+ Tab    - tab, ignored
 
 Demo music: Mozart K33b:`
 
@@ -89,49 +97,82 @@ var demoHelp = `To play a demo music, run:
  $ beep -p | beep -m
 `
 
-var waveHeader = []byte{
-	0, 0, 0, 0, // 0 ChunkID
-	0, 0, 0, 0, // 4 ChunkSize
-	0, 0, 0, 0, // 8 Format
-	0, 0, 0, 0, // 12 Subchunk1ID
-	0, 0, 0, 0, // 16 Subchunk1Size
-	0, 0, // 20 AudioFormat
-	0, 0, // 22 NumChannels
-	0, 0, 0, 0, // 24 SampleRate
-	0, 0, 0, 0, // 28 ByteRate
-	0, 0, // 32 BlockAlign
-	0, 0, // 34 BitsPerSample
-	0, 0, 0, 0, // 36 Subchunk2ID
-	0, 0, 0, 0, // 40 Subchunk2Size
+type WaveHeader struct {
+	header        [44]byte
+	ChunkID       [4]byte
+	ChunkSize     [4]byte
+	Format        [4]byte
+	Subchunk1ID   [4]byte
+	Subchunk1Size [4]byte
+	AudioFormat   [2]byte
+	NumChannels   [2]byte
+	SampleRate    [4]byte
+	ByteRate      [4]byte
+	BlockAlign    [2]byte
+	BitsPerSample [2]byte
+	Subchunk2ID   [4]byte
+	Subchunk2Size [4]byte
+}
+
+func NewWaveHeader(channels, sampleRate, bitsPerSample int, dataSize int) WaveHeader {
+	wh := WaveHeader{}
+	copy(wh.ChunkID[0:], stringToBytes("RIFF"))
+	copy(wh.ChunkSize[0:], int32ToBytes(36+dataSize))
+	copy(wh.Format[0:], stringToBytes("WAVE"))
+	copy(wh.Subchunk1ID[0:], stringToBytes("fmt "))
+	copy(wh.Subchunk1Size[0:], int32ToBytes(16))
+	copy(wh.AudioFormat[0:], int16ToBytes(1))
+	copy(wh.NumChannels[0:], int16ToBytes(channels))
+	copy(wh.SampleRate[0:], int32ToBytes(sampleRate))
+	copy(wh.ByteRate[0:], int32ToBytes(sampleRate*channels*(bitsPerSample/8)))
+	copy(wh.BlockAlign[0:], int16ToBytes(1))
+	copy(wh.BitsPerSample[0:], int16ToBytes(bitsPerSample))
+	copy(wh.Subchunk2ID[0:], stringToBytes("data"))
+	copy(wh.Subchunk2Size[0:], int32ToBytes(dataSize))
+	return wh
+}
+
+func (w *WaveHeader) WriteHeader(wr io.Writer) (int, error) {
+	copy(w.header[0:], w.ChunkID[:])
+	copy(w.header[4:], w.ChunkSize[:])
+	copy(w.header[8:], w.Format[:])
+	copy(w.header[12:], w.Subchunk1ID[:])
+	copy(w.header[16:], w.Subchunk1Size[:])
+	copy(w.header[20:], w.AudioFormat[:])
+	copy(w.header[22:], w.NumChannels[:])
+	copy(w.header[24:], w.SampleRate[:])
+	copy(w.header[28:], w.ByteRate[:])
+	copy(w.header[32:], w.BlockAlign[:])
+	copy(w.header[34:], w.BitsPerSample[:])
+	copy(w.header[36:], w.Subchunk2ID[:])
+	copy(w.header[40:], w.Subchunk2Size[:])
+	return wr.Write(w.header[:])
 }
 
 func playMusicNotes(volume100 int, debug string) {
 	octaveLeft := []float64{
 		// C, C#, D, D#, E, F, F#, G, G#, A, A#, B
-		32.70, 34.64, 36.70, 38.89, 41.20, 43.65, 46.24, 48.99, 51.91, 55.00, 58.27, 61.73, // octave 0
-		65.40, 69.29, 73.41, 77.78, 82.40, 87.30, 92.49, 97.99, 103.82, 110.00, 116.54, 123.47, // octave 1
-		130.82, 138.59, 146.83, 155.56, 164.81, 174.61, 185.00, 196.00, 207.65, 220.00, 233.08, 246.94, // octave 2
+		32.70, 34.64, 36.70, 38.89, 41.20, 43.65, 46.24, 48.99, 51.91, 55.00, 58.27, 61.73,
+		65.40, 69.29, 73.41, 77.78, 82.40, 87.30, 92.49, 97.99, 103.8, 110.0, 116.5, 123.4,
+		130.8, 138.5, 146.8, 155.5, 164.8, 174.6, 185.0, 196.0, 207.6, 220.0, 233.0, 246.9,
 	}
 	octaveRight := []float64{
 		// C, C#, D, D#, E, F, F#, G, G#, A, A#, B
-		261.63, 277.18, 293.66, 311.13, 329.63, 349.23, 369.99, 392.00, 415.30, 440.00, 466.16, 493.88, // octave 3 (middle C)
-		523.25, 554.37, 587.33, 622.25, 659.26, 698.46, 739.99, 783.99, 830.61, 880.00, 932.33, 987.77, // octave 4
-		1046.5, 1108.73, 1174.66, 1244.51, 1318.51, 1396.91, 1479.98, 1567.98, 1661.22, 1760.00, 1864.66, 1975.53, // octave 5
+		261.6, 277.1, 293.6, 311.1, 329.6, 349.2, 369.9, 392.0, 415.3, 440.0, 466.1, 493.8,
+		523.2, 554.3, 587.3, 622.2, 659.2, 698.4, 739.9, 783.9, 830.6, 880.0, 932.3, 987.7,
+		1046.5, 1108.7, 1174.6, 1244.5, 1318.5, 1396.9, 1479.9, 1567, 1661, 1760, 1864, 1975,
 	}
 	octaveFarRight := []float64{
 		// C, C#, D, D#, E, F, F#, G, G#, A, A#, B
-		2093.0, 2217.5, 2349.3, 2489.0, 2637.0, 2793.0, 2960.0, 3136.0, 3322.4, 3520.0, 3729.3, 4186.0, // octave 6 (last octave)
+		2093, 2217.5, 2349.3, 2489, 2637, 2793, 2960, 3136, 3322.4, 3520, 3729.3, 4186,
 	}
 	keys := "q2w3er5t6y7ui9o0p[=]azsxcfvgbnjmk,l."
 	volume := byte(127.0 * (float64(volume100) / 100.0))
 	freqMapLeft := make(map[rune]float64)
 	freqMapRight := make(map[rune]float64)
 	freqMapFarRight := make(map[rune]float64)
-	bufMerge := make([]byte, 512)
-	quarterNote := 1024 * 18
+	quarterNote := 1024 * 21
 	wholeNote := quarterNote * 4
-	//middleC := hertzToFreq(261.63)
-	DEBUG := false // print wave form
 	printSheet := !*flagQuiet
 	printNotes := *flagNotes
 	outputFileName := *flagOutput
@@ -163,71 +204,64 @@ func playMusicNotes(volume100 int, debug string) {
 
 	// frequency map
 	for i, key := range keys {
-		freqMapLeft[key] = hertzToFreq(octaveLeft[i])
-		freqMapRight[key] = hertzToFreq(octaveRight[i])
+		freqMapLeft[key] = octaveLeft[i]
+		freqMapRight[key] = octaveRight[i]
 	}
 	for i, key := range keys[:12] {
-		freqMapFarRight[key] = hertzToFreq(octaveFarRight[i])
+		freqMapFarRight[key] = octaveFarRight[i]
 	}
-
-	// boundary buffer, used for fading
-	for i, _ := range bufMerge {
-		bufMerge[i] = 1
-	}
-	bufMerge[255] = 0 // merge mark
-	bufMerge[256] = 0 // merge mark
 
 	// wave buffer map
 	keyFreqMap := make(map[rune][]byte)
 	for key, freq := range freqMapLeft {
-		keyFreqMap[100+key] = keyFreq(freq, quarterNote, volume)
+		keyFreqMap[100+key] = generateVoice(freq, quarterNote, volume)
 	}
 	for key, freq := range freqMapRight {
-		keyFreqMap[200+key] = keyFreq(freq, quarterNote, volume)
+		keyFreqMap[200+key] = generateVoice(freq, quarterNote, volume)
 	}
 	for key, freq := range freqMapFarRight {
-		keyFreqMap[300+key] = keyFreq(freq, quarterNote, volume)
+		keyFreqMap[300+key] = generateVoice(freq, quarterNote, volume)
 	}
 
 	// rest buffer map
 	bufRW := make([]byte, wholeNote)
 	for i, _ := range bufRW {
-		bufRW[i] = 1
+		bufRW[i] = 127
 	}
-	bufRW[0] = 0 // boundary mark
 	bufRH := bufRW[:wholeNote/2]
 	bufRQ := bufRW[:wholeNote/4]
 	bufRE := bufRW[:wholeNote/8]
 	bufRS := bufRW[:wholeNote/16]
 	bufRT := bufRW[:wholeNote/32]
 
-	// space bar, half of current rest
-	keyFreqMap[132] = bufRQ // space
-	keyFreqMap[232] = bufRQ // space
-	keyFreqMap[332] = bufRQ // space
-
 	// read lines
 	reader := bufio.NewReader(os.Stdin)
 	bufPlayLimit := 1024 * 1024 * 100
-	ctrlKeys := "RDHT"
+	ctrlKeys := "RDHTS"
 	measures := "WHQEST"
 	hands := "RLF"
 	tempos := "0123456789"
-	ignored := "|CB"
+	ignored := "\t |CB"
+	sustainTypes := "ADSR"
+	sustainLevels := "0123456789"
+	sustainA := 4
+	sustainD := 4
+	sustainS := 5
+	sustainR := 4
 	var bufPlay bytes.Buffer
 	var bufBase bytes.Buffer
 	var bufOutput bytes.Buffer
 	var duration = 'Q' // default note duration
 	var rest rune
 	var ctrl rune
-	var last rune
+	var sustainType rune
 	var hand rune = 'R' // default is middle C octave
 	var handLevel rune
 	var done bool
-	var count int   // line counter
-	var tempo int = 4  // normal speed
-	var line string // G clef notes
-	var base string // F clef notes
+	var count int     // line counter
+	var tempo int = 4 // normal speed
+	var line string   // G clef notes
+	var base string   // F clef notes
 	var hasBase bool
 	for {
 		bufPlay.Reset()
@@ -269,8 +303,7 @@ func playMusicNotes(volume100 int, debug string) {
 		controller := func(bufWave *bytes.Buffer, notation string) {
 			for _, key := range notation {
 				keystr := string(key)
-				if key == 32 && last == 32 {
-					// spaces after first space are ignored
+				if strings.ContainsAny(keystr, ignored) {
 					continue
 				}
 				if ctrl == 0 && strings.ContainsAny(keystr, ctrlKeys) {
@@ -279,21 +312,39 @@ func playMusicNotes(volume100 int, debug string) {
 				}
 				if ctrl > 0 {
 					switch ctrl {
-					case 'D':
+					case 'D': // duration
 						if strings.ContainsAny(keystr, measures) {
 							duration = key
 						}
-					case 'R':
+					case 'R': // reset
 						if strings.ContainsAny(keystr, measures) {
 							rest = key
 						}
-					case 'H':
+					case 'H': // hand
 						if strings.ContainsAny(keystr, hands) {
 							hand = key
 						}
-					case 'T':
+					case 'T': // tempo
 						if strings.ContainsAny(keystr, tempos) {
 							tempo = strings.Index(tempos, keystr)
+						}
+					case 'S': // sustain
+						if strings.ContainsAny(keystr, sustainTypes) {
+							sustainType = key
+							continue
+						}
+						if strings.ContainsAny(keystr, sustainLevels) {
+							level := strings.Index(sustainLevels, keystr)
+							switch sustainType {
+							case 'A': // attack
+								sustainA = level
+							case 'D': // decay
+								sustainD = level
+							case 'S': // sustain
+								sustainS = level
+							case 'R': // release
+								sustainR = level
+							}
 						}
 					}
 					ctrl = 0
@@ -324,7 +375,7 @@ func playMusicNotes(volume100 int, debug string) {
 				case 'F':
 					handLevel = 300
 				}
-				if buf, found := keyFreqMap[handLevel+key]; found {
+				if bufFreq, found := keyFreqMap[handLevel+key]; found {
 					repeat := 1
 					divide := 1
 					switch duration {
@@ -339,41 +390,43 @@ func playMusicNotes(volume100 int, debug string) {
 					case 'T':
 						divide = 8
 					}
-					if key == 32 {
-						// space rest is half of current duration
-						divide *= 2
+					buf := make([]byte, len(bufFreq))
+					applyNoteVolume(buf, volume)
+					copy(buf, bufFreq)
+					bufsize := len(buf)
+					cut := bufsize
+					if tempo < 4 && bufsize > 1024 {
+						// slow tempo
+						for t := 0; t < 4-tempo; t++ {
+							buf = append(buf, trimWave(buf[:1024])...)
+						}
 					}
-					for r := 0; r < repeat; r++ {
-						bufsize := len(buf)
-						cut := bufsize
-						if tempo < 4 && bufsize > 1024 {
-							// slow tempo
-							for t := 0; t < 4-tempo; t++ {
-								buf = append(trimWave(buf), trimWave(buf[:1024])...)
+					if tempo > 4 {
+						// fast tempo
+						for t := 0; t < tempo-4 && cut > 1024; t++ {
+							if 1024 < len(buf[:cut]) {
+								cut -= 1024
 							}
 						}
-						if tempo > 4 {
-							// fast tempo
-							for t := 0; t < tempo-4 && cut > 1024; t++ {
-								if 1024 < len(buf[:cut]) {
-									cut -= 1024
-								}
-							}
-							buf = buf[:cut]
-						}
+						buf = buf[:cut]
+					}
+					if divide > 1 {
 						cut = len(buf) / divide
 						buf = trimWave(buf[:cut])
-						if last != key && last > 0 {
-							bufWave.Write(bufMerge)
-						}
-						buf[0] = 0 // note boundary mark
-						bufWave.Write(buf)
-						if bufWave.Len() > bufPlayLimit {
-							fmt.Fprintln(os.Stderr, "Line wave buffer exceeds 100MB limit.")
-							os.Exit(1)
-						}
 					}
-					last = key
+					bufsize = len(buf)
+					for r := 1; r < repeat; r++ {
+						buf = append(buf, buf[:bufsize]...)
+					}
+					sustainNote(buf, volume, sustainA, sustainD, sustainS, sustainR)
+					wrote, err := bufWave.Write(buf)
+					if err != nil || wrote != len(buf) {
+						fmt.Fprintln(os.Stderr, "Error writing to buffer:", err)
+					}
+					if bufWave.Len() > bufPlayLimit {
+						fmt.Fprintln(os.Stderr, "Line wave buffer exceeds 100MB limit.")
+						os.Exit(1)
+					}
 					if printNotes {
 						fmt.Printf("%s", noteLetter(key))
 					}
@@ -390,7 +443,7 @@ func playMusicNotes(volume100 int, debug string) {
 			fmt.Println()
 		}
 		gclef := bufPlay.Bytes()
-		mergeNotes(gclef, volume, bufMerge)
+		//mergeNotes(gclef, volume)
 		var fclef []byte
 		if hasBase {
 			controller(&bufBase, base)
@@ -403,34 +456,27 @@ func playMusicNotes(volume100 int, debug string) {
 					fclef = append(fclef, bufRW...)
 				}
 			}
-			mergeNotes(fclef, volume, bufMerge)
+			//mergeNotes(fclef, volume)
 		} else {
 			fclef = gclef
 		}
-		if test || DEBUG {
-			fmt.Println("LINE")
-			for i, bar := range gclef {
-				fmt.Printf("%d:%03d|%s\n", i, bar, strings.Repeat("=", int(bar/4)))
+		if outputFile == nil {
+			notes := line
+			if hasBase {
+				notes += "\n" + base
 			}
+			playback(gclef, fclef, notes)
 		} else {
-			if outputFile == nil {
-				notes := line
+			// saving to file
+			var buf [2]byte
+			for i, bar := range gclef {
+				buf[0] = bar
 				if hasBase {
-					notes += "\n"+ base
+					buf[1] = fclef[i]
+				} else {
+					buf[1] = bar
 				}
-				playback(gclef, fclef, notes)
-			} else {
-				// saving to file
-				var buf [2]byte
-				for i, bar := range gclef {
-					buf[0] = bar
-					if hasBase {
-						buf[1] = fclef[i]
-					} else {
-						buf[1] = bar
-					}
-					bufOutput.Write(buf[:])
-				}
+				bufOutput.Write(buf[:])
 			}
 		}
 		count++
@@ -440,25 +486,17 @@ func playMusicNotes(volume100 int, debug string) {
 	if outputFile != nil {
 		// save wave to file
 		bufsize := bufOutput.Len()
-		copy(waveHeader[0:], stringToBytes("RIFF"))    // ChunkID
-		copy(waveHeader[4:], int32ToBytes(36+bufsize)) // ChunkSize
-		copy(waveHeader[8:], stringToBytes("WAVE"))    // Format
-		copy(waveHeader[12:], stringToBytes("fmt "))   // Subchunk1ID
-		copy(waveHeader[16:], int32ToBytes(16))        // Subchunk1Size
-		copy(waveHeader[20:], int16ToBytes(1))         // AudioFormat
-		copy(waveHeader[22:], int16ToBytes(2))         // NumChannels
-		copy(waveHeader[24:], int32ToBytes(44100))     // SampleRate
-		copy(waveHeader[28:], int32ToBytes(44100))     // ByteRate
-		copy(waveHeader[32:], int16ToBytes(1))         // BlockAlign
-		copy(waveHeader[34:], int16ToBytes(8))         // BitsPerSample
-		copy(waveHeader[36:], stringToBytes("data"))   // Subchunk2ID
-		copy(waveHeader[40:], int32ToBytes(bufsize))   // Subchunk2Size
-		_, err = outputFile.Write(waveHeader)
+		header := NewWaveHeader(2, sampleRate, 8, bufsize)
+		_, err = header.WriteHeader(outputFile)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "Error writing to output file:", err)
 			os.Exit(1)
 		}
-		outputFile.Write(bufOutput.Bytes())
+		num, err := outputFile.Write(bufOutput.Bytes())
+		if err != nil || num != bufsize {
+			fmt.Fprintln(os.Stderr, "Error writing to output file:", err)
+			os.Exit(1)
+		}
 	}
 }
 
@@ -483,87 +521,66 @@ func nextMusicLine(reader *bufio.Reader) (string, bool) {
 	return buf.String(), false
 }
 
-// Merges two wave form by fading for playing smooth
-func mergeNotes(buf []byte, volume byte, bufMerge []byte) {
-	half := len(bufMerge)/2
-	buflen := len(buf)
-	var c int // count
-	var index int
-	var found bool
-	var first int
-	DEBUG := false
+// Changes note amplitude
+func applyNoteVolume(buf []byte, volume byte) {
+	return
 	for i, bar := range buf {
-		if i > 0 && bar == 0 && buf[i-1] == 0 {
-			// found merge buffer found
-			found = true
-			index = i
-			c = 0
-		}
-		if found {
-			if first == 0 {
-				first = i
-			}
-
-			// merge left
-			s := index - half - c
-			t := index - half + c
-			if s > 0 {
-				buf[t] = fadeWaveOut(buf[s], c, volume)
-			}
-
-			// merge right
-			s = index + half + c
-			t = index + half - c + 1
-			if t < buflen && buflen > s {
-				buf[t] = fadeWaveOut(buf[s], c, volume)
-			}
-			if i % 2 == 0 {
-				c++
-			}
-			if c >= half {
-				found = false
-			}
-		}
-	}
-
-	if DEBUG {
-		for i, bar := range buf {
-			if i > first-20 && i < first+half*2+20 {
-				if i == first || i == first+half*2 {
-					fmt.Println("BOUNDRY")
-				}
-				fmt.Printf("|%s\n", i, strings.Repeat("=", int(bar/4)))
-			}
-		}
+		bar64 := float64(bar)
+		volume64 := float64(volume)
+		buf[i] = byte(bar64 * (volume64 / 127.0))
 	}
 }
 
-func fadeWaveIn(bar byte, i int, volume byte) byte {
-	i64 := float64(i)
-	gap := float64(255)
-	bar64 := float64(bar)
-	if i64 < gap && gap > 0 {
-		bar = byte(bar64 * (i64 / gap))
-		if bar > 0 {
-			return bar
-		}
+// Changes note amplitude for ADSR phases
+func sustainNote(buf []byte, volume byte, sustainA, sustainD, sustainS, sustainR int) {
+	// |  /|\
+	// | / | \ _____
+	// |/  |  |    | \
+	// |--------------
+	//   A  D  S    R
+	if volume == 0 {
+		return
 	}
-	return 1
+	buflen := len(buf)
+	volume64 := float64(volume)
+	attack := int(float64(buflen/32) * float64(sustainA))
+	decay := (buflen-attack)/10 + ((buflen-attack)/20 * sustainD)
+	sustain := byte(volume64 / 10.0 * float64(sustainS+1))
+	sustainCount := (buflen - attack - decay) / 2
+	release := buflen - attack - decay - sustainCount
+	attack64 := float64(attack)
+	decay64 := float64(decay)
+	sustain64 := float64(sustain)
+	release64 := float64(release)
+	countD := 0.0
+	countR := 0.0
+	for i, bar := range buf {
+		i64 := float64(i)
+		bar64 := float64(bar) - 127.0
+		if i >= attack+decay+sustainCount {
+			// Release phase, decay volume to zero
+			bar64 = bar64 * ((sustain64 * (release64 - countR) / release64) / volume64)
+			countR++
+		} else if i >= attack+decay {
+			// Sustain phase, hold volume on sustain level
+			bar64 = bar64 * (sustain64 / volume64)
+		} else if i >= attack && decay > 0 {
+			// Decay phase, decay volume to sustain level
+			gap := (volume64 - sustain64) * ((decay64 - countD) / decay64)
+			bar64 = bar64 * ((sustain64 + gap) / volume64)
+			countD++
+		} else if i <= attack && attack > 0 {
+			// Attack phase, raise volume to max
+			bar64 = bar64 * (i64 / attack64)
+		}
+		if bar64 == 0 {
+			bar64 = 1
+		}
+		buf[i] = byte(127.0 + bar64)
+	}
 }
 
-func fadeWaveOut(bar byte, i int, volume byte) byte {
-	i64 := float64(i)
-	gap := float64(255)
-	bar64 := float64(bar)
-	if i64 < gap && gap > 0 {
-		bar = byte(bar64 * ((gap - i64)/gap))
-		if bar > 0 {
-			return bar
-		}
-	}
-	return 1
-}
-
+// Translates beep notation to CDEFGAB notation
 func noteLetter(note rune) string {
 	if note < 0 {
 		note = -note
@@ -601,32 +618,46 @@ func noteLetter(note rune) string {
 	return string(note) + "=?"
 }
 
-// Generates sine wave for music notes
-func keyFreq(freq float64, duration int, volume byte) []byte {
-	buf := make([]byte, duration)
-	vol64 := float64(volume)
-	for i, _ := range buf {
-		bar := volume - byte(vol64*math.Cos(float64(i)*freq))
-		if bar == 0 {
-			bar = 1
-		}
-		buf[i] = bar
+// Generates voice waveform for music notes
+func generateVoice(freq float64, duration int, volume byte) []byte {
+	samples := int(sampleRate64/freq)
+	bufString := make([]byte, samples)
+	tick := 2.0*math.Pi/float64(samples)
+	volume64 := float64(volume)
+	if volume > 20 {
+		volume64 -= 20 // root to vibrate string
 	}
-	return trimWave(buf)
+	timer := 0.0
+	i := 0
+	var bufWave bytes.Buffer
+	for i < duration {
+		for s := 0; s < samples; s++ {
+			bar64 := volume64*math.Sin(timer)
+			if bar64 == 0 {
+				bar64 = 1
+			}
+			bufString[s] = 127 + byte(bar64)
+			timer += tick
+			i++
+		}
+		bufWave.Write(bufString)
+	}
+
+	buf := bufWave.Bytes()
+	return trimWave(buf[:duration])
 }
 
 // Trims sharp edge from wave for smooth play
 func trimWave(buf []byte) []byte {
 	cut := len(buf) - 1
 	var last byte
-	DEBUG := false
 	for i, _ := range buf {
 		if i == 0 {
 			last = buf[cut]
 		}
 		if buf[cut] < last {
 			// falling
-			if buf[cut] < 6 {
+			if 127-buf[cut] < 6 {
 				break
 			}
 		}
@@ -644,50 +675,5 @@ func trimWave(buf []byte) []byte {
 		}
 	}
 	buf = buf[:cut]
-
-	if DEBUG {
-		for i, _ := range buf {
-			if i < 50 {
-				bar := buf[len(buf)-1-i]
-				fmt.Printf("%d:%03d|%s\n", i, bar, strings.Repeat("=", int(bar/4)))
-			}
-		}
-		fmt.Println()
-	}
-
 	return buf
-}
-
-func stringToBytes(s string) []byte {
-	var buf []byte
-	for _, c := range s {
-		buf = append(buf, byte(c))
-	}
-	return buf
-}
-
-func int32ToBytes(i int) []byte {
-	var buf [4]byte
-	n := int32(i)
-	buf[0] = byte(n)
-	buf[1] = byte(n >> 8)
-	buf[2] = byte(n >> 16)
-	buf[3] = byte(n >> 24)
-	return buf[:]
-}
-
-func int16ToBytes(i int) []byte {
-	n := int32(i)
-	var buf [2]byte
-	buf[0] = byte(n)
-	buf[1] = byte(n >> 8)
-	return buf[:]
-}
-
-func hertzToFreq(hertz float64) float64 {
-	// 1 second = 44100 samples
-	// 1 hertz = freq * 2Pi
-	// freq = 2Pi / 44100 * hertz
-	freq := 2.0 * math.Pi / 44100.0 * hertz
-	return freq
 }
