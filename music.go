@@ -74,23 +74,17 @@ Demo music: Mozart K33b:`
 
 var demoMusic = `
 # Mozart K33b
-HRDE|c c DSc s z s |DEc DQz DE[   |CB
-HLDE|[ n   z   ,   |  c HRq HLz , |
+HRDE cc DScszs|DEc DQzDE[|cc DScszs|DEc DQz DE[|vv DSvcsc|DEvs ]v|cc DScszs|CB
+HLDE [n z,    |cHRq HLz, |[n z,    |cHRq HLz,  |sl z,    |]m   pb|z, ]m    |
 
-HRDE|c c DSc s z s |DEc DQz DE[   |CB
-HLDE|[ n   z   ,   |  c HRq HLz , |
+HRDE cz [c|ss DSsz]z|DEs] ps|DSsDEzDS][ zDE]DS[p|pDQ[ [  || REDE] DS][p[ |CB
+HLDE [n ov|]m [n    |  pb ic|  n,       lHRq    |HLnc DQ[|| DEcHRq HLvHRw|
 
-HRDE|v v DSv c s c |DEv s ] v |CB
-HLDE|s l   z   ,   |  ] m p b |
+HRDS ][p[ ][p[|DE] DQp DEi|REc DScszs|cszs |cszs|DEc DQz DE[|REv DSvcsc|DEvs ]v|CB
+HLDE bHRe HLvw|cHRq   HLic|[n  ]m    |z,   |]m  |zn       z,|sl  [,    |z. p   |
 
-HRDE|c c DSc s z s |DEc z [ c |CB
-HLDE|z ,   ]   m   |  [ n o v |
-
-HRDE|s s DSs z ] z |DEs ] p s |CB
-HLDE|] m   [   n   |  p b i c |
-
-HRDS|s z ] [ z ] [ p |DE[ DSi y DQr |CB
-HLDE|n   z   s   c   |  n    c  DQ[ |
+HRDE REc DScszs|DEcz [c|REs DSsz]z|DEs] ps|DSsDEz DS][ DSzDE]DS[p|DE[DSit DQr|CB
+HLDE z,  ]m    |[n   ov|]m  [n    |pb   ic|nz          sc        |n    c  DQ[|
 `
 
 var demoHelp = `To play a demo music, run:
