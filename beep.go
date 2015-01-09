@@ -131,7 +131,7 @@ func beepPerLine(volume int, freq float64) {
 	var last byte
 	for i, _ := range buf {
 		if i < gap {
-			buf[i] = 127 - byte(float64(bar)*math.Sin(float64(i)*freq))
+			buf[i] = 127 + byte(float64(bar)*math.Sin(float64(i)*freq))
 			last = buf[i]
 		} else {
 			if last > 127 {

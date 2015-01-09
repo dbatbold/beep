@@ -443,7 +443,6 @@ func playMusicNotes(volume100 int, debug string) {
 			fmt.Println()
 		}
 		gclef := bufPlay.Bytes()
-		//mergeNotes(gclef, volume)
 		var fclef []byte
 		if hasBase {
 			controller(&bufBase, base)
@@ -456,7 +455,6 @@ func playMusicNotes(volume100 int, debug string) {
 					fclef = append(fclef, bufRW...)
 				}
 			}
-			//mergeNotes(fclef, volume)
 		} else {
 			fclef = gclef
 		}
