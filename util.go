@@ -87,7 +87,7 @@ func NewWaveHeader(channels, sampleRate, bitsPerSample int, dataSize int) *WaveH
 	return wh
 }
 
-func (w *WaveHeader) WriteHeader(wr io.Writer) (int, error) {
+func (w *WaveHeader) WriteHeader(writer io.Writer) (int, error) {
 	copy(w.header[0:], stringToBytes(w.ChunkID[:4]))
 	copy(w.header[4:], int32ToBytes(w.ChunkSize))
 	copy(w.header[8:], stringToBytes(w.Format[:4]))
@@ -101,11 +101,14 @@ func (w *WaveHeader) WriteHeader(wr io.Writer) (int, error) {
 	copy(w.header[34:], int16ToBytes(w.BitsPerSample))
 	copy(w.header[36:], stringToBytes(w.Subchunk2ID[:4]))
 	copy(w.header[40:], int32ToBytes(w.Subchunk2Size))
-	return wr.Write(w.header[:])
+	return writer.Write(w.header[:])
 }
 
-func (w *WaveHeader) ReadHeader(buf []byte) {
-	copy(w.header[0:], buf[:44])
+func (w *WaveHeader) ReadHeader(reader io.Reader) (int, error) {
+	n, err := reader.Read(w.header[:])
+	if err != nil {
+		return 0, err
+	}
 	w.ChunkID = string(w.header[:4])
 	w.ChunkSize = int(bytesToInt32(w.header[4:8]))
 	w.Format = string(w.header[8:12])
@@ -119,6 +122,7 @@ func (w *WaveHeader) ReadHeader(buf []byte) {
 	w.BitsPerSample = int(bytesToInt16(w.header[34:36]))
 	w.Subchunk2ID = string(w.header[36:40])
 	w.Subchunk2Size = int(bytesToInt32(w.header[40:44]))
+	return n, nil
 }
 
 func (w *WaveHeader) String() string {
