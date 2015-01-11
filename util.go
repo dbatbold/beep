@@ -68,7 +68,7 @@ type WaveHeader struct {
 	Subchunk2Size int
 }
 
-func NewWaveHeader(channels, sampleRate, bitsPerSample int, dataSize int) *WaveHeader {
+func NewWaveHeader(channels, sampleRate, bitsPerSample, dataSize int) *WaveHeader {
 	wh := &WaveHeader{
 		ChunkID:       "RIFF",
 		ChunkSize:     36 + dataSize,
@@ -79,7 +79,7 @@ func NewWaveHeader(channels, sampleRate, bitsPerSample int, dataSize int) *WaveH
 		NumChannels:   channels,
 		SampleRate:    sampleRate,
 		ByteRate:      sampleRate * channels * (bitsPerSample / 8),
-		BlockAlign:    1,
+		BlockAlign:    channels * bitsPerSample/8,
 		BitsPerSample: bitsPerSample,
 		Subchunk2ID:   "data",
 		Subchunk2Size: dataSize,
@@ -118,7 +118,7 @@ func (w *WaveHeader) ReadHeader(reader io.Reader) (int, error) {
 	w.NumChannels = int(bytesToInt16(w.header[22:24]))
 	w.SampleRate = int(bytesToInt32(w.header[24:28]))
 	w.ByteRate = int(bytesToInt32(w.header[28:32]))
-	w.BlockAlign = int(bytesToInt16(w.header[32:40]))
+	w.BlockAlign = int(bytesToInt16(w.header[32:34]))
 	w.BitsPerSample = int(bytesToInt16(w.header[34:36]))
 	w.Subchunk2ID = string(w.header[36:40])
 	w.Subchunk2Size = int(bytesToInt32(w.header[40:44]))

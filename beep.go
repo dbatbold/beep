@@ -92,6 +92,10 @@ func main() {
 		return
 	}
 
+var piano Piano
+piano.GenerateNote(0)
+return
+
 	// beep
 	bar := byte(127.0 * (float64(volume) / 100.0))
 	samples := int(sampleRate64 * (duration / 1000.0))

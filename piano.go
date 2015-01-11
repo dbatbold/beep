@@ -2,9 +2,10 @@ package main
 
 import (
 	"bytes"
-	"fmt"
 	"math"
 	"strings"
+	//"os"
+	//"fmt"
 )
 
 var pianoNoteC2buf []byte
@@ -39,38 +40,81 @@ func (p *Piano) GenerateWave(force byte) []byte {
 	return bufWave.Bytes()
 }
 
-func (p *Piano) GenerateNote(freq float64) []byte {
+func (p *Piano) GenerateNote(freq float64, duration int) []byte {
 	if pianoNoteC2buf == nil {
-		//var bufNote bytes.Buffer
-		var bar uint16
+		var bufNote bytes.Buffer
+		var buf [2]byte
+		var bar int
 		hex := "0123456789abcdef"
-		for i, line := range pianoNoteC2 {
+		for _, line := range pianoNoteC2 {
 			for c, char := range line {
 				h := strings.Index(hex, string(char))
 				switch c % 4 {
 				case 0:
-					bar = uint16(h * 16 * 16 * 16)
+					bar = h * 4096
 				case 1:
-					bar += uint16(h * 16 * 16)
+					bar += h * 256
 				case 2:
-					bar += uint16(h * 16)
+					bar += h * 16
 				case 3:
-					bar += uint16(h)
-					fmt.Print(bar, " ")
+					bar += h
+					bar -= 0xffff/2
+					buf[0] = byte(bar)
+					buf[1] = byte(bar>>8)
+					bufNote.Write(buf[:])
+					//fmt.Print(bar, " ")
 				}
 			}
-			if i > 19 {
-				break
-			}
 		}
+		//fmt.Println(bufNote.Len())
+		//playback(bufw, bufw, "")
+		pianoNoteC2buf = bufNote.Bytes()
+		/*
+		buflen := len(bufw)
+		opt := os.O_WRONLY|os.O_CREATE|os.O_TRUNC
+		sampleFile, err := os.OpenFile("test.wav", opt, 0644)
+		if err != nil {
+			panic(err)
+		}
+		defer sampleFile.Close()
+		header := NewWaveHeader(1, 22050, 16, buflen)
+		header.WriteHeader(sampleFile)
+		fmt.Println(header.String())
+		sampleFile.Write(bufw)
+		*/
 	}
+
+
+	// 65.41 - 22050
+	// Freq  - sampleRate
+	// x = 22050 * 65.41 / 65.41
+	// timer = 65.41/sampleRate
+	// timerFreq = freq/sampleRate
+	buf := make([]byte, duration*2)
+	sampleRate := 22050.0 * 65.41 / freq
+	tick := freq/sampleRate
+	var last int
+	var bar16 int
+	for i, bar := pianoNoteC2buf {
+		switch i%2 {
+		case 0:
+			bar16 = int(bar)
+		case 1:
+			bar16 += int(bar)
+		}
+		last = bar16
+	}
+
+
 	return nil
 }
 
 // Note: C2
+// Fequency: 65.41Hz
 // Channel: 1
-// ByteRate: 65672
+// SampleRate: 22050Hz
 // BitsPerSample: 16
+// SampleSize: 159360 bytes
 var pianoNoteC2 = []string{
 	"801e7ff87ff57ff87fe07fee7ff6800a8001801f801e7fef7fe97fd17fdf800d80097fda7fe0",
 	"7fe47feb800180017fec7ff57fef7ff47ff8801480157fe1800d7ffe8016800b7ff57fee7ff6",

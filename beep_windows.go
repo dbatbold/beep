@@ -29,11 +29,11 @@ func openSoundDevice(device string) {
 	var fdwOpen C.DWORD = C.CALLBACK_NULL
 
 	wfx.wFormatTag = C.WAVE_FORMAT_PCM
-	wfx.nChannels = C.WORD(2)
+	wfx.nChannels = C.WORD(1)
 	wfx.nSamplesPerSec = C.DWORD(44100)
 	wfx.nAvgBytesPerSec = C.DWORD(44100)
-	wfx.nBlockAlign = C.WORD(2)
-	wfx.wBitsPerSample = C.WORD(8)
+	wfx.nBlockAlign = C.WORD(4)
+	wfx.wBitsPerSample = C.WORD(16)
 
 	res := C.waveOutOpen(&hwaveout, C.WAVE_MAPPER, &wfx, dwCallback, dwCallbackInstance, fdwOpen)
 	if res != C.MMSYSERR_NOERROR {
