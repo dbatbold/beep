@@ -112,7 +112,7 @@ func playMusicNotes(volume100 int, debug string) {
 	freqMapLeft := make(map[rune]float64)
 	freqMapRight := make(map[rune]float64)
 	freqMapFarRight := make(map[rune]float64)
-	quarterNote := 1024 * 20
+	quarterNote := 1024 * 22
 	wholeNote := quarterNote * 4
 	printSheet := !*flagQuiet
 	printNotes := *flagNotes
