@@ -6,8 +6,6 @@ import (
 
 func TestMusicNotes(t *testing.T) {
 	t.Skip()
-	// print waveform
-	playMusicNotes(100, "T6ic")
 }
 
 func TestHertzToFreq(t *testing.T) {

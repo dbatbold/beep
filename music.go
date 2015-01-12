@@ -8,8 +8,6 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	"io"
-	"math"
 	"os"
 	"strings"
 )
@@ -91,58 +89,6 @@ var demoHelp = `To play a demo music, run:
  $ beep -p | beep -m
 `
 
-type WaveHeader struct {
-	header        [44]byte
-	ChunkID       [4]byte
-	ChunkSize     [4]byte
-	Format        [4]byte
-	Subchunk1ID   [4]byte
-	Subchunk1Size [4]byte
-	AudioFormat   [2]byte
-	NumChannels   [2]byte
-	SampleRate    [4]byte
-	ByteRate      [4]byte
-	BlockAlign    [2]byte
-	BitsPerSample [2]byte
-	Subchunk2ID   [4]byte
-	Subchunk2Size [4]byte
-}
-
-func NewWaveHeader(channels, sampleRate, bitsPerSample int, dataSize int) WaveHeader {
-	wh := WaveHeader{}
-	copy(wh.ChunkID[0:], stringToBytes("RIFF"))
-	copy(wh.ChunkSize[0:], int32ToBytes(36+dataSize))
-	copy(wh.Format[0:], stringToBytes("WAVE"))
-	copy(wh.Subchunk1ID[0:], stringToBytes("fmt "))
-	copy(wh.Subchunk1Size[0:], int32ToBytes(16))
-	copy(wh.AudioFormat[0:], int16ToBytes(1))
-	copy(wh.NumChannels[0:], int16ToBytes(channels))
-	copy(wh.SampleRate[0:], int32ToBytes(sampleRate))
-	copy(wh.ByteRate[0:], int32ToBytes(sampleRate*channels*(bitsPerSample/8)))
-	copy(wh.BlockAlign[0:], int16ToBytes(1))
-	copy(wh.BitsPerSample[0:], int16ToBytes(bitsPerSample))
-	copy(wh.Subchunk2ID[0:], stringToBytes("data"))
-	copy(wh.Subchunk2Size[0:], int32ToBytes(dataSize))
-	return wh
-}
-
-func (w *WaveHeader) WriteHeader(wr io.Writer) (int, error) {
-	copy(w.header[0:], w.ChunkID[:])
-	copy(w.header[4:], w.ChunkSize[:])
-	copy(w.header[8:], w.Format[:])
-	copy(w.header[12:], w.Subchunk1ID[:])
-	copy(w.header[16:], w.Subchunk1Size[:])
-	copy(w.header[20:], w.AudioFormat[:])
-	copy(w.header[22:], w.NumChannels[:])
-	copy(w.header[24:], w.SampleRate[:])
-	copy(w.header[28:], w.ByteRate[:])
-	copy(w.header[32:], w.BlockAlign[:])
-	copy(w.header[34:], w.BitsPerSample[:])
-	copy(w.header[36:], w.Subchunk2ID[:])
-	copy(w.header[40:], w.Subchunk2Size[:])
-	return wr.Write(w.header[:])
-}
-
 func playMusicNotes(volume100 int, debug string) {
 	octaveLeft := []float64{
 		// C, C#, D, D#, E, F, F#, G, G#, A, A#, B
@@ -165,7 +111,7 @@ func playMusicNotes(volume100 int, debug string) {
 	freqMapLeft := make(map[rune]float64)
 	freqMapRight := make(map[rune]float64)
 	freqMapFarRight := make(map[rune]float64)
-	quarterNote := 1024 * 21
+	quarterNote := 1024 * 22
 	wholeNote := quarterNote * 4
 	printSheet := !*flagQuiet
 	printNotes := *flagNotes
@@ -208,13 +154,13 @@ func playMusicNotes(volume100 int, debug string) {
 	// wave buffer map
 	keyFreqMap := make(map[rune][]byte)
 	for key, freq := range freqMapLeft {
-		keyFreqMap[100+key] = generateVoice(freq, quarterNote, volume)
+		keyFreqMap[100+key] = generateVoice(freq, quarterNote)
 	}
 	for key, freq := range freqMapRight {
-		keyFreqMap[200+key] = generateVoice(freq, quarterNote, volume)
+		keyFreqMap[200+key] = generateVoice(freq, quarterNote)
 	}
 	for key, freq := range freqMapFarRight {
-		keyFreqMap[300+key] = generateVoice(freq, quarterNote, volume)
+		keyFreqMap[300+key] = generateVoice(freq, quarterNote)
 	}
 
 	// rest buffer map
@@ -515,7 +461,6 @@ func nextMusicLine(reader *bufio.Reader) (string, bool) {
 
 // Changes note amplitude
 func applyNoteVolume(buf []byte, volume byte) {
-	return
 	for i, bar := range buf {
 		bar64 := float64(bar)
 		volume64 := float64(volume)
@@ -536,7 +481,7 @@ func sustainNote(buf []byte, volume byte, sustainA, sustainD, sustainS, sustainR
 	buflen := len(buf)
 	volume64 := float64(volume)
 	attack := int(float64(buflen/96) * float64(sustainA))
-	decay := (buflen-attack)/10 + ((buflen-attack)/20 * sustainD)
+	decay := (buflen-attack)/10 + ((buflen - attack) / 20 * sustainD)
 	sustain := byte(volume64 / 10.0 * float64(sustainS+1))
 	sustainCount := (buflen - attack - decay) / 2
 	release := buflen - attack - decay - sustainCount
@@ -611,32 +556,9 @@ func noteLetter(note rune) string {
 }
 
 // Generates voice waveform for music notes
-func generateVoice(freq float64, duration int, volume byte) []byte {
-	samples := int(sampleRate64/freq)
-	bufString := make([]byte, samples)
-	tick := 2.0*math.Pi/float64(samples)
-	volume64 := float64(volume)
-	if volume > 20 {
-		volume64 -= 20 // root to vibrate string
-	}
-	timer := 0.0
-	i := 0
-	var bufWave bytes.Buffer
-	for i < duration {
-		for s := 0; s < samples; s++ {
-			bar64 := volume64*math.Sin(timer)
-			if bar64 == 0 {
-				bar64 = 1
-			}
-			bufString[s] = 127 + byte(bar64)
-			timer += tick
-			i++
-		}
-		bufWave.Write(bufString)
-	}
-
-	buf := bufWave.Bytes()
-	return trimWave(buf[:duration])
+func generateVoice(freq float64, duration int) []byte {
+	var piano Piano
+	return piano.GenerateNote(freq, duration)
 }
 
 // Trims sharp edge from wave for smooth play
