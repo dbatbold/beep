@@ -1,10 +1,10 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"testing"
-	"bytes"
 )
 
 // channel:
@@ -56,7 +56,7 @@ func TestFormatPianoSample(t *testing.T) {
 			right16 += int16(bar) << 8
 			//fmt.Printf("%v ", left16)
 			fmt.Printf("%.4x", uint16(0xffff/2+int(left16)))
-			if i%width == width - 1 {
+			if i%width == width-1 {
 				fmt.Println("\",")
 			}
 		}

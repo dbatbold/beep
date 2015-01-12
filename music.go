@@ -8,7 +8,6 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	"math"
 	"os"
 	"strings"
 )
@@ -155,13 +154,13 @@ func playMusicNotes(volume100 int, debug string) {
 	// wave buffer map
 	keyFreqMap := make(map[rune][]byte)
 	for key, freq := range freqMapLeft {
-		keyFreqMap[100+key] = generateVoice(freq, quarterNote, volume)
+		keyFreqMap[100+key] = generateVoice(freq, quarterNote)
 	}
 	for key, freq := range freqMapRight {
-		keyFreqMap[200+key] = generateVoice(freq, quarterNote, volume)
+		keyFreqMap[200+key] = generateVoice(freq, quarterNote)
 	}
 	for key, freq := range freqMapFarRight {
-		keyFreqMap[300+key] = generateVoice(freq, quarterNote, volume)
+		keyFreqMap[300+key] = generateVoice(freq, quarterNote)
 	}
 
 	// rest buffer map
@@ -462,7 +461,6 @@ func nextMusicLine(reader *bufio.Reader) (string, bool) {
 
 // Changes note amplitude
 func applyNoteVolume(buf []byte, volume byte) {
-	return
 	for i, bar := range buf {
 		bar64 := float64(bar)
 		volume64 := float64(volume)
@@ -558,35 +556,9 @@ func noteLetter(note rune) string {
 }
 
 // Generates voice waveform for music notes
-func generateVoice(freq float64, duration int, volume byte) []byte {
+func generateVoice(freq float64, duration int) []byte {
 	var piano Piano
 	return piano.GenerateNote(freq, duration)
-
-	samples := int(sampleRate64 / freq)
-	bufString := make([]byte, samples)
-	tick := 2.0 * math.Pi / float64(samples)
-	volume64 := float64(volume)
-	if volume > 20 {
-		volume64 -= 20 // root to vibrate string
-	}
-	timer := 0.0
-	i := 0
-	var bufWave bytes.Buffer
-	for i < duration {
-		for s := 0; s < samples; s++ {
-			bar64 := volume64 * math.Sin(timer)
-			if bar64 == 0 {
-				bar64 = 1
-			}
-			bufString[s] = 127 + byte(bar64)
-			timer += tick
-			i++
-		}
-		bufWave.Write(bufString)
-	}
-
-	buf := bufWave.Bytes()
-	return trimWave(buf[:duration])
 }
 
 // Trims sharp edge from wave for smooth play
