@@ -58,7 +58,7 @@ func (p *Piano) GenerateNote(freq float64, duration int) []byte {
 					bar += h * 16
 				case 3:
 					bar += h
-					bar -= 0xffff/2
+					//bar -= 0xffff/2
 					buf[0] = byte(bar)
 					buf[1] = byte(bar>>8)
 					bufNote.Write(buf[:])
@@ -84,29 +84,36 @@ func (p *Piano) GenerateNote(freq float64, duration int) []byte {
 		*/
 	}
 
-
-	// 65.41 - 22050
-	// Freq  - sampleRate
-	// x = 22050 * 65.41 / 65.41
-	// timer = 65.41/sampleRate
-	// timerFreq = freq/sampleRate
-	buf := make([]byte, duration*2)
-	sampleRate := 22050.0 * 65.41 / freq
-	tick := freq/sampleRate
-	var last int
-	var bar16 int
-	for i, bar := pianoNoteC2buf {
-		switch i%2 {
-		case 0:
-			bar16 = int(bar)
-		case 1:
-			bar16 += int(bar)
+	buf := make([]byte, duration)
+	ratio := freq/65.41
+	bufOrig := pianoNoteC2buf
+	bufOrigLen := len(pianoNoteC2buf)
+	bufLen := len(buf)
+	for i, _ := range buf {
+		p := int(float64(i) * ratio)
+		if p%2 == 1 {
+			p++
 		}
-		last = bar16
+		if p < bufOrigLen -1 && i < bufLen -1 {
+			buf[i] = byte((int(bufOrig[p]) + int(bufOrig[p+1])<<8)*255.0/65535.0)
+		} else {
+			buf[i] = 128
+		}
 	}
 
+	/*
+	opt := os.O_WRONLY|os.O_CREATE|os.O_TRUNC
+	sampleFile, err := os.OpenFile("test.wav", opt, 0644)
+	if err != nil {
+		panic(err)
+	}
+	defer sampleFile.Close()
+	header := NewWaveHeader(1, 44100, 16, bufLen)
+	header.WriteHeader(sampleFile)
+	sampleFile.Write(buf)
+	*/
 
-	return nil
+	return trimWave(buf)
 }
 
 // Note: C2

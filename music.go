@@ -112,7 +112,7 @@ func playMusicNotes(volume100 int, debug string) {
 	freqMapLeft := make(map[rune]float64)
 	freqMapRight := make(map[rune]float64)
 	freqMapFarRight := make(map[rune]float64)
-	quarterNote := 1024 * 21
+	quarterNote := 1024 * 20
 	wholeNote := quarterNote * 4
 	printSheet := !*flagQuiet
 	printNotes := *flagNotes
@@ -359,7 +359,7 @@ func playMusicNotes(volume100 int, debug string) {
 					for r := 1; r < repeat; r++ {
 						buf = append(buf, buf[:bufsize]...)
 					}
-					sustainNote(buf, volume, sustainA, sustainD, sustainS, sustainR)
+					//sustainNote(buf, volume, sustainA, sustainD, sustainS, sustainR)
 					wrote, err := bufWave.Write(buf)
 					if err != nil || wrote != len(buf) {
 						fmt.Fprintln(os.Stderr, "Error writing to buffer:", err)
@@ -559,6 +559,9 @@ func noteLetter(note rune) string {
 
 // Generates voice waveform for music notes
 func generateVoice(freq float64, duration int, volume byte) []byte {
+	var piano Piano
+	return piano.GenerateNote(freq, duration)
+
 	samples := int(sampleRate64 / freq)
 	bufString := make([]byte, samples)
 	tick := 2.0 * math.Pi / float64(samples)

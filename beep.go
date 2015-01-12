@@ -92,9 +92,9 @@ func main() {
 		return
 	}
 
-var piano Piano
-piano.GenerateNote(0)
-return
+//var piano Piano
+//piano.GenerateNote(261.3, 1024 * 21)
+//return
 
 	// beep
 	bar := byte(127.0 * (float64(volume) / 100.0))

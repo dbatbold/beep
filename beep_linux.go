@@ -31,9 +31,9 @@ func openSoundDevice(device string) {
 func initSoundDevice() {
 	code := C.snd_pcm_set_params(
 		pcm_handle,
-		C.SND_PCM_FORMAT_S16,
+		C.SND_PCM_FORMAT_U8,
 		C.SND_PCM_ACCESS_RW_NONINTERLEAVED,
-		1,
+		2,
 		44100,
 		1,
 		500000)
