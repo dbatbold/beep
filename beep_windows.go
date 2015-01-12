@@ -33,7 +33,7 @@ func openSoundDevice(device string) {
 	wfx.nSamplesPerSec = C.DWORD(44100)
 	wfx.nAvgBytesPerSec = C.DWORD(44100)
 	wfx.nBlockAlign = C.WORD(2)
-	wfx.wBitsPerSample = C.WORD(16)
+	wfx.wBitsPerSample = C.WORD(8)
 
 	res := C.waveOutOpen(&hwaveout, C.WAVE_MAPPER, &wfx, dwCallback, dwCallbackInstance, fdwOpen)
 	if res != C.MMSYSERR_NOERROR {
