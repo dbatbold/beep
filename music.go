@@ -359,7 +359,7 @@ func playMusicNotes(volume100 int, debug string) {
 					for r := 1; r < repeat; r++ {
 						buf = append(buf, buf[:bufsize]...)
 					}
-					//sustainNote(buf, volume, sustainA, sustainD, sustainS, sustainR)
+					sustainNote(buf, volume, sustainA, sustainD, sustainS, sustainR)
 					wrote, err := bufWave.Write(buf)
 					if err != nil || wrote != len(buf) {
 						fmt.Fprintln(os.Stderr, "Error writing to buffer:", err)

@@ -23,8 +23,7 @@ func TestFormatPianoSample(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-fmt.Println(header.String())
-return
+	//fmt.Println(header.String())
 
 	var buf [1024 * 10]byte
 	for {
