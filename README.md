@@ -92,7 +92,7 @@ Control keys:
  SR#    - release time, 0-9, default 4
 
  Clef:
- CB     - G and F clef partition (Base). If line ends
+ CB     - G and F clef partition (Bass). If line ends
           with 'CB', the next line will be played as bass.
 
  Measures:
