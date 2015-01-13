@@ -93,7 +93,7 @@ Control keys:
 
  Clef:
  CB     - G and F clef partition (Base). If line ends
-          with 'CB', the next line will be played as base.
+          with 'CB', the next line will be played as bass.
 
  Measures:
  |      - bar, ignored

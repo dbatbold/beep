@@ -61,7 +61,7 @@ Beep notation:
 
  Clef:
  CB     - G and F clef partition (Base). If line ends
-          with 'CB', the next line will be played as base.
+          with 'CB', the next line will be played as bass.
 
  Measures:
  |      - bar, ignored
@@ -201,7 +201,7 @@ func playMusicNotes(volume100 int, debug string) {
 	var count int     // line counter
 	var tempo int = 4 // normal speed
 	var line string   // G clef notes
-	var base string   // F clef notes
+	var bass string   // F clef notes
 	var hasBase bool
 	for {
 		bufPlay.Reset()
@@ -231,9 +231,9 @@ func playMusicNotes(volume100 int, debug string) {
 			continue
 		}
 		if strings.HasSuffix(line, "CB") {
-			// Base clef, read base line
+			// Base clef, read bass line
 			hasBase = true
-			base, done = nextMusicLine(reader)
+			bass, done = nextMusicLine(reader)
 			if done {
 				break
 			}
@@ -385,7 +385,7 @@ func playMusicNotes(volume100 int, debug string) {
 		gclef := bufPlay.Bytes()
 		var fclef []byte
 		if hasBase {
-			controller(&bufBase, base)
+			controller(&bufBase, bass)
 			if printNotes {
 				fmt.Println()
 			}
@@ -395,25 +395,20 @@ func playMusicNotes(volume100 int, debug string) {
 					fclef = append(fclef, bufRW...)
 				}
 			}
-		} else {
-			fclef = gclef
+			mixWaves(gclef, fclef)
 		}
 		if outputFile == nil {
 			notes := line
 			if hasBase {
-				notes += "\n" + base
+				notes += "\n" + bass
 			}
-			playback(gclef, fclef, notes)
+			playback(gclef, gclef, notes)
 		} else {
 			// saving to file
 			var buf [2]byte
-			for i, bar := range gclef {
+			for _, bar := range gclef {
 				buf[0] = bar
-				if hasBase {
-					buf[1] = fclef[i]
-				} else {
-					buf[1] = bar
-				}
+				buf[1] = bar
 				bufOutput.Write(buf[:])
 			}
 		}
@@ -465,6 +460,16 @@ func applyNoteVolume(buf []byte, volume byte) {
 		bar64 := float64(bar)
 		volume64 := float64(volume)
 		buf[i] = byte(bar64 * (volume64 / 127.0))
+	}
+}
+
+// Mix two waves
+func mixWaves(buf1 []byte, buf2 []byte) {
+	for i, _ := range buf1 {
+		bar1 := 127 - int(buf1[i])
+		bar2 := 127 - int(buf2[i])
+		bar := (bar1-bar2)/2
+		buf1[i] = byte(127+bar)
 	}
 }
 

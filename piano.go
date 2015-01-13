@@ -3,7 +3,6 @@ package main
 import (
 	"math"
 )
-
 type Piano struct {
 	Freq float64
 }
