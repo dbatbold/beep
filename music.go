@@ -485,7 +485,7 @@ func sustainNote(buf []byte, volume byte, sustainA, sustainD, sustainS, sustainR
 	}
 	buflen := len(buf)
 	volume64 := float64(volume)
-	attack := int(float64(buflen/96) * float64(sustainA))
+	attack := int(float64(buflen/200) * float64(sustainA))
 	decay := (buflen-attack)/10 + ((buflen - attack) / 20 * sustainD)
 	sustain := byte(volume64 / 10.0 * float64(sustainS+1))
 	sustainCount := (buflen - attack - decay) / 2
