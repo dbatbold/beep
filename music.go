@@ -59,9 +59,14 @@ Beep notation:
  SS#    - sustain level, 0-9, default 6
  SR#    - release time, 0-9, default 4
 
- Clef:
- CB     - G and F clef partition (Base). If line ends
-          with 'CB', the next line will be played as bass.
+ Voice:
+ VP     - Piano voice
+ VV     - Violin voice
+ VN     - If line ends with 'VN', the next line will be
+          played with the current voice at same time.
+
+ Amplitude:
+ A#     - where # is 0-9, default is 9
 
  Measures:
  |      - bar, ignored
@@ -177,10 +182,11 @@ func playMusicNotes(volume100 int, debug string) {
 	// read lines
 	reader := bufio.NewReader(os.Stdin)
 	bufPlayLimit := 1024 * 1024 * 100
-	ctrlKeys := "RDHTS"
+	ctrlKeys := "RDHTSA"
 	measures := "WHQEST"
 	hands := "RLF"
 	tempos := "0123456789"
+	amplitudes := "0123456789"
 	ignored := "\t |CB"
 	sustainTypes := "ADSR"
 	sustainLevels := "0123456789"
@@ -200,6 +206,7 @@ func playMusicNotes(volume100 int, debug string) {
 	var done bool
 	var count int     // line counter
 	var tempo int = 4 // normal speed
+	var amplitude int = 9 // max volume
 	var line string   // G clef notes
 	var bass string   // F clef notes
 	var hasBase bool
@@ -286,6 +293,10 @@ func playMusicNotes(volume100 int, debug string) {
 								sustainR = level
 							}
 						}
+					case 'A': // amplitude
+						if strings.ContainsAny(keystr, amplitudes) {
+							amplitude = strings.Index(amplitudes, keystr)
+						}
 					}
 					ctrl = 0
 					continue
@@ -332,7 +343,7 @@ func playMusicNotes(volume100 int, debug string) {
 					}
 					buf := make([]byte, len(bufFreq))
 					copy(buf, bufFreq)
-					applyNoteVolume(buf, volume)
+					applyNoteVolume(buf, volume, amplitude)
 					bufsize := len(buf)
 					cut := bufsize
 					if tempo < 4 && bufsize > 1024 {
@@ -455,11 +466,14 @@ func nextMusicLine(reader *bufio.Reader) (string, bool) {
 }
 
 // Changes note amplitude
-func applyNoteVolume(buf []byte, volume byte) {
+func applyNoteVolume(buf []byte, volume byte, amplitude int) {
+	volume64 := float64(volume)
+	amplitude64 := float64(amplitude)
 	for i, bar := range buf {
-		bar64 := float64(bar)
-		volume64 := float64(volume)
-		buf[i] = byte(bar64 * (volume64 / 127.0))
+		bar64 := 127.0 - float64(bar)
+		bar64 *= (volume64 / 127.0)
+		bar64 *= (amplitude64 / 9.0)
+		buf[i] = byte(127.0 + bar64)
 	}
 }
 
