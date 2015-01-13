@@ -16,7 +16,7 @@ func (p *Piano) GenerateNote(freq float64, duration int) []byte {
 	tick := 2 * math.Pi / sampleRate64 * freq
 	tick1 := 2 * math.Pi / sampleRate64 * freq * 2
 	tick2 := 2 * math.Pi / sampleRate64 * freq * 4
-	tick3 := 2 * math.Pi / sampleRate64 * freq * 10
+	tick3 := 2 * math.Pi / sampleRate64 * freq * 16
 	for i, _ := range buf {
 		bar := 60.0 * math.Sin(timer)
 		bar1 := 60.0 * math.Sin(timer1)
