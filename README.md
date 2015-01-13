@@ -22,8 +22,8 @@ On Windows: (requires MinGW, Go compiler from golang.org)
 ```
 Prebuilt binaries
 ===============
- Windows: [beep.exe](http://angiud.com/beep/binary/windows/beep.exe) &nbsp; ```MD5: ebba8ce681c710cda828a92c10e44cdd```<br>
- Linux 64-bit: [beep](http://angiud.com/beep/binary/linux/beep) &nbsp; ```MD5: 7fb868a039d10f5f83073553e870c530```
+ Windows: [beep.exe](http://angiud.com/beep/binary/windows/beep.exe) &nbsp; ```MD5: 8565169f195ac5bdac57d8377e029f82```<br>
+ Linux 64-bit: [beep](http://angiud.com/beep/binary/linux/beep) &nbsp; ```MD5: e4d33360d3285255cd79654c52bd53ae```
 Usage
 =====
 ```
@@ -107,14 +107,14 @@ Demo Music
 HRDE cc DScszs|DEc DQzDE[|cc DScszs|DEc DQz DE[|vv DSvcsc|DEvs ]v|cc DScszs|CB
 HLDE [n z,    |cHRq HLz, |[n z,    |cHRq HLz,  |sl z,    |]m   pb|z, ]m    |
 
-HRDE cz [c|ss DSsz]z|DEs] ps|DSsDEzDS][ zDE]DS[p|pDQ[ [  || REDE] DS][p[ |CB
-HLDE [n ov|]m [n    |  pb ic|  n,       lHRq    |HLnc DQ[|| DEcHRq HLvHRw|
+HRDE cz [c|ss DSsz]z|DEs] ps|DSsz][ z][p|DEpDQ[ [ || REDE] DS][p[ |CB
+HLDE [n ov|]m [n    |  pb ic|  n,   lHRq|HLnc DQ[ || DEcHRq HLvHRw|
 
-HRDS ][p[ ][p[|DE] DQp DEi|REc DScszs|cszs |cszs|DEc DQz DE[|REv DSvcsc|DEvs ]v|CB
-HLDE bHRe HLvw|cHRq   HLic|[n  ]m    |z,   |]m  |zn       z,|sl  [,    |z. p   |
+HRDS ][p[ ][p[|DE] DQp DEi|REc DScszs|cszs |cszs|DEcDQzDE[|REv DSvcsc|DEvs ]v|CB
+HLDE bHRe HLvw|cHRq   HLic|[n  ]m    |z,   |]m  |zn   z,  |sl  [,    |z. DQp |
 
-HRDE REc DScszs|DEcz [c|REs DSsz]z|DEs] ps|DSsDEz DS][ DSzDE]DS[p|DE[DSit DQr|CB
-HLDE z,  ]m    |[n   ov|]m  [n    |pb   ic|nz          sc        |n    c  DQ[|
+HRDE REc DScszs|DEcz [c|REs DSsz]z|DEs] ps|DSsz][ z][p|DE[DSitDQr|CB
+HLDE z,  ]m    |[n   ov|]m  [n    |pb   ic|nz     sc  |DQn      [|
 ```
 [Play&nbsp; ▶](http://angiud.com/beep/demo-mozart-k33b.mp3)
 Usage Examples
