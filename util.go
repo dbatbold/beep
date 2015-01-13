@@ -33,12 +33,12 @@ func int16ToBytes(i int) []byte {
 }
 
 func bytesToInt32(buf []byte) int32 {
-	i := int(buf[3])<<24 + int(buf[2])<<16 + int(buf[1]<<8) + int(buf[0])
+	i := int(buf[3])<<24 + int(buf[2])<<16 + int(buf[1])<<8 + int(buf[0])
 	return int32(i)
 }
 
 func bytesToInt16(buf []byte) int16 {
-	i := int(buf[1]<<8) + int(buf[0])
+	i := int(buf[1])<<8 + int(buf[0])
 	return int16(i)
 }
 
