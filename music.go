@@ -167,17 +167,17 @@ func playMusicNotes(volume100 int) {
 	piano.FreqMap = make(map[rune][]int16)
 	violin.FreqMap = make(map[rune][]int16)
 	for key, freq := range freqMapLeft {
-		keyLevel := 100+key
+		keyLevel := 100 + key
 		piano.FreqMap[keyLevel] = piano.GenerateNote(freq, quarterNote)
 		violin.FreqMap[keyLevel] = violin.GenerateNote(freq, quarterNote)
 	}
 	for key, freq := range freqMapRight {
-		keyLevel := 200+key
+		keyLevel := 200 + key
 		piano.FreqMap[keyLevel] = piano.GenerateNote(freq, quarterNote)
 		violin.FreqMap[keyLevel] = violin.GenerateNote(freq, quarterNote)
 	}
 	for key, freq := range freqMapFarRight {
-		keyLevel := 300+key
+		keyLevel := 300 + key
 		piano.FreqMap[keyLevel] = piano.GenerateNote(freq, quarterNote)
 		violin.FreqMap[keyLevel] = violin.GenerateNote(freq, quarterNote)
 	}
@@ -212,12 +212,12 @@ func playMusicNotes(volume100 int) {
 	var duration = 'Q' // default note duration
 	var rest rune
 	var ctrl rune
-	var voice Voice = piano  // default voice is piano
+	var voice Voice = piano // default voice is piano
 	var sustainType rune
 	var hand rune = 'R' // default is middle C octave
 	var handLevel rune
-	var count int     // line counter
-	var tempo int = 4 // normal speed
+	var count int         // line counter
+	var tempo int = 4     // normal speed
 	var amplitude int = 9 // max volume
 	var mixNextLine bool
 	var chordBuf []int16
@@ -250,7 +250,7 @@ func playMusicNotes(volume100 int) {
 			mixNextLine = false
 		}
 		controller := func(notation string) []int16 {
-			var bufWave []int16 
+			var bufWave []int16
 			for _, key := range notation {
 				keystr := string(key)
 				if strings.ContainsAny(keystr, ignored) {
@@ -345,7 +345,7 @@ func playMusicNotes(volume100 int) {
 				case 'F':
 					handLevel = 300
 				}
-				if bufFreq, found := voice.GetNote(handLevel+key); found {
+				if bufFreq, found := voice.GetNote(handLevel + key); found {
 					repeat := 1
 					divide := 1
 					switch duration {
@@ -438,7 +438,7 @@ func playMusicNotes(volume100 int) {
 				copy(bufMix, bufLine)
 				lineMix = line
 			} else {
-				lineMix += "\n"+ line
+				lineMix += "\n" + line
 				bufMix = mixWaves(bufMix, bufLine, volume)
 			}
 			count++
@@ -448,7 +448,7 @@ func playMusicNotes(volume100 int) {
 			bufMix = mixWaves(bufMix, bufLine, volume)
 			bufLine = bufMix
 			bufMix = nil
-			line = lineMix +"\n"+ line
+			line = lineMix + "\n" + line
 		}
 		if outputFile == nil {
 			playback(bufLine, bufLine, line)
@@ -536,7 +536,7 @@ func mixWaves(buf1 []int16, buf2 []int16, volume int16) []int16 {
 	for i, _ := range buf1 {
 		bar1 := float64(buf1[i])
 		bar2 := float64(buf2[i])
-		bar64 := (bar1-bar2)/2 * 1.4
+		bar64 := (bar1 - bar2) / 2 * 1.4
 		if bar64 > gap {
 			bar64 = gap
 		} else if bar64 <= -gap {
@@ -629,11 +629,6 @@ func noteLetter(note rune) string {
 		return ""
 	}
 	return string(note) + "=?"
-}
-
-// Generates note waveform for voice
-func generateVoice(voice Voice, freq float64, duration int) []int16 {
-	return voice.GenerateNote(freq, duration)
 }
 
 // Trims sharp edge from wave for smooth play

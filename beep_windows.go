@@ -10,7 +10,6 @@ package main
 import "C"
 
 import (
-	"bytes"
 	"fmt"
 	"os"
 	"time"
@@ -47,13 +46,12 @@ func initSoundDevice() {
 
 func playback(buf1 []int16, buf2 []int16, notes string) {
 	var buf [2]int16
-	var bufChannel bytes.Buffer
+	var bufWave []int16
 	for i, bar := range buf1 {
 		buf[0] = bar
 		buf[1] = buf2[i]
-		bufChannel.Write(int16ToByteBuf(buf[:]))
+		bufWave = append(bufWave, buf[:]...)
 	}
-	bufWave := bufChannel.Bytes()
 
 	var wavehdr C.WAVEHDR
 

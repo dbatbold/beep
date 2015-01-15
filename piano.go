@@ -5,7 +5,7 @@ import (
 )
 
 type Piano struct {
-	Freq float64
+	Freq    float64
 	FreqMap map[rune][]int16
 }
 
@@ -26,10 +26,10 @@ func (p *Piano) GenerateNote(freq float64, duration int) []int16 {
 		sin2 := sin1 * math.Sin(timer2)
 		sin3 := sin2 * math.Sin(timer3)
 		bar0 := amp * sin0
-		bar1 := bar0 * sin1/2 * sin0
-		bar2 := bar0 * sin2/3 * sin0
-		bar3 := bar0 * sin3/4 * sin0
-		buf[i] = int16(bar0+bar1+bar2+bar3)
+		bar1 := bar0 * sin1 / 2 * sin0
+		bar2 := bar0 * sin2 / 3 * sin0
+		bar3 := bar0 * sin3 / 4 * sin0
+		buf[i] = int16(bar0 + bar1 + bar2 + bar3)
 		timer0 += tick0
 		timer1 += tick1
 		timer2 += tick2
