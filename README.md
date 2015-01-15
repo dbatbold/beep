@@ -22,8 +22,8 @@ On Windows: (requires MinGW, Go compiler from golang.org)
 ```
 Prebuilt binaries
 ===============
- Windows: [beep.exe](http://angiud.com/beep/binary/windows/beep.exe) &nbsp; ```MD5: 8565169f195ac5bdac57d8377e029f82```<br>
- Linux 64-bit: [beep](http://angiud.com/beep/binary/linux/beep) &nbsp; ```MD5: e4d33360d3285255cd79654c52bd53ae```
+ Windows: [beep.exe](http://angiud.com/beep/binary/windows/beep.exe) &nbsp; ```MD5: 36a088368122e80da1a0e2049fc0a136```<br>
+ Linux 64-bit: [beep](http://angiud.com/beep/binary/linux/beep) &nbsp; ```MD5: 40c255a83f04fce4e3ba5264549d9ff1```
 Usage
 =====
 ```
@@ -98,6 +98,7 @@ Control keys:
 
  Chord:
  C#     - Play next # notes as a chord, where # is 2-9.
+          For example C major chord is "C3qet"
 
  Amplitude:
  A#     - Changes current amplitude, where # is 1-9, default is 9
