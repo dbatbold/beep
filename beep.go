@@ -19,7 +19,7 @@ var (
 	flagCount     = flag.Int("c", 1, "beep count")
 	flagFreq      = flag.Float64("f", 523.25, "frequency in Hertz (1-22050)")
 	flagVolume    = flag.Int("v", 100, "volume (1-100)")
-	flagDuration  = flag.Float64("t", 250, "beep time duration in millisecond (1-600000)")
+	flagDuration  = flag.Float64("t", 250, "beep time duration in millisecond (1-60000)")
 	flagDevice    = flag.String("d", "default", "audio device, Linux example: hw:0,0")
 	flagLine      = flag.Bool("l", false, "beep per line from stdin")
 	flagMusic     = flag.Bool("m", false, "play music notes from stdin (see beep notation)")
@@ -31,6 +31,10 @@ var (
 
 	sampleRate   = 44100
 	sampleRate64 = float64(sampleRate)
+	bitsPerSample = 16
+	sample16bit = bitsPerSample == 16
+	sampleAmp16bit = 32767.0
+	sampleAmp8bit = 127.0
 )
 
 func main() {
@@ -83,7 +87,7 @@ func main() {
 	}
 
 	if playMusic {
-		playMusicNotes(volume, "")
+		playMusicNotes(volume)
 		return
 	}
 
@@ -93,27 +97,27 @@ func main() {
 	}
 
 	// beep
-	bar := byte(127.0 * (float64(volume) / 100.0))
+	bar := sampleAmp16bit*(float64(volume) / 100.0)
 	samples := int(sampleRate64 * (duration / 1000.0))
 	rest := 0
 	if count > 1 {
 		rest = (sampleRate / 20) * 4 // 200ms
 	}
-	buf := make([]byte, samples+rest)
-	var last byte
-	var fade = 255
+	buf := make([]int16, samples+rest)
+	var last int16
+	var fade = 1024
 	if samples < fade {
-		fade = 0
+		fade = 1
 	}
 	for i, _ := range buf {
 		if i < samples-fade {
-			buf[i] = 127 + byte(float64(bar)*math.Sin(float64(i)*freq))
+			buf[i] = int16(bar*math.Sin(float64(i)*freq))
 			last = buf[i]
 		} else {
-			if last > 127 {
-				last--
+			if last > 0 {
+				last -= 31
 			} else {
-				last++
+				last += 31
 			}
 			buf[i] = last
 		}
@@ -125,19 +129,19 @@ func main() {
 }
 
 func beepPerLine(volume int, freq float64) {
-	buf := make([]byte, sampleRate/5)
-	bar := byte(127.0 * (float64(volume) / 100.0))
+	buf := make([]int16, sampleRate/5)
+	bar := sampleAmp16bit*(float64(volume) / 100.0)
 	gap := sampleRate / 6
-	var last byte
+	var last int16
 	for i, _ := range buf {
 		if i < gap {
-			buf[i] = 127 + byte(float64(bar)*math.Sin(float64(i)*freq))
+			buf[i] = int16(bar*math.Sin(float64(i)*freq))
 			last = buf[i]
 		} else {
-			if last > 127 {
-				last--
+			if last > 0 {
+				last -= 31
 			} else {
-				last++
+				last += 31
 			}
 			buf[i] = last
 		}

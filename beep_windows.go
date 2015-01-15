@@ -32,8 +32,8 @@ func openSoundDevice(device string) {
 	wfx.nChannels = C.WORD(2)
 	wfx.nSamplesPerSec = C.DWORD(44100)
 	wfx.nAvgBytesPerSec = C.DWORD(44100)
-	wfx.nBlockAlign = C.WORD(2)
-	wfx.wBitsPerSample = C.WORD(8)
+	wfx.nBlockAlign = C.WORD(4)
+	wfx.wBitsPerSample = C.WORD(16)
 
 	res := C.waveOutOpen(&hwaveout, C.WAVE_MAPPER, &wfx, dwCallback, dwCallbackInstance, fdwOpen)
 	if res != C.MMSYSERR_NOERROR {
@@ -45,13 +45,13 @@ func openSoundDevice(device string) {
 func initSoundDevice() {
 }
 
-func playback(buf1 []byte, buf2 []byte, notes string) {
-	var buf [2]byte
+func playback(buf1 []int16, buf2 []int16, notes string) {
+	var buf [2]int16
 	var bufChannel bytes.Buffer
 	for i, bar := range buf1 {
 		buf[0] = bar
 		buf[1] = buf2[i]
-		bufChannel.Write(buf[:])
+		bufChannel.Write(int16ToByteBuf(buf[:]))
 	}
 	bufWave := bufChannel.Bytes()
 

@@ -35,7 +35,7 @@ beep [options]
   -l: beep per line from stdin
   -m: play music notes from stdin (see beep notation)
   -p: print the demo music by Mozart
-  -t=1: beep time duration in millisecond (1-600000)
+  -t=1: beep time duration in millisecond (1-60000)
   -v=100: volume (1-100)
   -b: send bell to PC speaker
   -q: quiet stdout while playing music
@@ -88,12 +88,19 @@ Control keys:
  Sustain:
  SA#    - attack time, where # is 0-9, default is 4
  SD#    - decay time, 0-9, default 4
- SS#    - sustain level, 0-9, default 5
+ SS#    - sustain level, 0-9, default 4
  SR#    - release time, 0-9, default 4
 
- Clef:
- CB     - G and F clef partition (Bass). If line ends
-          with 'CB', the next line will be played as bass.
+ Voice:
+ VP     - Piano voice
+ VN     - If a line ends with 'VN', the next line will be
+          played harmony with the line.
+
+ Chord:
+ C#     - Play next # notes as a chord, where # is 2-9.
+
+ Amplitude:
+ A#     - Changes current amplitude, where # is 1-9, default is 9
 
  Measures:
  |      - bar, ignored

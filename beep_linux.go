@@ -29,9 +29,13 @@ func openSoundDevice(device string) {
 }
 
 func initSoundDevice() {
+	var sampleFormat C.snd_pcm_format_t = C.SND_PCM_FORMAT_S8
+	if sample16bit {
+		sampleFormat = C.SND_PCM_FORMAT_S16
+	}
 	code := C.snd_pcm_set_params(
 		pcm_handle,
-		C.SND_PCM_FORMAT_U8,
+		sampleFormat,
 		C.SND_PCM_ACCESS_RW_NONINTERLEAVED,
 		2,
 		44100,
@@ -48,14 +52,14 @@ func initSoundDevice() {
 	}
 }
 
-func playback(buf1 []byte, buf2 []byte, notes string) {
+func playback(buf1 []int16, buf2 []int16, notes string) {
 	if !*flagQuiet && len(notes) > 0 {
 		fmt.Println(notes)
 	}
 	bufsize := len(buf1)
 	if bufsize < sampleRate {
 		// prevent buffer underrun
-		rest := make([]byte, sampleRate)
+		rest := make([]int16, sampleRate)
 		buf1 = append(buf1, rest...)
 		buf2 = append(buf2, rest...)
 	}
