@@ -68,6 +68,7 @@ Control keys:
  RE     - eighth rest
  RS     - sixteenth rest
  RT     - thirty-second rest
+ RI     - sixty-fourth rest
 
  Durations:
  DW     - whole note
@@ -76,6 +77,7 @@ Control keys:
  DE     - eighth note
  DS     - sixteenth note
  DT     - thirty-second note
+ DI     - sixty-fourth note
 
  Octave:
  HL     - switch to left hand keys
