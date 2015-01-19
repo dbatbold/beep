@@ -406,7 +406,6 @@ func playMusicNotes(reader *bufio.Reader, volume100 int) {
 								mixSoundWave(bufSustain, buf, volume)
 							}
 						}
-							fmt.Println(len(chordBuf))
 						if chordCount == chordNumber {
 							if piano.NaturalVoice {
 								release := (quarterNote / divide)/10*sustainS
@@ -554,7 +553,7 @@ func mixSoundWave(buf1, buf2 []int16, volume int16) {
 		}
 		bar1 := float64(buf1[i])
 		bar2 := float64(buf2[i])
-		bar64 := (bar1 - bar2) / 2 * 1.7
+		bar64 := (bar1 - bar2) / 2 * 1.5
 		if bar64 > gap {
 			bar64 = gap
 		} else if bar64 <= -gap {
