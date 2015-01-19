@@ -103,10 +103,12 @@ Control keys:
  VD     - Computer generated default voice
  VP     - Piano voice
  VV     - Violin voice (WIP)
- VN     - If a line ends with 'VN', the next line will be played harmony with the line.
+ VN     - If a line ends with 'VN', the next line will be played 
+          harmony with the line.
 
  Chord:
- C#     - Play next # notes as a chord, where # is 2-9. For example C major chord is "C3qet"
+ C#     - Play next # notes as a chord, where # is 2-9. 
+          For example C major chord is "C3qet"
 
  Amplitude:
  A#     - Changes current amplitude, where # is 1-9, default is 9
