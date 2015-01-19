@@ -48,9 +48,10 @@ Beep notation:
  DI     - sixty-fourth note
 
  Octave:
- HL     - switch to left hand keys
- HR     - switch to right hand keys
- HF     - switch to far right keys (last octave)
+ H0     - octave 0 keys
+ HL     - octave 1, 2, 3 (left hand keys)
+ HR     - octave 4, 5, 6 (right hand keys)
+ H7     - octave 7, 8 keys
 
  Tempo:
  T#     - where # is 0-9, default is 4
@@ -58,17 +59,17 @@ Beep notation:
  Sustain:
  SA#    - attack time, where # is 0-9, default is 4
  SD#    - decay time, 0-9, default 4
- SS#    - sustain level, 0-9, default 4
+ SS#    - sustain level, 0-9, default 2
  SR#    - release time, 0-9, default 4
 
  Voice:
+ VD     - Computer generated default voice
  VP     - Piano voice
- VN     - If a line ends with 'VN', the next line will be
-          played harmony with the line.
+ VV     - Violin voice
+ VN     - If a line ends with 'VN', the next line will be played harmony with the line.
 
  Chord:
- C#     - Play next # notes as a chord, where # is 2-9.
-          For example C major chord is "C3qet"
+ C#     - Play next # notes as a chord, where # is 2-9. For example C major chord is "C3qet"
 
  Amplitude:
  A#     - Changes current amplitude, where # is 1-9, default is 9
@@ -82,17 +83,17 @@ Demo music: Mozart K33b:`
 
 var demoMusic = `
 # Mozart K33b
-HRDE cc DScszs|DEc DQzDE[|cc DScszs|DEc DQz DE[|vv DSvcsc|DEvs ]v|cc DScszs|VN
-HLDE [n z,    |cHRq HLz, |[n z,    |cHRq HLz,  |sl z,    |]m   pb|z, ]m    |
+A9HRDE cc DScszs|DEc DQzDE[|cc DScszs|DEc DQz DE[|vv DSvcsc|DEvs ]v|cc DScszs|VN
+A2HLDE [n z,    |cHRq HLz, |[n z,    |cHRq HLz,  |sl z,    |]m   pb|z, ]m    |
 
-HRDE cz [c|ss DSsz]z|DEs] ps|DSsz][ z][p|DEpDQ[ [ || REDE] DS][p[ |VN
-HLDE [n ov|]m [n    |  pb ic|  n,   lHRq|HLnc DQ[ || DEcHRq HLvHRw|
+A9HRDE cz [c|ss DSsz]z|DEs] ps|DSsz][ z][p|DEpDQ[ [ || DERE] DS][p[ |VN
+A2HLDE [n ov|]m [n    |  pb ic|  n,   lHRq|HLnc DQ[ || DEcHRq HLvHRw|
 
-HRDS ][p[ ][p[|DE] DQp DEi|REc DScszs|cszs |cszs|DEcDQzDE[|REv DSvcsc|DEvs ]v|VN
-HLDE bHRe HLvw|cHRq   HLic|[n  ]m    |z,   |]m  |zn   z,  |sl  [,    |z. DQp |
+A9HRDS ][p[ ][p[|DE] DQp DEi|REc DScszs|cszs |cszs|DEcDQzDE[|REv DSvcsc|DEvs ]v|VN
+A2HLDE bHRe HLvw|cHRq   HLic|[n  ]m    |z,   |]m  |zn   z,  |sl  [,    |z. DQp |
 
-HRDE REc DScszs|DEcz [c|REs DSsz]z|DEs] ps|DSsz][ z][p|DE[DSitDQr|VN
-HLDE z,  ]m    |[n   ov|]m  [n    |pb   ic|nz     sc  |DQn      [|
+A9HRDE REc DScszs|DEcz [c|REs DSsz]z|DEs] ps|DSsz][ z][p|DE[DSitDQr|VN
+A2HLDE z,  ]m    |[n   ov|]m  [n    |pb   ic|nz     sc  |DQn      [|
 `
 
 var demoHelp = `To play a demo music, run:
@@ -100,40 +101,24 @@ var demoHelp = `To play a demo music, run:
 `
 
 type Voice interface {
-	GenerateNote(freq float64, duration int) []int16
 	GetNote(key rune) ([]int16, bool)
+	SustainNote(buf []int16, volume int16, A, D, S, R int)
 }
 
-func playMusicNotes(volume100 int) {
-	octaveLeft := []float64{
-		// C, C#, D, D#, E, F, F#, G, G#, A, A#, B
-		32.70, 34.64, 36.70, 38.89, 41.20, 43.65, 46.24, 48.99, 51.91, 55.00, 58.27, 61.73,
-		65.40, 69.29, 73.41, 77.78, 82.40, 87.30, 92.49, 97.99, 103.8, 110.0, 116.5, 123.4,
-		130.8, 138.5, 146.8, 155.5, 164.8, 174.6, 185.0, 196.0, 207.6, 220.0, 233.0, 246.9,
-	}
-	octaveRight := []float64{
-		// C, C#, D, D#, E, F, F#, G, G#, A, A#, B
-		261.6, 277.1, 293.6, 311.1, 329.6, 349.2, 369.9, 392.0, 415.3, 440.0, 466.1, 493.8,
-		523.2, 554.3, 587.3, 622.2, 659.2, 698.4, 739.9, 783.9, 830.6, 880.0, 932.3, 987.7,
-		1046.5, 1108.7, 1174.6, 1244.5, 1318.5, 1396.9, 1479.9, 1567, 1661, 1760, 1864, 1975,
-	}
-	octaveFarRight := []float64{
-		// C, C#, D, D#, E, F, F#, G, G#, A, A#, B
-		2093, 2217.5, 2349.3, 2489, 2637, 2793, 2960, 3136, 3322.4, 3520, 3729.3, 4186,
-	}
-	keys := "q2w3er5t6y7ui9o0p[=]azsxcfvgbnjmk,l."
+var (
+	quarterNote = 1024 * 22
+	wholeNote   = quarterNote * 4
+	waiter      = make(chan int)
+)
+
+func playMusicNotes(reader *bufio.Reader, volume100 int) {
 	volume := int16(sampleAmp16bit * (float64(volume100) / 100.0))
-	freqMapLeft := make(map[rune]float64)
-	freqMapRight := make(map[rune]float64)
-	freqMapFarRight := make(map[rune]float64)
-	quarterNote := 1024 * 22
-	wholeNote := quarterNote * 4
 	printSheet := !*flagQuiet
 	printNotes := *flagNotes
 	outputFileName := *flagOutput
-	piano := &Piano{}
-	violin := &Violin{}
+	piano := NewPiano()
 
+	var violin *Violin
 	var outputFile *os.File
 	var err error
 
@@ -154,34 +139,6 @@ func playMusicNotes(volume100 int) {
 		defer outputFile.Close()
 	}
 
-	// frequency map
-	for i, key := range keys {
-		freqMapLeft[key] = octaveLeft[i]
-		freqMapRight[key] = octaveRight[i]
-	}
-	for i, key := range keys[:12] {
-		freqMapFarRight[key] = octaveFarRight[i]
-	}
-
-	// generate notes
-	piano.FreqMap = make(map[rune][]int16)
-	violin.FreqMap = make(map[rune][]int16)
-	for key, freq := range freqMapLeft {
-		keyLevel := 100 + key
-		piano.FreqMap[keyLevel] = piano.GenerateNote(freq, quarterNote)
-		violin.FreqMap[keyLevel] = violin.GenerateNote(freq, quarterNote)
-	}
-	for key, freq := range freqMapRight {
-		keyLevel := 200 + key
-		piano.FreqMap[keyLevel] = piano.GenerateNote(freq, quarterNote)
-		violin.FreqMap[keyLevel] = violin.GenerateNote(freq, quarterNote)
-	}
-	for key, freq := range freqMapFarRight {
-		keyLevel := 300 + key
-		piano.FreqMap[keyLevel] = piano.GenerateNote(freq, quarterNote)
-		violin.FreqMap[keyLevel] = violin.GenerateNote(freq, quarterNote)
-	}
-
 	// rest buffer map
 	bufRW := make([]int16, wholeNote)
 	bufRH := bufRW[:wholeNote/2]
@@ -192,11 +149,10 @@ func playMusicNotes(volume100 int) {
 	bufRI := bufRW[:wholeNote/64]
 
 	// read lines
-	reader := bufio.NewReader(os.Stdin)
 	bufWaveLimit := 1024 * 1024 * 100
 	controlKeys := "RDHTSAVC"
 	measures := "WHQESTI"
-	hands := "RLF"
+	hands := "0RL78"
 	tempos := "0123456789"
 	amplitudes := "0123456789"
 	chordNumbers := "0123456789"
@@ -207,7 +163,8 @@ func playMusicNotes(volume100 int) {
 	sustainD := 4
 	sustainS := 4
 	sustainR := 4
-	voiceControls := "PVN"
+	bufSustain := make([]int16, quarterNote)
+	voiceControls := "DPVN"
 	var bufOutput []int16
 	var duration = 'Q' // default note duration
 	var rest rune
@@ -225,16 +182,11 @@ func playMusicNotes(volume100 int) {
 	var chordCount int
 	var bufMix []int16
 	var lineMix string
+	var wait bool
 	for {
 		line, done := nextMusicLine(reader)
 		if done {
 			break
-		}
-		if len(line) == 0 {
-			if printSheet {
-				fmt.Println()
-			}
-			continue
 		}
 		if strings.HasPrefix(line, "#") {
 			// ignore comments
@@ -298,15 +250,19 @@ func playMusicNotes(volume100 int) {
 						}
 					case 'A': // amplitude
 						if strings.ContainsAny(keystr, amplitudes) {
-							amplitude = strings.Index(keystr, amplitudes)
+							amplitude = strings.Index(amplitudes, keystr)
 						}
 					case 'V': // voice
 						if strings.ContainsAny(keystr, voiceControls) {
 							switch key {
+							case 'D': // default voice
+								piano.NaturalVoice = false
 							case 'P':
 								voice = piano
 							case 'V':
-								voice = violin
+								if violin == nil {
+									voice = NewViolin()
+								}
 							}
 						}
 					case 'C': // chord
@@ -319,33 +275,43 @@ func playMusicNotes(volume100 int) {
 					continue
 				}
 				if rest > 0 {
+					var bufRest []int16
 					switch rest {
 					case 'W':
-						bufWave = append(bufWave, bufRW...)
+						bufRest = bufRW
 					case 'H':
-						bufWave = append(bufWave, bufRH...)
+						bufRest = bufRH
 					case 'Q':
-						bufWave = append(bufWave, bufRQ...)
+						bufRest = bufRQ
 					case 'E':
-						bufWave = append(bufWave, bufRE...)
+						bufRest = bufRE
 					case 'S':
-						bufWave = append(bufWave, bufRS...)
+						bufRest = bufRS
 					case 'T':
-						bufWave = append(bufWave, bufRT...)
+						bufRest = bufRT
 					case 'I':
-						bufWave = append(bufWave, bufRI...)
+						bufRest = bufRI
+					}
+					if bufRest != nil {
+						if piano.NaturalVoice {
+							clearBuffer(bufSustain)
+						}
+						bufWave = append(bufWave, bufRest...)
 					}
 					rest = 0
 				}
 				switch hand {
-				case 'L':
-					handLevel = 100
-				case 'R':
-					handLevel = 200
-				case 'F':
-					handLevel = 300
+				case '0': // octave 0
+					handLevel = 1000
+				case 'L': // octave 1, 2, 3
+					handLevel = 2000
+				case 'R': // octave 4, 5, 6
+					handLevel = 3000
+				case '7', '8': // octave 7, 8
+					handLevel = 4000
 				}
-				if bufFreq, found := voice.GetNote(handLevel + key); found {
+				keyId := handLevel + key
+				if bufFreq, found := voice.GetNote(keyId); found {
 					repeat := 1
 					divide := 1
 					switch duration {
@@ -363,53 +329,98 @@ func playMusicNotes(volume100 int) {
 						divide = 16
 					}
 					buf := make([]int16, len(bufFreq))
-					copy(buf, bufFreq)
+					copy(buf, bufFreq) // get a copy of the note
 					applyNoteVolume(buf, volume, amplitude)
 					bufsize := len(buf)
 					cut := bufsize
 					if tempo < 4 && bufsize > 1024 {
 						// slow tempo
+						releaseNote(buf, 0, 0.7)
 						for t := 0; t < 4-tempo; t++ {
-							buf = append(buf, trimWave(buf[:1024])...)
+							if piano.NaturalVoice {
+								buf = append(buf, bufRW[:1024]...)
+							} else {
+								buf = append(buf, trimWave(buf[:1024])...)
+							}
 						}
 					}
 					if tempo > 4 {
 						// fast tempo
+						releaseNote(buf, 0, 0.7)
 						for t := 0; t < tempo-4 && cut > 1024; t++ {
 							if 1024 < len(buf[:cut]) {
 								cut -= 1024
 							}
 						}
-						buf = buf[:cut]
-					}
-					if divide > 1 {
-						cut = len(buf) / divide
 						buf = trimWave(buf[:cut])
 					}
-					bufsize = len(buf)
-					for r := 1; r < repeat; r++ {
-						buf = append(buf, buf[:bufsize]...)
+					sustRatio := float64(sustainS)/10.0
+					if divide > 1 {
+						cut = len(buf) / divide
+						bufDiv := trimWave(buf[:cut])
+						if piano.NaturalVoice {
+							mixSoundWave(bufDiv, bufSustain, volume)
+							copyBuffer(bufSustain, buf[cut-1:])
+							release := (quarterNote / divide)/10*sustainS
+							releaseNote(bufSustain, release, sustRatio)
+						}
+						buf = bufDiv
+					} else {
+						if piano.NaturalVoice {
+							mixSoundWave(buf, bufSustain, volume)
+							copyBuffer(bufSustain, buf[bufsize/3:])
+							release := bufsize/10*sustainS
+							releaseNote(bufSustain, release, sustRatio)
+						}
 					}
-					sustainNote(buf, volume, sustainA, sustainD, sustainS, sustainR)
+					raiseNote(buf, 0.05)
+					releaseNote(buf, 0, 0.95)
+
+					// sustain note
+					bufsize = len(buf)
+					if !piano.NaturalVoice {
+						for r := 1; r < repeat; r++ {
+							buf = append(buf, buf[:bufsize]...)
+						}
+						voice.SustainNote(buf, volume, sustainA, sustainD, sustainS, sustainR)
+					} else {
+						if repeat > 1 {
+							// sustain note
+							bufSust := make([]int16, quarterNote*(repeat-1))
+							releaseNote(buf, 0, 0.8)
+							buf = append(buf, bufSust...)
+						}
+					}
 					if chordNumber > 0 {
 						// playing a chord
 						chordCount++
 						if chordBuf == nil {
 							chordBuf = make([]int16, len(buf))
 							copy(chordBuf, buf)
+							if piano.NaturalVoice {
+								copyBuffer(bufSustain, chordBuf)
+							}
 						} else {
-							chordBuf = mixWaves(chordBuf, buf, volume)
+							mixSoundWave(chordBuf, buf, volume)
+							if piano.NaturalVoice {
+								mixSoundWave(bufSustain, buf, volume)
+							}
 						}
+							fmt.Println(len(chordBuf))
 						if chordCount == chordNumber {
-							bufWave = append(bufWave, chordBuf...)
+							if piano.NaturalVoice {
+								release := (quarterNote / divide)/10*sustainS
+								releaseNote(bufSustain, release, sustRatio)
+							}
+							buf = chordBuf
 							chordNumber = 0
 							chordBuf = nil
 						} else {
 							if printNotes {
-								fmt.Printf("%s-", noteLetter(key))
+								fmt.Printf("%v-", piano.keyNoteMap[keyId])
 							}
+							continue
 						}
-						continue
 					}
 					bufWave = append(bufWave, buf...)
 					if len(bufWave) > bufWaveLimit {
@@ -417,21 +428,15 @@ func playMusicNotes(volume100 int) {
 						os.Exit(1)
 					}
 					if printNotes {
-						fmt.Printf("%s", noteLetter(key))
+						fmt.Printf("%v ", piano.keyNoteMap[keyId])
 					}
 				} else {
-					fmt.Printf("invalid note: %s (%d)\n", keystr, handLevel-key)
+					fmt.Printf("invalid note: %s (%d)\n", keystr, key)
 				}
 			}
 			return bufWave
 		}
 		bufLine := controller(line)
-		if len(bufLine) == 0 {
-			continue
-		}
-		if printNotes {
-			fmt.Println()
-		}
 		if mixNextLine {
 			if bufMix == nil {
 				bufMix = make([]int16, len(bufLine))
@@ -439,19 +444,35 @@ func playMusicNotes(volume100 int) {
 				lineMix = line
 			} else {
 				lineMix += "\n" + line
-				bufMix = mixWaves(bufMix, bufLine, volume)
+				mixSoundWave(bufMix, bufLine, volume)
 			}
 			count++
+			clearBuffer(bufSustain)
 			continue
 		}
 		if bufMix != nil {
-			bufMix = mixWaves(bufMix, bufLine, volume)
+			mixSoundWave(bufMix, bufLine, volume)
 			bufLine = bufMix
 			bufMix = nil
 			line = lineMix + "\n" + line
 		}
 		if outputFile == nil {
-			playback(bufLine, bufLine, line)
+			if printNotes {
+				fmt.Println()
+			}
+			if len(bufLine) > 0 {
+				if wait {
+					<-waiter // wait until previous line is done playing
+				}
+				if printSheet {
+					fmt.Println(line)
+				}
+				// prepare next line while playing
+				go playback(bufLine, bufLine)
+				wait = true
+			} else {
+				fmt.Println()
+			}
 		} else {
 			// saving to file
 			var bufCh [2]int16
@@ -461,7 +482,11 @@ func playMusicNotes(volume100 int) {
 				bufOutput = append(bufOutput, bufCh[:]...)
 			}
 		}
+		clearBuffer(bufSustain)
 		count++
+	}
+	if wait {
+		<-waiter // wait until last line
 	}
 	flushSoundBuffer()
 
@@ -520,23 +545,16 @@ func applyNoteVolume(buf []int16, volume int16, amplitude int) {
 }
 
 // Mix two waves
-func mixWaves(buf1 []int16, buf2 []int16, volume int16) []int16 {
-	buf1len := len(buf1)
-	buf2len := len(buf2)
-	lendiff := buf2len - buf1len
-	if lendiff > 0 {
-		bufdiff := make([]int16, lendiff)
-		buf1 = append(buf1, bufdiff...)
-	}
-	if lendiff < 0 {
-		bufdiff := make([]int16, -lendiff)
-		buf2 = append(buf2, bufdiff...)
-	}
+func mixSoundWave(buf1, buf2 []int16, volume int16) {
+	bufsize := len(buf2)
 	gap := 32500.0
 	for i, _ := range buf1 {
+		if i == bufsize {
+			break
+		}
 		bar1 := float64(buf1[i])
 		bar2 := float64(buf2[i])
-		bar64 := (bar1 - bar2) / 2 * 1.4
+		bar64 := (bar1 - bar2) / 2 * 1.7
 		if bar64 > gap {
 			bar64 = gap
 		} else if bar64 <= -gap {
@@ -544,95 +562,30 @@ func mixWaves(buf1 []int16, buf2 []int16, volume int16) []int16 {
 		}
 		buf1[i] = int16(bar64)
 	}
-	return buf1
 }
 
-// Changes note amplitude for ADSR phases
-func sustainNote(buf []int16, volume int16, sustainA, sustainD, sustainS, sustainR int) {
-	// |  /|\
-	// | / | \ _____
-	// |/  |  |    | \
-	// |--------------
-	//   A  D  S    R
-	if volume == 0 {
-		return
-	}
-	bufLen := len(buf)
-	volume64 := float64(volume)
-	attack := int(float64(bufLen/200) * float64(sustainA))
-	decay := (bufLen-attack)/10 + ((bufLen - attack) / 20 * sustainD)
-	sustain := int16(volume64 / 10.0 * float64(sustainS+1))
-	sustainCount := (bufLen - attack - decay) / 2
-	release := bufLen - attack - decay - sustainCount
-	attack64 := float64(attack)
-	decay64 := float64(decay)
-	sustain64 := float64(sustain)
-	release64 := float64(release)
-	countD := 0.0
-	countR := 0.0
-	for i, bar := range buf {
-		i64 := float64(i)
-		bar64 := float64(bar)
-		if i >= attack+decay+sustainCount {
-			// Release phase, decay volume to zero
-			bar64 = bar64 * ((sustain64 * (release64 - countR) / release64) / volume64)
-			countR++
-		} else if i >= attack+decay {
-			// Sustain phase, hold volume on sustain level
-			bar64 = bar64 * (sustain64 / volume64)
-		} else if i >= attack && decay > 0 {
-			// Decay phase, decay volume to sustain level
-			gap := (volume64 - sustain64) * ((decay64 - countD) / decay64)
-			bar64 = bar64 * ((sustain64 + gap) / volume64)
-			countD++
-		} else if i <= attack && attack > 0 {
-			// Attack phase, raise volume to max
-			bar64 = bar64 * (i64 / attack64)
+func copyBuffer(target, src []int16) {
+	bufsize := len(src)
+	for i, _ := range target {
+		if i < bufsize {
+			target[i] = src[i]
+		} else {
+			target[i] = 0
 		}
-		buf[i] = int16(bar64)
 	}
 }
 
-// Translates beep notation to CDEFGAB notation
-func noteLetter(note rune) string {
-	if note < 0 {
-		note = -note
+func clearBuffer(buf []int16) {
+	for i, _ := range buf {
+		buf[i] = 0
 	}
-	switch note {
-	case 'q', 'i', 'c':
-		return "C "
-	case '2', '9', 'f':
-		return "C# "
-	case 'w', 'o', 'v':
-		return "D "
-	case '3', '0', 'g':
-		return "D# "
-	case 'e', 'p', 'b':
-		return "E "
-	case 'r', '[', 'n':
-		return "F "
-	case '5', '=', 'j':
-		return "F# "
-	case 't', ']', 'm':
-		return "G "
-	case '6', 'a', 'k':
-		return "G# "
-	case 'y', 'z', ',':
-		return "A "
-	case '7', 's', 'l':
-		return "A# "
-	case 'u', 'x', '.':
-		return "B "
-	case '8', 'd', ';':
-		return "B#"
-	case ' ':
-		return ""
-	}
-	return string(note) + "=?"
 }
 
 // Trims sharp edge from wave for smooth play
 func trimWave(buf []int16) []int16 {
+	if len(buf) == 0 {
+		return buf
+	}
 	cut := len(buf) - 1
 	var last int16
 	for i, _ := range buf {
@@ -660,4 +613,49 @@ func trimWave(buf []int16) []int16 {
 	}
 	buf = buf[:cut]
 	return buf
+}
+
+func releaseNote(buf []int16, duration int, ratio float64) {
+	// |    release
+	// |----|
+	// |      \     buflen
+	// |----|--|----|
+	//      |  duration > 0
+	//      ratio
+
+	buflen := len(buf)
+	if duration > 0 && duration < buflen {
+		buflen = duration
+	}
+	release := int(float64(buflen) * ratio)
+	decay := float64(buflen - release)
+	tick := sampleAmp16bit / decay
+	volume := sampleAmp16bit
+	for i, bar := range buf {
+		bar64 := float64(bar)
+		if i >= release && volume > 0 {
+			bar64 = bar64 * (volume / sampleAmp16bit)
+			buf[i] = int16(bar64)
+			volume -= tick
+		}
+		if volume <= 0 {
+			buf[i] = 0
+		}
+	}
+}
+
+func raiseNote(buf []int16, ratio float64) {
+	buflen := len(buf)
+	raise := float64(buflen) * ratio
+	tick := sampleAmp16bit / raise
+	volume := 0.0
+	for i, bar := range buf {
+		bar64 := float64(bar)
+		bar64 = bar64 * (volume / sampleAmp16bit)
+		buf[i] = int16(bar64)
+		volume += tick
+		if sampleAmp16bit <= volume {
+			break
+		}
+	}
 }

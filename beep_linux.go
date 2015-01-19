@@ -12,6 +12,7 @@ import "C"
 import (
 	"fmt"
 	"os"
+	"os/user"
 	"unsafe"
 )
 
@@ -52,10 +53,7 @@ func initSoundDevice() {
 	}
 }
 
-func playback(buf1 []int16, buf2 []int16, notes string) {
-	if !*flagQuiet && len(notes) > 0 {
-		fmt.Println(notes)
-	}
+func playback(buf1, buf2 []int16) {
 	bufsize := len(buf1)
 	if bufsize < sampleRate {
 		// prevent buffer underrun
@@ -82,21 +80,25 @@ func playback(buf1 []int16, buf2 []int16, notes string) {
 				break
 			}
 		}
-		if written == bufsize {
-			break
-		}
-		if written == 0 {
-			C.snd_pcm_wait(pcm_handle, 1000)
-			continue
-		}
-		fmt.Fprintln(os.Stderr, "snd_pcm_writen: wrote: %d/%d\n", written, bufsize)
-		buffers = []unsafe.Pointer{
-			unsafe.Pointer(&buf1[written]),
-			unsafe.Pointer(&buf2[written]),
-		}
-		pos = &buffers[0]
-		bufsize -= written
+		break // don't retry, breaks timing
+		/*
+			if written == bufsize {
+				break
+			}
+			if written == 0 {
+				C.snd_pcm_wait(pcm_handle, 1000)
+				continue
+			}
+			fmt.Fprintf(os.Stderr, "snd_pcm_writen: wrote: %d/%d\n", written, bufsize)
+			buffers = []unsafe.Pointer{
+				unsafe.Pointer(&buf1[written]),
+				unsafe.Pointer(&buf2[written]),
+			}
+			pos = &buffers[0]
+			bufsize -= written
+		*/
 	}
+	waiter <- 1 // notify that playback is done
 }
 
 func flushSoundBuffer() {
@@ -129,4 +131,16 @@ func sendBell() {
 	}
 	defer console.Close()
 	console.Write(bell)
+}
+
+func beepHomeDir() string {
+	var home string
+	usr, err := user.Current()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "Unable to get current user directory.")
+		home = "/home"
+	} else {
+		home = usr.HomeDir
+	}
+	return home + "/.beep"
 }

@@ -52,6 +52,15 @@ func int16ToByteBuf(buf16 []int16) []byte {
 	return buf
 }
 
+// Converts []byte to []int16
+func byteToInt16Buf(buf []byte) []int16 {
+	buf16 := make([]int16, len(buf)/2)
+	for i, _ := range buf16 {
+		buf16[i] = int16(buf[i*2]) + int16(buf[i*2+1])<<8
+	}
+	return buf16
+}
+
 // Converts Hertz to frequency unit
 func hertzToFreq(hertz float64) float64 {
 	// 1 second = 44100 samples
@@ -165,3 +174,4 @@ Subchunk2Size: %v
 		w.Subchunk2Size,
 	)
 }
+

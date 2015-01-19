@@ -2,8 +2,10 @@ beep
 ====
 
 A Go program that is useful for alerting the end of a long running command execution.
-Beep can also play piano music sheet. To play a demo music, run: ```$ beep -p | beep -m``` &nbsp;
+Beep can also play piano music sheet. To play a demo music, run:
+```$ beep -p | beep -m``` &nbsp;
 [Play&nbsp; ▶](http://angiud.com/beep/demo-mozart-k33b.mp3)
+[Play with piano voice&nbsp; ▶](http://angiud.com/beep/demo-mozart-k33b-piano.mp3)
 Compiling
 =========
 ```
@@ -22,8 +24,8 @@ On Windows: (requires MinGW, Go compiler from golang.org)
 ```
 Prebuilt binaries
 ===============
- Windows: [beep.exe](http://angiud.com/beep/binary/windows/beep.exe) &nbsp; ```MD5: 36a088368122e80da1a0e2049fc0a136```<br>
- Linux 64-bit: [beep](http://angiud.com/beep/binary/linux/beep) &nbsp; ```MD5: 40c255a83f04fce4e3ba5264549d9ff1```
+ Windows: [beep.exe](http://angiud.com/beep/binary/windows/beep.exe) &nbsp; ```MD5: 9c24dd7f35d6f2337236454cab5fc9c1```<br>
+ Linux 64-bit: [beep](http://angiud.com/beep/binary/linux/beep) &nbsp; ```MD5: f4becb0770ea874f022c20f426ea7c7c```
 Usage
 =====
 ```
@@ -59,6 +61,7 @@ Piano key map:
  rest. Spaces after first space are ignored.
  Lines start with '#' are ignored.
 
+
 Control keys:
 
  Rest:
@@ -80,9 +83,10 @@ Control keys:
  DI     - sixty-fourth note
 
  Octave:
- HL     - switch to left hand keys
- HR     - switch to right hand keys
- HF     - switch to far right keys (last octave)
+ H0     - octave 0 keys
+ HL     - octave 1, 2, 3 (left hand keys)
+ HR     - octave 4, 5, 6 (right hand keys)
+ H7     - octave 7, 8 keys
 
  Tempo:
  T#     - where # is 0-9, default is 4
@@ -94,13 +98,13 @@ Control keys:
  SR#    - release time, 0-9, default 4
 
  Voice:
+ VD     - Computer generated default voice
  VP     - Piano voice
- VN     - If a line ends with 'VN', the next line will be
-          played harmony with the line.
+ VV     - Violin voice (WIP)
+ VN     - If a line ends with 'VN', the next line will be played harmony with the line.
 
  Chord:
- C#     - Play next # notes as a chord, where # is 2-9.
-          For example C major chord is "C3qet"
+ C#     - Play next # notes as a chord, where # is 2-9. For example C major chord is "C3qet"
 
  Amplitude:
  A#     - Changes current amplitude, where # is 1-9, default is 9
@@ -127,6 +131,24 @@ HRDE REc DScszs|DEcz [c|REs DSsz]z|DEs] ps|DSsz][ z][p|DE[DSitDQr|VN
 HLDE z,  ]m    |[n   ov|]m  [n    |pb   ic|nz     sc  |DQn      [|
 ```
 [Play&nbsp; ▶](http://angiud.com/beep/demo-mozart-k33b.mp3)
+[Play with natural piano voice&nbsp; ▶](http://angiud.com/beep/demo-mozart-k33b-piano.mp3)
+Natural Voices
+==============
+
+Beep uses computer generated voices, if there are no voice files exist.
+A voice file is a ZIP file contains sound samples of all notes that the
+music instrument can play. By downloading and placing voice files to
+specific locations where beep find will improve sound quality.
+
+Voice files:<br>
+ Piano voice: [piano.zip](http://angiud.com/beep/voices/piano.zip) (13MB)<br>
+ Violin voice: [violin.zip](http://angiud.com/beep/voices/piano.zip) (6.9MB)<br>
+
+Voice file location:<br>
+ Windows: ```C:\Users\{username}\_beep\voices\``` <br>
+ Linux: ```/home/{username}/.beep/voices/```
+
+Curretly the violin voice has not been tested with a music.
 Usage Examples
 ==============
 ```
@@ -146,9 +168,10 @@ Usage Examples
  $ sh -c 'sleep 3600; beep -t 300 -c 6' &
  
  # play all piano notes
- $ echo "HLDEq2w3er5t6y7ui9o0p[=]azsxcfvgbnjmk,l.\
-         HRDEq2w3er5t6y7ui9o0p[=]azsxcfvgbnjmk,l.\
-         HFDEq2w3er5t6y7u" | beep -m
+ $ echo "DEH0,l.\
+         HLq2w3er5t6y7ui9o0p[=]azsxcfvgbnjmk,l.\
+         HRq2w3er5t6y7ui9o0p[=]azsxcfvgbnjmk,l.\
+         H7q2w3er5t6y7ui" | beep -m
  
  # play Mozart K33b
  $ beep -p | beep -m

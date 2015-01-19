@@ -37,6 +37,22 @@ var (
 	sampleAmp8bit = 127.0
 )
 
+var beepOptions = `Usage: beep [options]
+  -c=1: beep count
+  -d="default": audio device, Linux example: hw:0,0
+  -f=523.25: frequency in Hertz (1-22050)
+  -h: print help
+  -l: beep per line from stdin
+  -m: play music notes from stdin (see beep notation)
+  -p: print the demo music by Mozart
+  -t=1: beep time duration in millisecond (1-60000)
+  -v=100: volume (1-100)
+  -b: send bell to PC speaker
+  -q: quiet stdout while playing music
+  -n: print notes while playing music
+  -o=file: output music waveform to a WAV file. Use '-' for stdout
+`
+
 func main() {
 	flag.Parse()
 
@@ -52,9 +68,8 @@ func main() {
 	writeBell := *flagBell
 
 	if help {
-		fmt.Fprintf(os.Stderr, "Usage: beep [options]\n")
-		flag.PrintDefaults()
-		fmt.Fprintf(os.Stderr, "%s\n%s\n%s",
+		fmt.Printf("%s%s\n%s\n%s",
+			beepOptions,
 			beepNotation,
 			demoMusic,
 			demoHelp,
@@ -87,7 +102,8 @@ func main() {
 	}
 
 	if playMusic {
-		playMusicNotes(volume)
+		reader := bufio.NewReader(os.Stdin)
+		playMusicNotes(reader, volume)
 		return
 	}
 
@@ -123,7 +139,7 @@ func main() {
 		}
 	}
 	for i := 0; i < count; i++ {
-		playback(buf, buf, "")
+		playback(buf, buf)
 	}
 	flushSoundBuffer()
 }
@@ -155,7 +171,7 @@ func beepPerLine(volume int, freq float64) {
 		fmt.Print(string(line))
 		if !isPrefix {
 			fmt.Println()
-			playback(buf, buf, "")
+			playback(buf, buf)
 		}
 	}
 	flushSoundBuffer()
