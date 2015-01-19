@@ -2,7 +2,7 @@ beep
 ====
 
 A Go program that is useful for alerting the end of a long running command execution.
-Beep can also play piano music sheet. To play a demo music, run:<br>
+Beep can also play piano music sheet with optional voices. To play a demo music, run:<br>
 
 ```$ beep -p | beep -m```<br>
 
