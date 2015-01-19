@@ -148,6 +148,7 @@ Voice files:<br>
 
 Voice file location:<br>
  Windows: ```C:\Users\{username}\_beep\voices\``` <br>
+ Windows XP: ```C:\Documents and Settings\{username}\_beep\voices\``` <br>
  Linux: ```/home/{username}/.beep/voices/```
 
 Currently the violin voice has not been tested with a music sheet.
