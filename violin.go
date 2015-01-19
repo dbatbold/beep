@@ -28,15 +28,11 @@ func NewViolin() *Violin {
 		noteKeyMap: make(map[string]rune),
 	}
 
-
-
 	keys := "q2w3er5t6y7ui9o0p[=]azsxcfvgbnjmk,l."
 
-	octaveFreq123 := []float64{
-		// C1, Db1, D1, Eb1, E1, F1, Gb1, G1, Ab1, A1, Bb1, B1
-		32.70, 34.64, 36.70, 38.89, 41.20, 43.65, 46.24, 48.99, 51.91, 55.00, 58.27, 61.73, // 1
-		65.40, 69.29, 73.41, 77.78, 82.40, 87.30, 92.49, 97.99, 103.8, 110.0, 116.5, 123.4, // 2
-		130.8, 138.5, 146.8, 155.5, 164.8, 174.6, 185.0, 196.0, 207.6, 220.0, 233.0, 246.9, // 3
+	octaveFreq3 := []float64{
+		// C3, Db3, D3, Eb3, E3, F3, Gb3, G3, Ab3, A3, Bb3, B3
+		196.0, 207.6, 220.0, 233.0, 246.9, // 3
 	}
 	octaveFreq456 := []float64{
 		// C4, Db4, D4, Eb4, E4, F4, Gb4, G4, Ab4, A4, Bb4, B4
@@ -44,10 +40,9 @@ func NewViolin() *Violin {
 		523.2, 554.3, 587.3, 622.2, 659.2, 698.4, 739.9, 783.9, 830.6, 880.0, 932.3, 987.7, // 5
 		1046.5, 1108.7, 1174.6, 1244.5, 1318.5, 1396.9, 1479.9, 1567, 1661, 1760, 1864, 1975, // 6
 	}
-	octaveFreq78 := []float64{
-		// C7, Db7, D7, Eb7, E7, F7, Gb7, G7, Ab7, A7, Bb7, B7
-		2093, 2217.5, 2349.3, 2489, 2637, 2793, 2960, 3136, 3322.4, 3520, 3729.3, 3951.1, // 7
-		4186.00, // 8
+	octaveFreq7 := []float64{
+		// C7, Db7, D7, Eb7, E7
+		2093, 2217.5, 2349.3, 2489, 2637, 2793, 2960,
 	}
 	
 	noteNames := []string{
@@ -61,15 +56,15 @@ func NewViolin() *Violin {
 	// initialize maps
 	ni := 0
 	for i, key := range keys[31:] { // actave 3
-		keyId := 1000 + key
+		keyId := 2000 + key
 		note := noteNames[ni]
-		p.keyFreqMap[keyId] = octaveFreq123[i]
+		p.keyFreqMap[keyId] = octaveFreq3[i]
 		p.keyNoteMap[keyId] = note
 		p.noteKeyMap[note] = keyId
 		ni++
 	}
 	for i, key := range keys {  // actave 4, 5, 6
-		keyId := 2000 + key
+		keyId := 3000 + key
 		note := noteNames[ni]
 		p.keyFreqMap[keyId] = octaveFreq456[i]
 		p.keyNoteMap[keyId] = note
@@ -77,9 +72,9 @@ func NewViolin() *Violin {
 		ni++
 	}
 	for i, key := range keys[:5] {  // actave 7
-		keyId := 3000 + key
+		keyId := 4000 + key
 		note := noteNames[ni]
-		p.keyFreqMap[keyId] = octaveFreq78[i]
+		p.keyFreqMap[keyId] = octaveFreq7[i]
 		p.keyNoteMap[keyId] = note
 		p.noteKeyMap[note] = keyId
 		ni++
