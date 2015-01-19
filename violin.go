@@ -62,18 +62,15 @@ func NewViolin() *Violin {
 	ni := 0
 	for i, key := range keys[31:] { // actave 3
 		keyId := 1000 + key
-	fmt.Print(string(key))
 		note := noteNames[ni]
 		p.keyFreqMap[keyId] = octaveFreq123[i]
 		p.keyNoteMap[keyId] = note
 		p.noteKeyMap[note] = keyId
 		ni++
 	}
-	fmt.Println()
 	for i, key := range keys {  // actave 4, 5, 6
 		keyId := 2000 + key
 		note := noteNames[ni]
-	fmt.Print(string(key))
 		p.keyFreqMap[keyId] = octaveFreq456[i]
 		p.keyNoteMap[keyId] = note
 		p.noteKeyMap[note] = keyId
