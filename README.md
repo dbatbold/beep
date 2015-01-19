@@ -144,11 +144,11 @@ A voice file is a ZIP file contains sound samples of all notes that the
 music instrument can play. By downloading and placing voice files to
 specific locations where beep find will improve sound quality.
 
-Voice files:<br>
+**Voice files:**<br>
  Piano voice: [piano.zip](http://angiud.com/beep/voices/piano.zip) (13MB)<br>
  Violin voice: [violin.zip](http://angiud.com/beep/voices/piano.zip) (6.9MB)<br>
 
-Voice file location:<br>
+**Voice file location:**<br>
  Windows: ```C:\Users\{username}\_beep\voices\``` <br>
  Windows XP: ```C:\Documents and Settings\{username}\_beep\voices\``` <br>
  Linux: ```/home/{username}/.beep/voices/```
