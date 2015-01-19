@@ -43,7 +43,7 @@ func openSoundDevice(device string) {
 func initSoundDevice() {
 }
 
-func playback(buf1, buf2 []int16, notes string) {
+func playback(buf1, buf2 []int16) {
 	bufWave := make([]int16, len(buf1)*2)
 	for i, bar := range buf1 {
 		bufWave[i*2] = bar
@@ -71,10 +71,6 @@ func playback(buf1, buf2 []int16, notes string) {
 	res = C.waveOutWrite(hwaveout, &wavehdr, wdrsize)
 	if res != C.MMSYSERR_NOERROR {
 		fmt.Fprintln(os.Stderr, "Error: waveOutWrite:", winmmErrorText(res))
-	}
-
-	if !*flagQuiet && len(notes) > 0 {
-		fmt.Println(notes)
 	}
 
 	for wavehdr.dwFlags&C.WHDR_DONE == 0 {
