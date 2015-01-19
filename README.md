@@ -3,7 +3,9 @@ beep
 
 A Go program that is useful for alerting the end of a long running command execution.
 Beep can also play piano music sheet. To play a demo music, run:<br>
+
 ```$ beep -p | beep -m```<br>
+
 [Play demo&nbsp; ▶](http://angiud.com/beep/demo-mozart-k33b.mp3)<br>
 [Play demo with piano voice&nbsp; ▶](http://angiud.com/beep/demo-mozart-k33b-piano.mp3)
 Compiling
