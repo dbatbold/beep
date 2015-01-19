@@ -2,10 +2,10 @@ beep
 ====
 
 A Go program that is useful for alerting the end of a long running command execution.
-Beep can also play piano music sheet. To play a demo music, run:
-```$ beep -p | beep -m``` &nbsp;
-[Play&nbsp; ▶](http://angiud.com/beep/demo-mozart-k33b.mp3)
-[Play with piano voice&nbsp; ▶](http://angiud.com/beep/demo-mozart-k33b-piano.mp3)
+Beep can also play piano music sheet. To play a demo music, run:<br>
+```$ beep -p | beep -m```<br>
+[Play demo&nbsp; ▶](http://angiud.com/beep/demo-mozart-k33b.mp3)<br>
+[Play demo with piano voice&nbsp; ▶](http://angiud.com/beep/demo-mozart-k33b-piano.mp3)
 Compiling
 =========
 ```
@@ -118,19 +118,19 @@ Demo Music
 ==========
 ```
 # Mozart K33b
-HRDE cc DScszs|DEc DQzDE[|cc DScszs|DEc DQz DE[|vv DSvcsc|DEvs ]v|cc DScszs|VN
-HLDE [n z,    |cHRq HLz, |[n z,    |cHRq HLz,  |sl z,    |]m   pb|z, ]m    |
+A9HRDE cc DScszs|DEc DQzDE[|cc DScszs|DEc DQz DE[|vv DSvcsc|DEvs ]v|cc DScszs|VN
+A2HLDE [n z,    |cHRq HLz, |[n z,    |cHRq HLz,  |sl z,    |]m   pb|z, ]m    |
 
-HRDE cz [c|ss DSsz]z|DEs] ps|DSsz][ z][p|DEpDQ[ [ || REDE] DS][p[ |VN
-HLDE [n ov|]m [n    |  pb ic|  n,   lHRq|HLnc DQ[ || DEcHRq HLvHRw|
+A9HRDE cz [c|ss DSsz]z|DEs] ps|DSsz][ z][p|DEpDQ[ [ || DERE] DS][p[ |VN
+A2HLDE [n ov|]m [n    |  pb ic|  n,   lHRq|HLnc DQ[ || DEcHRq HLvHRw|
 
-HRDS ][p[ ][p[|DE] DQp DEi|REc DScszs|cszs |cszs|DEcDQzDE[|REv DSvcsc|DEvs ]v|VN
-HLDE bHRe HLvw|cHRq   HLic|[n  ]m    |z,   |]m  |zn   z,  |sl  [,    |z. DQp |
+A9HRDS ][p[ ][p[|DE] DQp DEi|REc DScszs|cszs |cszs|DEcDQzDE[|REv DSvcsc|DEvs ]v|VN
+A2HLDE bHRe HLvw|cHRq   HLic|[n  ]m    |z,   |]m  |zn   z,  |sl  [,    |z. DQp |
 
-HRDE REc DScszs|DEcz [c|REs DSsz]z|DEs] ps|DSsz][ z][p|DE[DSitDQr|VN
-HLDE z,  ]m    |[n   ov|]m  [n    |pb   ic|nz     sc  |DQn      [|
+A9HRDE REc DScszs|DEcz [c|REs DSsz]z|DEs] ps|DSsz][ z][p|DE[DSitDQr|VN
+A2HLDE z,  ]m    |[n   ov|]m  [n    |pb   ic|nz     sc  |DQn      [|
 ```
-[Play&nbsp; ▶](http://angiud.com/beep/demo-mozart-k33b.mp3)
+[Play with default voice&nbsp; ▶](http://angiud.com/beep/demo-mozart-k33b.mp3)<br>
 [Play with natural piano voice&nbsp; ▶](http://angiud.com/beep/demo-mozart-k33b-piano.mp3)
 Natural Voices
 ==============
@@ -148,7 +148,7 @@ Voice file location:<br>
  Windows: ```C:\Users\{username}\_beep\voices\``` <br>
  Linux: ```/home/{username}/.beep/voices/```
 
-Curretly the violin voice has not been tested with a music.
+Currently the violin voice has not been tested with a music sheet.
 Usage Examples
 ==============
 ```
