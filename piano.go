@@ -6,17 +6,17 @@ import (
 	"io/ioutil"
 	"math"
 	"os"
-	"strings"
 	"path/filepath"
+	"strings"
 )
 
 type Piano struct {
 	naturalVoice bool
-	keyDefMap  map[rune][]int16 // default voice
-	keyNatMap  map[rune][]int16 // natural voice
-	keyFreqMap map[rune]float64
-	keyNoteMap map[rune]string
-	noteKeyMap map[string]rune
+	keyDefMap    map[rune][]int16 // default voice
+	keyNatMap    map[rune][]int16 // natural voice
+	keyFreqMap   map[rune]float64
+	keyNoteMap   map[rune]string
+	noteKeyMap   map[string]rune
 }
 
 func NewPiano() *Piano {
@@ -51,7 +51,7 @@ func NewPiano() *Piano {
 		2093, 2217.5, 2349.3, 2489, 2637, 2793, 2960, 3136, 3322.4, 3520, 3729.3, 3951.1, // 7
 		4186.00, // 8
 	}
-	
+
 	noteNames := []string{
 		"A0", "Bb0", "B0",
 		"C1", "Db1", "D1", "Eb1", "E1", "F1", "Gb1", "G1", "Ab1", "A1", "Bb1", "B1",
@@ -82,7 +82,7 @@ func NewPiano() *Piano {
 		p.noteKeyMap[note] = keyId
 		ni++
 	}
-	for i, key := range keys {  // actave 4, 5, 6
+	for i, key := range keys { // actave 4, 5, 6
 		keyId := 3000 + key
 		note := noteNames[ni]
 		p.keyFreqMap[keyId] = octaveFreqRight[i]
@@ -90,7 +90,7 @@ func NewPiano() *Piano {
 		p.noteKeyMap[note] = keyId
 		ni++
 	}
-	for i, key := range keys[:13] {  // actave 7, 8
+	for i, key := range keys[:13] { // actave 7, 8
 		keyId := 4000 + key
 		note := noteNames[ni]
 		p.keyFreqMap[keyId] = octaveFreq78[i]
@@ -191,7 +191,7 @@ func (p *Piano) generateNote(key rune, duration int) []int16 {
 func (p *Piano) GetNote(note *Note, sustain *Sustain) bool {
 	var found bool
 	var bufNote []int16
-	if p.naturalVoice { 
+	if p.naturalVoice {
 		bufNote, found = p.keyNatMap[note.key]
 	}
 	if !found {
@@ -248,7 +248,7 @@ func (p *Piano) GetNote(note *Note, sustain *Sustain) bool {
 		if p.NaturalVoice() {
 			mixSoundWave(bufDiv, sustain.buf)
 			copyBuffer(sustain.buf, buf[cut-1:])
-			release := (wholeNote / divide) / 10 * sustain.sustain
+			release := cut / 10 * sustain.sustain
 			releaseNote(sustain.buf, release, sustRatio)
 		}
 		buf = bufDiv
@@ -261,9 +261,7 @@ func (p *Piano) GetNote(note *Note, sustain *Sustain) bool {
 		}
 	}
 	raiseNote(buf, 0.05)
-	if sustain.release != 9 {
-		releaseNote(buf, 0, 0.95)
-	}
+	releaseNote(buf, 0, 0.95)
 
 	note.buf = buf
 
@@ -294,7 +292,6 @@ func (p *Piano) SustainNote(note *Note, sustain *Sustain) {
 	volume64 := float64(note.volume)
 
 	if p.naturalVoice {
-		releaseNote(buf, 0, 0.6)
 		return
 	}
 

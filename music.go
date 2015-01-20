@@ -105,31 +105,32 @@ var demoHelp = `To play a demo music, run:
 var (
 	quarterNote = 1024 * 22
 	wholeNote   = quarterNote * 4
-	linePlayed    = make(chan bool)
-	wholeRest = make([]int16, wholeNote)
+	halfNote    = wholeNote / 2
+	linePlayed  = make(chan bool)
+	wholeRest   = make([]int16, wholeNote)
 )
 
 type Note struct {
-	key rune
-	duration rune
-	volume int
+	key       rune
+	duration  rune
+	volume    int
 	amplitude int
-	tempo int
-	buf []int16
+	tempo     int
+	buf       []int16
 }
 
 type Sustain struct {
-	attack int
-	decay int
+	attack  int
+	decay   int
 	sustain int
 	release int
-	buf []int16
+	buf     []int16
 }
 
 type Chord struct {
 	number int
-	count int
-	buf []int16
+	count  int
+	buf    []int16
 }
 
 // GetNote: Gets a whole note for the key
@@ -146,7 +147,7 @@ type Voice interface {
 }
 
 func (s *Sustain) Ratio() float64 {
-	return float64(s.sustain)/10.0
+	return float64(s.sustain) / 10.0
 }
 
 func (c *Chord) Reset() {
@@ -193,11 +194,11 @@ func playMusicNotes(reader *bufio.Reader, volume100 int) {
 
 	// sustain state
 	sustain := &Sustain{
-		attack: 4,
-		decay: 4,
+		attack:  4,
+		decay:   4,
 		sustain: 4,
 		release: 4,
-		buf: make([]int16, wholeNote/2),
+		buf:     make([]int16, quarterNote),
 	}
 
 	// read lines
@@ -355,11 +356,11 @@ func playMusicNotes(reader *bufio.Reader, volume100 int) {
 				handLevel = 4000
 			}
 			note := &Note{
-				key: handLevel + key,
-				volume: volume,
+				key:       handLevel + key,
+				volume:    volume,
 				amplitude: amplitude,
-				duration: duration,
-				tempo: tempo,
+				duration:  duration,
+				tempo:     tempo,
 			}
 			if voice.GetNote(note, sustain) {
 				if chord.number > 0 {
@@ -524,7 +525,7 @@ func mixSoundWave(buf1, buf2 []int16) {
 		}
 		bar1 := float64(buf1[i])
 		bar2 := float64(buf2[i])
-		bar64 := (bar1 + bar2) / 5 * 4
+		bar64 := (bar1 - bar2) / 2 * 1.6
 		if bar64 > gap {
 			bar64 = gap
 		} else if bar64 <= -gap {

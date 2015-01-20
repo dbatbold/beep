@@ -6,17 +6,17 @@ import (
 	"io/ioutil"
 	"math"
 	"os"
-	"strings"
 	"path/filepath"
+	"strings"
 )
 
 type Violin struct {
 	naturalVoice bool
-	keyDefMap  map[rune][]int16 // default voice
-	keyNatMap  map[rune][]int16 // natural voice
-	keyFreqMap map[rune]float64
-	keyNoteMap map[rune]string
-	noteKeyMap map[string]rune
+	keyDefMap    map[rune][]int16 // default voice
+	keyNatMap    map[rune][]int16 // natural voice
+	keyFreqMap   map[rune]float64
+	keyNoteMap   map[rune]string
+	noteKeyMap   map[string]rune
 }
 
 func NewViolin() *Violin {
@@ -44,7 +44,7 @@ func NewViolin() *Violin {
 		// C7, Db7, D7, Eb7, E7
 		2093, 2217.5, 2349.3, 2489, 2637, 2793, 2960,
 	}
-	
+
 	noteNames := []string{
 		"G3", "Ab3", "A3", "Bb3", "B3",
 		"C4", "Db4", "D4", "Eb4", "E4", "F4", "Gb4", "G4", "Ab4", "A4", "Bb4", "B4",
@@ -63,7 +63,7 @@ func NewViolin() *Violin {
 		v.noteKeyMap[note] = keyId
 		ni++
 	}
-	for i, key := range keys {  // actave 4, 5, 6
+	for i, key := range keys { // actave 4, 5, 6
 		keyId := 3000 + key
 		note := noteNames[ni]
 		v.keyFreqMap[keyId] = octaveFreq456[i]
@@ -71,7 +71,7 @@ func NewViolin() *Violin {
 		v.noteKeyMap[note] = keyId
 		ni++
 	}
-	for i, key := range keys[:5] {  // actave 7
+	for i, key := range keys[:5] { // actave 7
 		keyId := 4000 + key
 		note := noteNames[ni]
 		v.keyFreqMap[keyId] = octaveFreq7[i]
@@ -172,7 +172,7 @@ func (v *Violin) generateNote(key rune, duration int) []int16 {
 func (v *Violin) GetNote(note *Note, sustain *Sustain) bool {
 	var found bool
 	var bufNote []int16
-	if v.naturalVoice { 
+	if v.naturalVoice {
 		bufNote, found = v.keyNatMap[note.key]
 	}
 	if !found {
@@ -229,7 +229,7 @@ func (v *Violin) GetNote(note *Note, sustain *Sustain) bool {
 		if v.Sustain() && v.NaturalVoice() {
 			mixSoundWave(bufDiv, sustain.buf)
 			copyBuffer(sustain.buf, buf[cut-1:])
-			release := (wholeNote/ divide) / 10 * sustain.sustain
+			release := (wholeNote / divide) / 10 * sustain.sustain
 			releaseNote(sustain.buf, release, sustRatio)
 		}
 		buf = bufDiv
@@ -275,7 +275,6 @@ func (v *Violin) SustainNote(note *Note, sustain *Sustain) {
 	volume64 := float64(note.volume)
 
 	if v.naturalVoice {
-		releaseNote(buf, 0, 0.6)
 		return
 	}
 
