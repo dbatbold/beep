@@ -11,7 +11,7 @@ import (
 )
 
 type Violin struct {
-	NaturalVoice bool
+	naturalVoice bool
 	keyDefMap  map[rune][]int16 // default voice
 	keyNatMap  map[rune][]int16 // natural voice
 	keyFreqMap map[rune]float64
@@ -20,7 +20,7 @@ type Violin struct {
 }
 
 func NewViolin() *Violin {
-	p := &Violin{
+	v := &Violin{
 		keyDefMap:  make(map[rune][]int16),
 		keyNatMap:  make(map[rune][]int16),
 		keyFreqMap: make(map[rune]float64),
@@ -58,30 +58,30 @@ func NewViolin() *Violin {
 	for i, key := range keys[31:] { // actave 3
 		keyId := 2000 + key
 		note := noteNames[ni]
-		p.keyFreqMap[keyId] = octaveFreq3[i]
-		p.keyNoteMap[keyId] = note
-		p.noteKeyMap[note] = keyId
+		v.keyFreqMap[keyId] = octaveFreq3[i]
+		v.keyNoteMap[keyId] = note
+		v.noteKeyMap[note] = keyId
 		ni++
 	}
 	for i, key := range keys {  // actave 4, 5, 6
 		keyId := 3000 + key
 		note := noteNames[ni]
-		p.keyFreqMap[keyId] = octaveFreq456[i]
-		p.keyNoteMap[keyId] = note
-		p.noteKeyMap[note] = keyId
+		v.keyFreqMap[keyId] = octaveFreq456[i]
+		v.keyNoteMap[keyId] = note
+		v.noteKeyMap[note] = keyId
 		ni++
 	}
 	for i, key := range keys[:5] {  // actave 7
 		keyId := 4000 + key
 		note := noteNames[ni]
-		p.keyFreqMap[keyId] = octaveFreq7[i]
-		p.keyNoteMap[keyId] = note
-		p.noteKeyMap[note] = keyId
+		v.keyFreqMap[keyId] = octaveFreq7[i]
+		v.keyNoteMap[keyId] = note
+		v.noteKeyMap[note] = keyId
 		ni++
 	}
-	for key, _ := range p.keyFreqMap {
+	for key, _ := range v.keyFreqMap {
 		// generate default violin voice
-		p.keyDefMap[key] = p.generateNote(key, quarterNote)
+		v.keyDefMap[key] = v.generateNote(key, wholeNote)
 	}
 
 	// load natural voice file, if exists
@@ -90,7 +90,7 @@ func NewViolin() *Violin {
 	if err == nil {
 		// voice file exists
 		defer voiceFile.Close()
-		p.NaturalVoice = true
+		v.naturalVoice = true
 		for _, zfile := range voiceFile.File {
 			file, err := zfile.Open()
 			if err != nil {
@@ -102,7 +102,7 @@ func NewViolin() *Violin {
 				continue
 			}
 			noteName := strings.Split(filepath.Base(zfile.Name), ".")[0]
-			if key, found := p.noteKeyMap[noteName]; found {
+			if key, found := v.noteKeyMap[noteName]; found {
 				var header WaveHeader
 				header.ReadHeader(file)
 				if header.SampleRate != 44100 || header.BitsPerSample != 16 {
@@ -114,26 +114,29 @@ func NewViolin() *Violin {
 					fmt.Fprintln(os.Stderr, "Unable to read file from zip:", zfile.Name)
 					continue
 				}
-				rest := quarterNote - len(buf)/2
+				rest := wholeNote - len(buf)/2
 				if rest > 0 {
 					// too short, sample should be a whole note
 					bufRest := make([]byte, rest*2)
 					buf = append(buf, bufRest...)
 				}
 				buf16 := byteToInt16Buf(buf)
-				p.keyNatMap[key] = trimWave(buf16[:quarterNote])
+				if len(buf16) < wholeNote {
+					fmt.Fprintln(os.Stderr, "Sample note duration must be 90112 samples long.")
+				}
+				v.keyNatMap[key] = trimWave(buf16)
 			} else {
 				fmt.Fprintln(os.Stderr, "Unknown note name in voice file:", noteName)
 			}
 		}
 	}
 
-	return p
+	return v
 }
 
-func (p *Violin) generateNote(key rune, duration int) []int16 {
+func (v *Violin) generateNote(key rune, duration int) []int16 {
 	// default voice
-	freq, found := p.keyFreqMap[key]
+	freq, found := v.keyFreqMap[key]
 	if !found {
 		fmt.Fprintln(os.Stderr, "frequency not found: key", key)
 		return []int16{}
@@ -166,15 +169,98 @@ func (p *Violin) generateNote(key rune, duration int) []int16 {
 	return trimWave(buf)
 }
 
-func (p *Violin) GetNote(key rune) ([]int16, bool) {
-	if p.NaturalVoice { 
-		buf, found := p.keyNatMap[key]
-		if found {
-			return buf, found
+func (v *Violin) GetNote(note *Note, sustain *Sustain) bool {
+	var found bool
+	var bufNote []int16
+	if v.naturalVoice { 
+		bufNote, found = v.keyNatMap[note.key]
+	}
+	if !found {
+		bufNote, found = v.keyDefMap[note.key]
+	}
+	if !found {
+		return false
+	}
+	divide := 1
+	switch note.duration {
+	case 'H':
+		divide = 2
+	case 'Q':
+		divide = 4
+	case 'E':
+		divide = 8
+	case 'S':
+		divide = 16
+	case 'T':
+		divide = 32
+	case 'I':
+		divide = 64
+	}
+	buf := make([]int16, len(bufNote))
+	copy(buf, bufNote) // get a copy of the note
+	applyNoteVolume(buf, note.volume, note.amplitude)
+	bufsize := len(buf)
+	cut := bufsize
+	if note.tempo < 4 && bufsize > 1024 {
+		// slow tempo
+		releaseNote(buf, 0, 0.7)
+		for t := 0; t < 4-note.tempo; t++ {
+			if v.NaturalVoice() {
+				buf = append(buf, wholeRest[:1024]...)
+			} else {
+				buf = append(buf, trimWave(buf[:1024])...)
+			}
 		}
 	}
-	buf, found := p.keyDefMap[key]
-	return buf, found
+	if note.tempo > 4 {
+		// fast tempo
+		releaseNote(buf, 0, 0.7)
+		for t := 0; t < note.tempo-4 && cut > 1024; t++ {
+			if 1024 < len(buf[:cut]) {
+				cut -= 1024
+			}
+		}
+		buf = trimWave(buf[:cut])
+	}
+	sustRatio := float64(sustain.sustain) / 10.0
+	if divide > 1 {
+		cut = len(buf) / divide
+		bufDiv := trimWave(buf[:cut])
+		if v.Sustain() && v.NaturalVoice() {
+			mixSoundWave(bufDiv, sustain.buf)
+			copyBuffer(sustain.buf, buf[cut-1:])
+			release := (wholeNote/ divide) / 10 * sustain.sustain
+			releaseNote(sustain.buf, release, sustRatio)
+		}
+		buf = bufDiv
+	} else {
+		if v.Sustain() && v.NaturalVoice() {
+			mixSoundWave(buf, sustain.buf)
+			copyBuffer(sustain.buf, buf[bufsize/3:])
+			release := bufsize / 10 * sustain.sustain
+			releaseNote(sustain.buf, release, sustRatio)
+		}
+	}
+	raiseNote(buf, 0.05)
+	if sustain.release != 9 {
+		releaseNote(buf, 0, 0.95)
+	}
+
+	note.buf = buf
+
+	return true
+}
+
+func (v *Violin) Sustain() bool {
+	return false
+}
+
+func (v *Violin) NaturalVoice() bool {
+	return v.naturalVoice
+}
+
+func (v *Violin) ComputerVoice(enable bool) {
+	v.naturalVoice = !enable
 }
 
 // Changes note amplitude for ADSR phases
@@ -183,28 +269,29 @@ func (p *Violin) GetNote(key rune) ([]int16, bool) {
 // |/  |  |    | \   S - sustain
 // |--------------   R - release
 //   A  D  S    R
-func (p *Violin) SustainNote(buf []int16, volume int16, A, D, S, R int) {
+func (v *Violin) SustainNote(note *Note, sustain *Sustain) {
+	buf := note.buf
 	bufLen := len(buf)
-	volume64 := float64(volume)
+	volume64 := float64(note.volume)
 
-	if p.NaturalVoice {
+	if v.naturalVoice {
 		releaseNote(buf, 0, 0.6)
 		return
 	}
 
 	// Sustain default voice
-	if volume == 0 {
+	if note.volume == 0 {
 		return
 	}
-	attack := int(float64(bufLen/200) * float64(A))
-	decay := (bufLen-attack)/10 + ((bufLen - attack) / 20 * D)
-	sustain := int16(volume64 / 10.0 * float64(S+1))
+	attack := int(float64(bufLen/200) * float64(sustain.attack))
+	decay := (bufLen-attack)/10 + ((bufLen - attack) / 20 * sustain.decay)
+	S := int16(volume64 / 10.0 * float64(sustain.sustain+1))
 	sustainCount := (bufLen - attack - decay) / 2
-	release := bufLen - attack - decay - sustainCount
+	R := bufLen - attack - decay - sustainCount
 	attack64 := float64(attack)
 	decay64 := float64(decay)
-	sustain64 := float64(sustain)
-	release64 := float64(release)
+	sustain64 := float64(S)
+	release64 := float64(R)
 	countD := 0.0
 	countR := 0.0
 	for i, bar := range buf {

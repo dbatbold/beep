@@ -82,9 +82,18 @@ func playback(buf1, buf2 []int16) {
 		fmt.Fprintln(os.Stderr, "Error: waveOutUnprepareHeader:", winmmErrorText(res))
 	}
 
+	for wavehdr.dwFlags&C.WHDR_DONE == 0 {
+		// still playing
+		time.Sleep(time.Millisecond)
+	}
+	res = C.waveOutUnprepareHeader(hwaveout, &wavehdr, wdrsize)
+	if res != C.MMSYSERR_NOERROR {
+		fmt.Fprintln(os.Stderr, "Error: waveOutUnprepareHeader:", winmmErrorText(res))
+	}
+
 	wavehdrLast = &wavehdr
 	
-	waiter <- 1 // notify that playback is done
+	linePlayed <- true // notify that playback is done
 }
 
 func flushSoundBuffer() {

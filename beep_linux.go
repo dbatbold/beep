@@ -98,7 +98,7 @@ func playback(buf1, buf2 []int16) {
 			bufsize -= written
 		*/
 	}
-	waiter <- 1 // notify that playback is done
+	linePlayed <- true // notify that playback is done
 }
 
 func flushSoundBuffer() {
