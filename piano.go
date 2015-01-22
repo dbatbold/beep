@@ -1,3 +1,4 @@
+// piano.go - piano voice for beep
 package main
 
 import (
@@ -244,24 +245,30 @@ func (p *Piano) GetNote(note *Note, sustain *Sustain) bool {
 	sustRatio := float64(sustain.sustain) / 10.0
 	if divide > 1 {
 		cut = len(buf) / divide
+		if note.dotted {
+			cut += cut / 2
+		}
 		bufDiv := trimWave(buf[:cut])
 		if p.NaturalVoice() {
 			mixSoundWave(bufDiv, sustain.buf)
 			copyBuffer(sustain.buf, buf[cut-1:])
-			release := cut / 10 * sustain.sustain
+			release := cut / 10 * sustain.release
 			releaseNote(sustain.buf, release, sustRatio)
 		}
 		buf = bufDiv
 	} else {
+		// whole note
+		if note.dotted {
+			dotBuf := make([]int16, halfNote)
+			buf = append(buf, dotBuf...)
+		}
 		if p.NaturalVoice() {
 			mixSoundWave(buf, sustain.buf)
 			copyBuffer(sustain.buf, buf[bufsize/3:])
-			release := bufsize / 10 * sustain.sustain
+			release := bufsize / 10 * sustain.release
 			releaseNote(sustain.buf, release, sustRatio)
 		}
 	}
-	raiseNote(buf, 0.05)
-	releaseNote(buf, 0, 0.95)
 
 	note.buf = buf
 
@@ -280,22 +287,25 @@ func (p *Piano) ComputerVoice(enable bool) {
 	p.naturalVoice = !enable
 }
 
-// Changes note amplitude for ADSR phases
-// |  /|\            A - attack
-// | / | \ _____     D - decay
-// |/  |  |    | \   S - sustain
-// |--------------   R - release
-//   A  D  S    R
 func (p *Piano) SustainNote(note *Note, sustain *Sustain) {
 	buf := note.buf
 	buflen := len(buf)
 	volume64 := float64(note.volume)
 
 	if p.naturalVoice {
+		attack := float64(9-sustain.attack) / 100 * 2
+		raiseNote(buf, attack)
+		release := float64(1+sustain.release) / 10
+		releaseNote(buf, 0, release)
 		return
 	}
 
-	// Sustain default voice
+	// Sustain default voice amplitude for ADSR phases
+	// |  /|\            A - attack
+	// | / | \ _____     D - decay
+	// |/  |  |    | \   S - sustain
+	// |--------------   R - release
+	//   A  D  S    R
 	if note.volume == 0 {
 		return
 	}

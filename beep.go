@@ -15,26 +15,30 @@ import (
 )
 
 var (
-	flagHelp      = flag.Bool("h", false, "help")
-	flagCount     = flag.Int("c", 1, "beep count")
-	flagFreq      = flag.Float64("f", 523.25, "frequency in Hertz (1-22050)")
-	flagVolume    = flag.Int("v", 100, "volume (1-100)")
-	flagDuration  = flag.Float64("t", 250, "beep time duration in millisecond (1-60000)")
-	flagDevice    = flag.String("d", "default", "audio device, Linux example: hw:0,0")
-	flagLine      = flag.Bool("l", false, "beep per line from stdin")
-	flagMusic     = flag.Bool("m", false, "play music notes from stdin (see beep notation)")
-	flagPrintDemo = flag.Bool("p", false, "print a demo music by Mozart")
-	flagBell      = flag.Bool("b", false, "send bell to PC speaker")
-	flagQuiet     = flag.Bool("q", false, "quiet stdout while playing music")
-	flagNotes     = flag.Bool("n", false, "print notes while playing music")
-	flagOutput    = flag.String("o", "", "output music waveform to file. Use '-' for stdout")
+	flagHelp       = flag.Bool("h", false, "help")
+	flagCount      = flag.Int("c", 1, "beep count")
+	flagFreq       = flag.Float64("f", 523.25, "frequency in Hertz (1-22050)")
+	flagVolume     = flag.Int("v", 100, "volume (1-100)")
+	flagDuration   = flag.Float64("t", 250, "beep time duration in millisecond (1-60000)")
+	flagDevice     = flag.String("d", "default", "audio device, Linux example: hw:0,0")
+	flagLine       = flag.Bool("l", false, "beep per line from stdin")
+	flagMusic      = flag.Bool("m", false, "play music notes from stdin (see beep notation)")
+	flagPrintDemo  = flag.Bool("p", false, "print a demo music by Mozart")
+	flagBell       = flag.Bool("b", false, "send bell to PC speaker")
+	flagQuiet      = flag.Bool("q", false, "quiet stdout while playing music")
+	flagNotes      = flag.Bool("n", false, "print notes while playing music")
+	flagOutput     = flag.String("o", "", "output music waveform to file. Use '-' for stdout")
+	flagWeb        = flag.Bool("w", false, "start beep web server")
+	flagWebAddress = flag.String("wa", "localhost:4444", "web address to listen")
+	flagVoice      = flag.Bool("vd", false, "download voice")
+	flagVoiceNames = flag.String("vn", "piano,violin", "download voice files listed")
 
-	sampleRate   = 44100
-	sampleRate64 = float64(sampleRate)
-	bitsPerSample = 16
-	sample16bit = bitsPerSample == 16
+	sampleRate     = 44100
+	sampleRate64   = float64(sampleRate)
+	bitsPerSample  = 16
+	sample16bit    = bitsPerSample == 16
 	sampleAmp16bit = 32767.0
-	sampleAmp8bit = 127.0
+	sampleAmp8bit  = 127.0
 )
 
 var beepOptions = `Usage: beep [options]
@@ -51,6 +55,12 @@ var beepOptions = `Usage: beep [options]
   -q: quiet stdout while playing music
   -n: print notes while playing music
   -o=file: output music waveform to a WAV file. Use '-' for stdout
+ 
+UNDER CONSTRUCTION:
+  -w: start beep web server
+  -wa="localhost:4444": web server address to listen
+  -vd: download voices
+  -vn="piano,violin": voice names to download
 `
 
 func main() {
@@ -66,6 +76,10 @@ func main() {
 	playMusic := *flagMusic
 	printDemo := *flagPrintDemo
 	writeBell := *flagBell
+	webServer := *flagWeb
+	webAddress := *flagWebAddress
+	voice := *flagVoice
+	//voiceNames := *flagVoiceNames
 
 	if help {
 		fmt.Printf("%s%s\n%s\n%s",
@@ -112,8 +126,18 @@ func main() {
 		return
 	}
 
+	if webServer {
+		startWebServer(webAddress)
+		return
+	}
+
+	if voice {
+		fmt.Println("UNDER CONSTRUCTION")
+		return
+	}
+
 	// beep
-	bar := sampleAmp16bit*(float64(volume) / 100.0)
+	bar := sampleAmp16bit * (float64(volume) / 100.0)
 	samples := int(sampleRate64 * (duration / 1000.0))
 	rest := 0
 	if count > 1 {
@@ -127,7 +151,7 @@ func main() {
 	}
 	for i, _ := range buf {
 		if i < samples-fade {
-			buf[i] = int16(bar*math.Sin(float64(i)*freq))
+			buf[i] = int16(bar * math.Sin(float64(i)*freq))
 			last = buf[i]
 		} else {
 			if last > 0 {
@@ -139,19 +163,20 @@ func main() {
 		}
 	}
 	for i := 0; i < count; i++ {
-		playback(buf, buf)
+		go playback(buf, buf)
+		<-linePlayed
 	}
 	flushSoundBuffer()
 }
 
 func beepPerLine(volume int, freq float64) {
 	buf := make([]int16, sampleRate/5)
-	bar := sampleAmp16bit*(float64(volume) / 100.0)
+	bar := sampleAmp16bit * (float64(volume) / 100.0)
 	gap := sampleRate / 6
 	var last int16
 	for i, _ := range buf {
 		if i < gap {
-			buf[i] = int16(bar*math.Sin(float64(i)*freq))
+			buf[i] = int16(bar * math.Sin(float64(i)*freq))
 			last = buf[i]
 		} else {
 			if last > 0 {
@@ -171,7 +196,8 @@ func beepPerLine(volume int, freq float64) {
 		fmt.Print(string(line))
 		if !isPrefix {
 			fmt.Println()
-			playback(buf, buf)
+			go playback(buf, buf)
+			<-linePlayed
 		}
 	}
 	flushSoundBuffer()

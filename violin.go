@@ -1,3 +1,4 @@
+// violin.go - violin voice for beep
 package main
 
 import (
@@ -199,9 +200,9 @@ func (v *Violin) GetNote(note *Note, sustain *Sustain) bool {
 	buf := make([]int16, len(bufNote))
 	copy(buf, bufNote) // get a copy of the note
 	applyNoteVolume(buf, note.volume, note.amplitude)
-	bufsize := len(buf)
-	cut := bufsize
-	if note.tempo < 4 && bufsize > 1024 {
+	buflen := len(buf)
+	cut := buflen
+	if note.tempo < 4 && buflen > 1024 {
 		// slow tempo
 		releaseNote(buf, 0, 0.7)
 		for t := 0; t < 4-note.tempo; t++ {
@@ -233,17 +234,14 @@ func (v *Violin) GetNote(note *Note, sustain *Sustain) bool {
 			releaseNote(sustain.buf, release, sustRatio)
 		}
 		buf = bufDiv
+		buflen = len(buf)
 	} else {
 		if v.Sustain() && v.NaturalVoice() {
 			mixSoundWave(buf, sustain.buf)
-			copyBuffer(sustain.buf, buf[bufsize/3:])
-			release := bufsize / 10 * sustain.sustain
+			copyBuffer(sustain.buf, buf[buflen/3:])
+			release := buflen / 10 * sustain.sustain
 			releaseNote(sustain.buf, release, sustRatio)
 		}
-	}
-	raiseNote(buf, 0.05)
-	if sustain.release != 9 {
-		releaseNote(buf, 0, 0.95)
 	}
 
 	note.buf = buf
@@ -263,30 +261,59 @@ func (v *Violin) ComputerVoice(enable bool) {
 	v.naturalVoice = !enable
 }
 
-// Changes note amplitude for ADSR phases
-// |  /|\            A - attack
-// | / | \ _____     D - decay
-// |/  |  |    | \   S - sustain
-// |--------------   R - release
-//   A  D  S    R
-func (v *Violin) SustainNote(note *Note, sustain *Sustain) {
-	buf := note.buf
-	bufLen := len(buf)
-	volume64 := float64(note.volume)
+func (v *Violin) raiseNote(note *Note, ratio float64) {
+	buflen := len(note.buf)
+	raise := float64(buflen) * ratio
+	tick := sampleAmp16bit / raise
+	volume := 0.0
+	for i, bar := range note.buf {
+		bar64 := float64(bar)
+		bar64 = bar64 * (volume / sampleAmp16bit)
+		note.buf[i] = int16(bar64)
+		volume += tick
+		if sampleAmp16bit <= volume {
+			break
+		}
+	}
+}
 
+func (v *Violin) SustainNote(note *Note, sustain *Sustain) {
+	// |    ___ release
+	// |  /      \
+	// | /         ----|    <----------- sustain
+	// |/                \     buflen
+	// |---|---|-------|--|----|
+	//   attack|       |  duration > 0
+	//         |       ratio
+	//         decay
+	//
+	// attack: allows overriting the beginning by the previous note
+	//
+	buf := note.buf
+	buflen := len(buf)
+	volume64 := float64(note.volume)
 	if v.naturalVoice {
+		attack := float64(9-sustain.attack) / 10
+		v.raiseNote(note, attack)
+		release := float64(1+sustain.release) / 10
+		releaseNote(buf, 0, release)
 		return
 	}
 
-	// Sustain default voice
+	// Sustain default voice amplitude for ADSR phases
+	// |  /|\            A - attack
+	// | / | \ _____     D - decay
+	// |/  |  |    | \   S - sustain
+	// |--------------   R - release
+	//   A  D  S    R
 	if note.volume == 0 {
 		return
 	}
-	attack := int(float64(bufLen/200) * float64(sustain.attack))
-	decay := (bufLen-attack)/10 + ((bufLen - attack) / 20 * sustain.decay)
+	attack := int(float64(buflen/200) * float64(sustain.attack))
+	decay := (buflen-attack)/10 + ((buflen - attack) / 20 * sustain.decay)
 	S := int16(volume64 / 10.0 * float64(sustain.sustain+1))
-	sustainCount := (bufLen - attack - decay) / 2
-	R := bufLen - attack - decay - sustainCount
+	sustainCount := (buflen - attack - decay) / 2
+	R := buflen - attack - decay - sustainCount
 	attack64 := float64(attack)
 	decay64 := float64(decay)
 	sustain64 := float64(S)

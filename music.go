@@ -46,6 +46,7 @@ Beep notation:
  DS     - sixteenth note
  DT     - thirty-second note
  DI     - sixty-fourth note
+ DD     - dotted note (adds half duration)
 
  Octave:
  H0     - octave 0 keys
@@ -85,6 +86,7 @@ Demo music: Mozart K33b:`
 
 var demoMusic = `
 # Mozart K33b
+VP SA8 SR9
 A9HRDE cc DScszs|DEc DQzDE[|cc DScszs|DEc DQz DE[|vv DSvcsc|DEvs ]v|cc DScszs|VN
 A3HLDE [n z,    |cHRq HLz, |[n z,    |cHRq HLz,  |sl z,    |]m   pb|z, ]m    |
 
@@ -113,10 +115,12 @@ var (
 type Note struct {
 	key       rune
 	duration  rune
+	dotted    bool
 	volume    int
 	amplitude int
 	tempo     int
 	buf       []int16
+	prevNote  *Note
 }
 
 type Sustain struct {
@@ -194,10 +198,10 @@ func playMusicNotes(reader *bufio.Reader, volume100 int) {
 
 	// sustain state
 	sustain := &Sustain{
-		attack:  4,
-		decay:   4,
-		sustain: 4,
-		release: 4,
+		attack:  7,
+		decay:   7,
+		sustain: 7,
+		release: 8,
 		buf:     make([]int16, quarterNote),
 	}
 
@@ -216,6 +220,7 @@ func playMusicNotes(reader *bufio.Reader, volume100 int) {
 	voiceControls := "DPVN"
 	var bufOutput []int16
 	var duration = 'Q' // default note duration
+	var dotted bool
 	var rest rune
 	var ctrl rune
 	var voice Voice = piano // default voice is piano
@@ -229,6 +234,7 @@ func playMusicNotes(reader *bufio.Reader, volume100 int) {
 	var bufMix []int16
 	var lineMix string
 	var waitNext bool
+	var prevNote *Note
 	for {
 		line, done := nextMusicLine(reader)
 		if done {
@@ -262,6 +268,9 @@ func playMusicNotes(reader *bufio.Reader, volume100 int) {
 				case 'D': // duration
 					if strings.ContainsAny(keystr, measures) {
 						duration = key
+					}
+					if key == 'D' {
+						dotted = true
 					}
 				case 'R': // reset
 					if strings.ContainsAny(keystr, measures) {
@@ -360,9 +369,12 @@ func playMusicNotes(reader *bufio.Reader, volume100 int) {
 				volume:    volume,
 				amplitude: amplitude,
 				duration:  duration,
+				dotted:    dotted,
 				tempo:     tempo,
+				prevNote:  prevNote,
 			}
 			if voice.GetNote(note, sustain) {
+				dotted = false
 				if chord.number > 0 {
 					// playing a chord
 					chord.count++
@@ -402,6 +414,7 @@ func playMusicNotes(reader *bufio.Reader, volume100 int) {
 				if printNotes {
 					fmt.Printf("%v ", piano.keyNoteMap[note.key])
 				}
+				prevNote = note
 			} else {
 				voiceName := strings.Split(fmt.Sprintf("%T", voice), ".")[1]
 				noteName := piano.keyNoteMap[note.key]

@@ -26,8 +26,8 @@ On Windows: (requires MinGW, Go compiler from golang.org)
 ```
 Prebuilt binaries
 ===============
- Windows: [beep.exe](http://angiud.com/beep/binary/windows/beep.exe) &nbsp; ```MD5: a98bff553aafbf1d727c043de94ee20f```<br>
- Linux 64-bit: [beep](http://angiud.com/beep/binary/linux/beep) &nbsp; ```MD5: 77ff000f122163229386cc59d96e5f5d```
+ Windows: [beep.exe](http://angiud.com/beep/binary/windows/beep.exe) &nbsp; ```MD5: 01f120dd36c0d76e89942a1775f82520```<br>
+ Linux 64-bit: [beep](http://angiud.com/beep/binary/linux/beep) &nbsp; ```MD5: 01f120dd36c0d76e89942a1775f82520```
 Usage
 =====
 ```
@@ -94,10 +94,10 @@ Control keys:
  T#     - where # is 0-9, default is 4
 
  Sustain:
- SA#    - attack time, where # is 0-9, default is 4
- SD#    - decay time, 0-9, default 4
- SS#    - sustain level, 0-9, default 4
- SR#    - release time, 0-9, default 4
+ SA#    - attack time, where # is 0-9, default is 7
+ SD#    - decay time, 0-9, default 7
+ SS#    - sustain level, 0-9, default 7
+ SR#    - release time, 0-9, default 8
 
  Voice:
  VD     - Computer generated default voice
@@ -122,6 +122,7 @@ Demo Music
 ==========
 ```
 # Mozart K33b
+VP SA8 SR9
 A9HRDE cc DScszs|DEc DQzDE[|cc DScszs|DEc DQz DE[|vv DSvcsc|DEvs ]v|cc DScszs|VN
 A3HLDE [n z,    |cHRq HLz, |[n z,    |cHRq HLz,  |sl z,    |]m   pb|z, ]m    |
 

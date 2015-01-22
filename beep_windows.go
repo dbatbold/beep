@@ -29,11 +29,11 @@ func openSoundDevice(device string) {
 	wfx.wFormatTag = C.WAVE_FORMAT_PCM
 	wfx.nChannels = 2
 	wfx.nSamplesPerSec = C.DWORD(sampleRate)
-	wfx.nAvgBytesPerSec = C.DWORD(sampleRate)*2*2
-	wfx.nBlockAlign = 2*2
+	wfx.nAvgBytesPerSec = C.DWORD(sampleRate) * 2 * 2
+	wfx.nBlockAlign = 2 * 2
 	wfx.wBitsPerSample = 16
 
-	res := C.waveOutOpen(&hwaveout, C.WAVE_MAPPER, &wfx, 0, 0, C.CALLBACK_NULL);
+	res := C.waveOutOpen(&hwaveout, C.WAVE_MAPPER, &wfx, 0, 0, C.CALLBACK_NULL)
 	if res != C.MMSYSERR_NOERROR {
 		fmt.Fprintln(os.Stderr, "Error: waveOutOpen:", winmmErrorText(res))
 		os.Exit(1)
@@ -53,7 +53,7 @@ func playback(buf1, buf2 []int16) {
 	var wavehdr C.WAVEHDR
 	wdrsize := C.UINT(unsafe.Sizeof(wavehdr))
 	wavehdr.lpData = C.LPSTR(unsafe.Pointer(&bufWave[0]))
-	wavehdr.dwBufferLength = C.DWORD(len(bufWave)*2)
+	wavehdr.dwBufferLength = C.DWORD(len(bufWave) * 2)
 
 	res := C.waveOutPrepareHeader(hwaveout, &wavehdr, wdrsize)
 	if res != C.MMSYSERR_NOERROR {
@@ -92,7 +92,7 @@ func playback(buf1, buf2 []int16) {
 	}
 
 	wavehdrLast = &wavehdr
-	
+
 	linePlayed <- true // notify that playback is done
 }
 
