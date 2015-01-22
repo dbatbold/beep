@@ -16,25 +16,27 @@ type Web struct {
 
 func startWebServer(address string) {
 	var err error
-	if len(address) == 0 {
-		address = "localhost:4444"
-	}
-	web := &Web{}
-	ip := "localhost"
-	ipport := strings.Split(address, ":")
-	if len(ipport[0]) > 0 {
-		ip = ipport[0]
-	}
-	port, err := strconv.Atoi(ipport[1])
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Invalid port number: %s", ipport[1])
-		os.Exit(1)
+	ip := "localhost" // serve locally by default
+	port := 4444
+
+	parts := strings.Split(address, ":")
+	if len(parts) == 2 {
+		ip = parts[0]
+		if len(parts[1]) > 0 {
+			port, err = strconv.Atoi(parts[1])
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Invalid port number: %v", parts[1])
+				os.Exit(1)
+			}
+		}
 	}
 	address = fmt.Sprintf("%s:%d", ip, port)
-	fmt.Printf("Beep is listening on http://%s/\n", address)
+	fmt.Printf("Listening on http://%s/\n", address)
+
+	web := &Web{}
 	err = http.ListenAndServe(address, web)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Unable to start web server:", err)
+		fmt.Fprintln(os.Stderr, "Unable to start web server:", err)
 		os.Exit(1)
 	}
 }
