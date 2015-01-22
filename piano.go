@@ -309,6 +309,7 @@ func (p *Piano) SustainNote(note *Note, sustain *Sustain) {
 	if note.volume == 0 {
 		return
 	}
+	sustain.attack = 9 // overriding
 	attack := int(float64(buflen/200) * float64(sustain.attack))
 	decay := (buflen-attack)/10 + ((buflen - attack) / 20 * sustain.decay)
 	S := int16(volume64 / 10.0 * float64(sustain.sustain+1))
