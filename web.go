@@ -2,9 +2,11 @@
 package main
 
 import (
-	"net/http"
 	"fmt"
+	"net/http"
 	"os"
+	"strconv"
+	"strings"
 )
 
 type Web struct {
@@ -13,12 +15,24 @@ type Web struct {
 }
 
 func startWebServer(address string) {
+	var err error
 	if len(address) == 0 {
 		address = "localhost:4444"
 	}
 	web := &Web{}
-	fmt.Println("Beep is listening on http://localhost:4444/")
-	err := http.ListenAndServe(address, web)
+	ip := "localhost"
+	ipport := strings.Split(address, ":")
+	if len(ipport[0]) > 0 {
+		ip = ipport[0]
+	}
+	port, err := strconv.Atoi(ipport[1])
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Invalid port number: %s", ipport[1])
+		os.Exit(1)
+	}
+	address = fmt.Sprintf("%s:%d", ip, port)
+	fmt.Printf("Beep is listening on http://%s/\n", address)
+	err = http.ListenAndServe(address, web)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Unable to start web server:", err)
 		os.Exit(1)
@@ -44,7 +58,7 @@ func (w *Web) serveHome() {
 	fmt.Fprint(w.res, webFileMap["underconstruction"])
 }
 
-var webFileMap = map[string]string {
-	"pageNotFound": `<html><body>Page not found</body></html>`,
+var webFileMap = map[string]string{
+	"pageNotFound":      `<html><body>Page not found</body></html>`,
 	"underconstruction": `<html><body>Under construction</body></html>`,
 }
