@@ -86,7 +86,7 @@ Demo music: Mozart K33b:`
 
 var demoMusic = `
 # Mozart K33b
-VP SA8 SR9
+VP SA6 SR8
 A9HRDE cc DScszs|DEc DQzDE[|cc DScszs|DEc DQz DE[|vv DSvcsc|DEvs ]v|cc DScszs|VN
 A3HLDE [n z,    |cHRq HLz, |[n z,    |cHRq HLz,  |sl z,    |]m   pb|z, ]m    |
 
@@ -198,7 +198,7 @@ func playMusicNotes(reader *bufio.Reader, volume100 int) {
 
 	// sustain state
 	sustain := &Sustain{
-		attack:  7,
+		attack:  6,
 		decay:   7,
 		sustain: 7,
 		release: 8,

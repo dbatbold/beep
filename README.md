@@ -94,7 +94,7 @@ Control keys:
  T#     - where # is 0-9, default is 4
 
  Sustain:
- SA#    - attack time, where # is 0-9, default is 7
+ SA#    - attack time, where # is 0-9, default is 6
  SD#    - decay time, 0-9, default 7
  SS#    - sustain level, 0-9, default 7
  SR#    - release time, 0-9, default 8
