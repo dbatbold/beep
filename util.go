@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"io"
 	"math"
+	"strconv"
+	"strings"
 )
 
 func stringToBytes(s string) []byte {
@@ -47,7 +49,7 @@ func int16ToByteBuf(buf16 []int16) []byte {
 	buf := make([]byte, len(buf16)*2)
 	for i, bar := range buf16 {
 		buf[i*2] = byte(bar)
-		buf[i*2+1] = byte(bar>>8)
+		buf[i*2+1] = byte(bar >> 8)
 	}
 	return buf
 }
@@ -98,7 +100,7 @@ func NewWaveHeader(channels, sampleRate, bitsPerSample, dataSize int) *WaveHeade
 		NumChannels:   channels,
 		SampleRate:    sampleRate,
 		ByteRate:      sampleRate * channels * (bitsPerSample / 8),
-		BlockAlign:    channels * bitsPerSample/8,
+		BlockAlign:    channels * bitsPerSample / 8,
 		BitsPerSample: bitsPerSample,
 		Subchunk2ID:   "data",
 		Subchunk2Size: dataSize,
@@ -175,3 +177,38 @@ Subchunk2Size: %v
 	)
 }
 
+// Formats a number with commas: 1234567 to 1,234,567
+func numberComma(number int64) string {
+	var parts []int64
+	n := number
+	minus := n < 0
+	if minus {
+		n = -n
+	}
+	for n > 0 {
+		parts = append(parts, n%1000)
+		n /= 1000
+	}
+	var s []string
+	last := len(parts) - 1
+	for i, _ := range parts {
+		format := "%0.3d"
+		if i == 0 {
+			format = "%d"
+			if minus {
+				format = "-%d"
+			}
+		}
+		s = append(s, fmt.Sprintf(format, parts[last-i]))
+	}
+	return strings.Join(s, ",")
+}
+
+// Converts string to number, returns 0 for error
+func stringNumber(s string) int {
+	n, err := strconv.Atoi(s)
+	if err != nil {
+		return 0
+	}
+	return n
+}

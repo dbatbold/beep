@@ -223,7 +223,7 @@ func (p *Piano) GetNote(note *Note, sustain *Sustain) bool {
 	cut := bufsize
 	if note.tempo < 4 && bufsize > 1024 {
 		// slow tempo
-		releaseNote(buf, 0, 0.7)
+		//releaseNote(buf, 0, 0.7)
 		for t := 0; t < 4-note.tempo; t++ {
 			if p.NaturalVoice() {
 				buf = append(buf, wholeRest[:1024]...)
@@ -234,7 +234,7 @@ func (p *Piano) GetNote(note *Note, sustain *Sustain) bool {
 	}
 	if note.tempo > 4 {
 		// fast tempo
-		releaseNote(buf, 0, 0.7)
+		//releaseNote(buf, 0, 0.7)
 		for t := 0; t < note.tempo-4 && cut > 1024; t++ {
 			if 1024 < len(buf[:cut]) {
 				cut -= 1024
@@ -242,7 +242,6 @@ func (p *Piano) GetNote(note *Note, sustain *Sustain) bool {
 		}
 		buf = trimWave(buf[:cut])
 	}
-	sustRatio := float64(sustain.sustain) / 10.0
 	if divide > 1 {
 		cut = len(buf) / divide
 		if note.dotted {
@@ -252,8 +251,6 @@ func (p *Piano) GetNote(note *Note, sustain *Sustain) bool {
 		if p.NaturalVoice() {
 			mixSoundWave(bufDiv, sustain.buf)
 			copyBuffer(sustain.buf, buf[cut-1:])
-			release := cut / 10 * sustain.release
-			releaseNote(sustain.buf, release, sustRatio)
 		}
 		buf = bufDiv
 	} else {
@@ -265,10 +262,9 @@ func (p *Piano) GetNote(note *Note, sustain *Sustain) bool {
 		if p.NaturalVoice() {
 			mixSoundWave(buf, sustain.buf)
 			copyBuffer(sustain.buf, buf[bufsize/3:])
-			release := bufsize / 10 * sustain.release
-			releaseNote(sustain.buf, release, sustRatio)
 		}
 	}
+	releaseNote(buf, 0, 0.99)
 
 	note.buf = buf
 
@@ -288,15 +284,17 @@ func (p *Piano) ComputerVoice(enable bool) {
 }
 
 func (p *Piano) SustainNote(note *Note, sustain *Sustain) {
-	buf := note.buf
-	buflen := len(buf)
+	buflen := len(note.buf)
 	volume64 := float64(note.volume)
 
 	if p.naturalVoice {
 		attack := float64(9-sustain.attack) / 100 * 2
-		raiseNote(buf, attack)
+		raiseNote(note.buf, attack)
+		raiseNote(sustain.buf, 0.01)
 		release := float64(1+sustain.release) / 10
-		releaseNote(buf, 0, release)
+		releaseNote(note.buf, 0, release)
+		releaseNote(sustain.buf, 0, 0.5)
+		applyNoteVolume(sustain.buf, note.volume, sustain.sustain)
 		return
 	}
 
@@ -310,6 +308,7 @@ func (p *Piano) SustainNote(note *Note, sustain *Sustain) {
 		return
 	}
 	sustain.attack = 9 // overriding
+	sustain.sustain = 4
 	attack := int(float64(buflen/200) * float64(sustain.attack))
 	decay := (buflen-attack)/10 + ((buflen - attack) / 20 * sustain.decay)
 	S := int16(volume64 / 10.0 * float64(sustain.sustain+1))
@@ -321,7 +320,7 @@ func (p *Piano) SustainNote(note *Note, sustain *Sustain) {
 	release64 := float64(R)
 	countD := 0.0
 	countR := 0.0
-	for i, bar := range buf {
+	for i, bar := range note.buf {
 		i64 := float64(i)
 		bar64 := float64(bar)
 		if i >= attack+decay+sustainCount {
@@ -340,6 +339,6 @@ func (p *Piano) SustainNote(note *Note, sustain *Sustain) {
 			// Attack phase, raise volume to max
 			bar64 = bar64 * (i64 / attack64)
 		}
-		buf[i] = int16(bar64)
+		note.buf[i] = int16(bar64)
 	}
 }

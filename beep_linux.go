@@ -70,6 +70,9 @@ func playback(buf1, buf2 []int16) {
 		n := C.snd_pcm_writen(pcm_handle, pos, C.snd_pcm_uframes_t(bufsize))
 		written := int(n)
 		if written < 0 {
+			if music.stopping {
+				break
+			}
 			// error
 			code := C.int(written)
 			written = 0
@@ -98,12 +101,18 @@ func playback(buf1, buf2 []int16) {
 			bufsize -= written
 		*/
 	}
-	linePlayed <- true // notify that playback is done
+	music.linePlayed <- true // notify that playback is done
 }
 
 func flushSoundBuffer() {
 	if pcm_handle != nil {
 		C.snd_pcm_drain(pcm_handle)
+	}
+}
+
+func stopPlayBack() {
+	if pcm_handle != nil {
+		C.snd_pcm_drop(pcm_handle)
 	}
 }
 

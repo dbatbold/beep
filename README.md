@@ -2,9 +2,9 @@ beep
 ====
 
 A Go program that is useful for alerting the end of a long running command execution.
-Beep can also play piano music sheet with optional voices. To play a demo music, run:<br>
+Beep can also play music sheet with natural voices. To play a demo music, run:<br>
 
-```$ beep -p | beep -m```<br>
+```$ beep -m demo```<br>
 
 [Play demo&nbsp; ▶](http://angiud.com/beep/demo-mozart-k33b.mp3)<br>
 [Play demo with piano voice&nbsp; ▶](http://angiud.com/beep/demo-mozart-k33b-piano.mp3)
@@ -26,8 +26,8 @@ On Windows: (requires MinGW, Go compiler from golang.org)
 ```
 Prebuilt binaries
 ===============
- Windows: [beep.exe](http://angiud.com/beep/binary/windows/beep.exe) &nbsp; ```MD5: 1530091a9aa33db2942f8df16f12bbad```<br>
- Linux 64-bit: [beep](http://angiud.com/beep/binary/linux/beep) &nbsp; ```MD5: 01f120dd36c0d76e89942a1775f82520```
+ Windows: [beep.exe](http://angiud.com/beep/binary/windows/beep.exe) &nbsp; ```MD5: be86d51f5f9d703ace563565e9800685```<br>
+ Linux 64-bit: [beep](http://angiud.com/beep/binary/linux/beep) &nbsp; ```MD5: 482f74e8503daa06c878b8f8452c6313```
 Usage
 =====
 ```
@@ -37,14 +37,16 @@ beep [options]
   -f=523.25: frequency in Hertz (1-22050)
   -h: print help
   -l: beep per line from stdin
-  -m: play music notes from stdin (see beep notation)
-  -p: print the demo music by Mozart
+  -m: play music from sheet file, reads stdin if no arguments given (see beep notation)
+  -p: print demo music sheet (Mozart K33b)
   -t=1: beep time duration in millisecond (1-60000)
   -v=100: volume (1-100)
   -b: send bell to PC speaker
   -q: quiet stdout while playing music
   -n: print notes while playing music
   -o=file: output music waveform to a WAV file. Use '-' for stdout
+  -w [ip:port]: start beep web server, if no address given, listens on localhost:4444
+  -vd [name ..]: download voice files, if no names given, downloads all voices
 ```
 Beep notation
 =============
@@ -62,7 +64,6 @@ Piano key map:
  are music notes. Space bar is current duration
  rest. Spaces after first space are ignored.
  Lines start with '#' are ignored.
-
 
 Control keys:
 
@@ -83,6 +84,7 @@ Control keys:
  DS     - sixteenth note
  DT     - thirty-second note
  DI     - sixty-fourth note
+ DD     - dotted note (adds half duration)
 
  Octave:
  H0     - octave 0 keys
@@ -94,10 +96,10 @@ Control keys:
  T#     - where # is 0-9, default is 4
 
  Sustain:
- SA#    - attack time, where # is 0-9, default is 6
- SD#    - decay time, 0-9, default 7
+ SA#    - attack level, where # is 0-9, default is 8
+ SD#    - decay level, 0-9, default 7
  SS#    - sustain level, 0-9, default 7
- SR#    - release time, 0-9, default 8
+ SR#    - release level, 0-9, default 8
 
  Voice:
  VD     - Computer generated default voice
@@ -132,8 +134,8 @@ A3HLDE [n ov|]m [n    |  pb ic|  n,   lHRq|HLnc DQ[ || DEcHRq HLvHRw|
 A9HRDS ][p[ ][p[|DE] DQp DEi|REc DScszs|cszs |cszs|DEcDQzDE[|REv DSvcsc|DEvs ]v|VN
 A3HLDE bHRe HLvw|cHRq   HLic|[n  ]m    |z,   |]m  |zn   z,  |sl  [,    |z. DQp |
 
-A9HRDE REc DScszs|DEcz [c|REs DSsz]z|DEs] ps|DSsz][ z][p|DE[DSitDQr|VN
-A3HLDE z,  ]m    |[n   ov|]m  [n    |pb   ic|nz     sc  |DQn      [|
+A9HRDE REc DScszs|DEcz [c|REs DSsz]z|DEs] ps|DSsz][ z][p|DE[DSitDQrRE|VN
+A3HLDE z,  ]m    |[n   ov|]m  [n    |pb   ic|nz     sc  |DQn      [RE|
 ```
 [Play with default voice&nbsp; ▶](http://angiud.com/beep/demo-mozart-k33b.mp3)<br>
 [Play with natural piano voice&nbsp; ▶](http://angiud.com/beep/demo-mozart-k33b-piano.mp3)
@@ -145,6 +147,15 @@ A voice file is a ZIP file contains sound samples of all notes that the
 music instrument can play. By downloading and placing voice files to
 specific locations where beep find will improve sound quality.
 
+To download voice files, run:<br>
+```
+$ beep -vd  # downloads all voice files
+$ beep -vd piano # piano only
+$ beep -vd piano violin # piano and voice files
+```
+Voice files can also be downloaded manually. Move the files to location below after
+downloading:
+
 **Voice files:**<br>
  Piano voice: [piano.zip](http://angiud.com/beep/voices/piano.zip) (13MB)<br>
  Violin voice: [violin.zip](http://angiud.com/beep/voices/piano.zip) (6.9MB)<br>
@@ -153,8 +164,23 @@ specific locations where beep find will improve sound quality.
  Windows: ```C:\Users\{username}\_beep\voices\``` <br>
  Windows XP: ```C:\Documents and Settings\{username}\_beep\voices\``` <br>
  Linux: ```/home/{username}/.beep/voices/```
+Web Interface
+=============
 
-Currently the violin voice has not been tested with a music sheet.
+Playing music sheet from command line can be slow to start. Because voice
+files are loaded at startup for every time running beep.
+Beep has a built-in web server for playing and storing music sheets.
+The web server loads voice files only once. To start the web interface, run:
+```
+$ beep -w
+```
+then navigate to http:\\localhost:4444 with your browser. If the web interface
+needs to be accessible from other computers, run:
+```
+$ beep -w :4444
+```
+The number 4444 is the default port number for the web server that can be changed.
+
 Usage Examples
 ==============
 ```
@@ -179,19 +205,19 @@ Usage Examples
          HRq2w3er5t6y7ui9o0p[=]azsxcfvgbnjmk,l.\
          H7q2w3er5t6y7ui" | beep -m
  
- # play Mozart K33b
- $ beep -p | beep -m
- C:\>beep -p | beep -m
+ # play demo music by Mozart
+ $ beep -m demo
+ C:\>beep -m demo
  
  # dump music waveform to a WAV file
- $ beep -p | beep -m -o music.wav
+ $ beep -m demo -o music.wav
  
  # pipe to MP3 encoder
- $ beep -p | beep -m -o - | lame - music.mp3
+ $ beep -m demo -o - | lame - music.mp3
  
  # play misic sheet from a file
- $ beep -m < sheet.txt
- C:\>beep -m < sheet.txt
+ $ beep -m sheet.txt
+ C:\>beep -m sheet.txt
 
  # generate 528Hz sine wave for 60 seconds (wine glass frequency)
  $ beep -f 528 -t 60000

@@ -86,7 +86,7 @@ Demo music: Mozart K33b:`
 
 var demoMusic = `
 # Mozart K33b
-VP SA6 SR8
+VP SA8 SR9
 A9HRDE cc DScszs|DEc DQzDE[|cc DScszs|DEc DQz DE[|vv DSvcsc|DEvs ]v|cc DScszs|VN
 A3HLDE [n z,    |cHRq HLz, |[n z,    |cHRq HLz,  |sl z,    |]m   pb|z, ]m    |
 
@@ -96,21 +96,35 @@ A3HLDE [n ov|]m [n    |  pb ic|  n,   lHRq|HLnc DQ[ || DEcHRq HLvHRw|
 A9HRDS ][p[ ][p[|DE] DQp DEi|REc DScszs|cszs |cszs|DEcDQzDE[|REv DSvcsc|DEvs ]v|VN
 A3HLDE bHRe HLvw|cHRq   HLic|[n  ]m    |z,   |]m  |zn   z,  |sl  [,    |z. DQp |
 
-A9HRDE REc DScszs|DEcz [c|REs DSsz]z|DEs] ps|DSsz][ z][p|DE[DSitDQr|VN
-A3HLDE z,  ]m    |[n   ov|]m  [n    |pb   ic|nz     sc  |DQn      [|
+A9HRDE REc DScszs|DEcz [c|REs DSsz]z|DEs] ps|DSsz][ z][p|DE[DSitDQrRE|VN
+A3HLDE z,  ]m    |[n   ov|]m  [n    |pb   ic|nz     sc  |DQn      [RE|
 `
 
 var demoHelp = `To play a demo music, run:
- $ beep -p | beep -m
+ $ beep -m demo
 `
 
-var (
+const (
 	quarterNote = 1024 * 22
 	wholeNote   = quarterNote * 4
 	halfNote    = wholeNote / 2
-	linePlayed  = make(chan bool)
-	wholeRest   = make([]int16, wholeNote)
 )
+
+var (
+	music     *Music
+	wholeRest = make([]int16, wholeNote)
+)
+
+type Music struct {
+	playing    bool
+	stopping   bool
+	quietMode  bool
+	played     chan bool // for syncing player
+	stopped    chan bool
+	linePlayed chan bool // for syncing lines
+	piano      *Piano
+	violin     *Violin
+}
 
 type Note struct {
 	key       rune
@@ -120,7 +134,6 @@ type Note struct {
 	amplitude int
 	tempo     int
 	buf       []int16
-	prevNote  *Note
 }
 
 type Sustain struct {
@@ -161,11 +174,23 @@ func (c *Chord) Reset() {
 }
 
 func playMusicNotes(reader *bufio.Reader, volume100 int) {
+	music.playing = true
+	defer func() {
+		music.played <- true
+		if music.stopping {
+			music.stopped <- true
+		}
+		music.playing = false
+	}()
+
 	volume := int(sampleAmp16bit * (float64(volume100) / 100.0))
 	printSheet := !*flagQuiet
 	printNotes := *flagNotes
 	outputFileName := *flagOutput
-	piano := NewPiano()
+
+	if music.piano == nil {
+		music.piano = NewPiano()
+	}
 
 	var violin *Violin
 	var outputFile *os.File
@@ -175,8 +200,7 @@ func playMusicNotes(reader *bufio.Reader, volume100 int) {
 	if len(outputFileName) > 0 {
 		if outputFileName == "-" {
 			outputFile = os.Stdout
-			printSheet = false
-			printNotes = false
+			music.quietMode = true
 		} else {
 			opt := os.O_WRONLY | os.O_TRUNC | os.O_CREATE
 			outputFile, err = os.OpenFile(outputFileName, opt, 0644)
@@ -186,6 +210,11 @@ func playMusicNotes(reader *bufio.Reader, volume100 int) {
 			}
 		}
 		defer outputFile.Close()
+	}
+
+	if music.quietMode {
+		printSheet = false
+		printNotes = false
 	}
 
 	// rest buffer map
@@ -198,10 +227,10 @@ func playMusicNotes(reader *bufio.Reader, volume100 int) {
 
 	// sustain state
 	sustain := &Sustain{
-		attack:  6,
-		decay:   7,
-		sustain: 7,
-		release: 8,
+		attack:  8,
+		decay:   4,
+		sustain: 4,
+		release: 9,
 		buf:     make([]int16, quarterNote),
 	}
 
@@ -211,19 +240,20 @@ func playMusicNotes(reader *bufio.Reader, volume100 int) {
 	controlKeys := "RDHTSAVC"
 	measures := "WHQESTI"
 	hands := "0LR7"
-	tempos := "0123456789"
-	amplitudes := "0123456789"
-	chordNumbers := "0123456789"
+	zeroToNine := "0123456789"
+	tempos := zeroToNine
+	amplitudes := zeroToNine
+	chordNumbers := zeroToNine
 	ignoredKeys := "\t |"
 	sustainTypes := "ADSR"
-	sustainLevels := "0123456789"
+	sustainLevels := zeroToNine
 	voiceControls := "DPVN"
 	var bufOutput []int16
 	var duration = 'Q' // default note duration
 	var dotted bool
 	var rest rune
 	var ctrl rune
-	var voice Voice = piano // default voice is piano
+	var voice Voice = music.piano // default voice is piano
 	var sustainType rune
 	var hand rune = 'R' // default is middle C octave
 	var handLevel rune
@@ -234,7 +264,6 @@ func playMusicNotes(reader *bufio.Reader, volume100 int) {
 	var bufMix []int16
 	var lineMix string
 	var waitNext bool
-	var prevNote *Note
 	for {
 		line, done := nextMusicLine(reader)
 		if done {
@@ -312,10 +341,13 @@ func playMusicNotes(reader *bufio.Reader, volume100 int) {
 						case 'D': // default voice
 							voice.ComputerVoice(true)
 						case 'P':
-							voice = piano
+							voice = music.piano
 						case 'V':
 							if violin == nil {
-								voice = NewViolin()
+								if music.violin == nil {
+									music.violin = NewViolin()
+								}
+								voice = music.violin
 							}
 						}
 					}
@@ -325,34 +357,39 @@ func playMusicNotes(reader *bufio.Reader, volume100 int) {
 						chord.number = strings.Index(chordNumbers, keystr)
 					}
 				}
+				if rest > 0 {
+					var bufRest []int16
+					switch rest {
+					case 'W':
+						bufRest = wholeRest
+					case 'H':
+						bufRest = bufRH
+					case 'Q':
+						bufRest = bufRQ
+					case 'E':
+						bufRest = bufRE
+					case 'S':
+						bufRest = bufRS
+					case 'T':
+						bufRest = bufRT
+					case 'I':
+						bufRest = bufRI
+					}
+					if bufRest != nil {
+						if voice.NaturalVoice() {
+							buf := make([]int16, len(bufRest))
+							releaseNote(sustain.buf, 0, sustain.Ratio())
+							mixSoundWave(buf, sustain.buf)
+							bufWave = append(bufWave, buf...)
+							clearBuffer(sustain.buf)
+						} else {
+							bufWave = append(bufWave, bufRest...)
+						}
+					}
+					rest = 0
+				}
 				ctrl = 0
 				continue
-			}
-			if rest > 0 {
-				var bufRest []int16
-				switch rest {
-				case 'W':
-					bufRest = wholeRest
-				case 'H':
-					bufRest = bufRH
-				case 'Q':
-					bufRest = bufRQ
-				case 'E':
-					bufRest = bufRE
-				case 'S':
-					bufRest = bufRS
-				case 'T':
-					bufRest = bufRT
-				case 'I':
-					bufRest = bufRI
-				}
-				if bufRest != nil {
-					if voice.NaturalVoice() {
-						clearBuffer(sustain.buf)
-					}
-					bufWave = append(bufWave, bufRest...)
-				}
-				rest = 0
 			}
 			switch hand {
 			case '0': // octave 0
@@ -371,7 +408,6 @@ func playMusicNotes(reader *bufio.Reader, volume100 int) {
 				duration:  duration,
 				dotted:    dotted,
 				tempo:     tempo,
-				prevNote:  prevNote,
 			}
 			if voice.GetNote(note, sustain) {
 				dotted = false
@@ -400,7 +436,7 @@ func playMusicNotes(reader *bufio.Reader, volume100 int) {
 						chord.Reset()
 					} else {
 						if printNotes {
-							fmt.Printf("%v-", piano.keyNoteMap[note.key])
+							fmt.Printf("%v-", music.piano.keyNoteMap[note.key])
 						}
 						continue
 					}
@@ -412,12 +448,11 @@ func playMusicNotes(reader *bufio.Reader, volume100 int) {
 					os.Exit(1)
 				}
 				if printNotes {
-					fmt.Printf("%v ", piano.keyNoteMap[note.key])
+					fmt.Printf("%v ", music.piano.keyNoteMap[note.key])
 				}
-				prevNote = note
 			} else {
 				voiceName := strings.Split(fmt.Sprintf("%T", voice), ".")[1]
-				noteName := piano.keyNoteMap[note.key]
+				noteName := music.piano.keyNoteMap[note.key]
 				fmt.Printf("%s: Invalid note: %s (%s)\n", voiceName, keystr, noteName)
 			}
 		}
@@ -440,53 +475,54 @@ func playMusicNotes(reader *bufio.Reader, volume100 int) {
 			bufMix = nil
 			line = lineMix + "\n" + line
 		}
+		if printNotes {
+			fmt.Println()
+		}
+		if printSheet {
+			fmt.Println(line)
+		}
 		if outputFile == nil {
-			if printNotes {
-				fmt.Println()
-			}
 			if len(bufWave) > 0 {
 				if waitNext {
-					<-linePlayed // wait until previous line is done playing
-				}
-				if printSheet {
-					fmt.Println(line)
+					<-music.linePlayed // wait until previous line is done playing
 				}
 				// prepare next line while playing
 				go playback(bufWave, bufWave)
 				waitNext = true
-			} else {
-				fmt.Println()
 			}
 		} else {
 			// saving to file
-			var bufCh [2]int16
-			for _, bar := range bufWave {
-				bufCh[0] = bar
-				bufCh[1] = bar
-				bufOutput = append(bufOutput, bufCh[:]...)
+			buf := make([]int16, 2*len(bufWave))
+			for i, bar := range bufWave {
+				buf[i*2] = bar
+				buf[i*2+1] = bar
 			}
+			bufOutput = append(bufOutput, buf...)
 		}
 		clearBuffer(sustain.buf)
 		count++
 	}
 	if waitNext {
-		<-linePlayed // wait until last line
+		<-music.linePlayed // wait until last line
 	}
-	flushSoundBuffer()
 
 	if outputFile != nil {
 		// save wave to file
-		bufLen := len(bufOutput)
-		header := NewWaveHeader(2, sampleRate, 16, bufLen*2)
+		buflen := len(bufOutput)
+		header := NewWaveHeader(2, sampleRate, 16, buflen*2)
 		_, err = header.WriteHeader(outputFile)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "Error writing to output file:", err)
 			os.Exit(1)
 		}
-		_, err := outputFile.Write(int16ToByteBuf(bufOutput))
+		buf := int16ToByteBuf(bufOutput)
+		_, err := outputFile.Write(buf)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "Error writing to output file:", err)
 			os.Exit(1)
+		}
+		if outputFileName != "-" {
+			fmt.Printf("wrote %s bytes to '%s'\n", numberComma(int64(len(buf))), outputFileName)
 		}
 	}
 }

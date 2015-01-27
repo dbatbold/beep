@@ -41,6 +41,7 @@ func openSoundDevice(device string) {
 }
 
 func initSoundDevice() {
+	wavehdrLast = nil
 }
 
 func playback(buf1, buf2 []int16) {
@@ -68,32 +69,34 @@ func playback(buf1, buf2 []int16) {
 		}
 	}
 
-	res = C.waveOutWrite(hwaveout, &wavehdr, wdrsize)
-	if res != C.MMSYSERR_NOERROR {
-		fmt.Fprintln(os.Stderr, "Error: waveOutWrite:", winmmErrorText(res))
-	}
+	if !music.stopping {
+		res = C.waveOutWrite(hwaveout, &wavehdr, wdrsize)
+		if res != C.MMSYSERR_NOERROR {
+			fmt.Fprintln(os.Stderr, "Error: waveOutWrite:", winmmErrorText(res))
+		}
 
-	for wavehdr.dwFlags&C.WHDR_DONE == 0 {
-		// still playing
-		time.Sleep(time.Millisecond)
-	}
-	res = C.waveOutUnprepareHeader(hwaveout, &wavehdr, wdrsize)
-	if res != C.MMSYSERR_NOERROR {
-		fmt.Fprintln(os.Stderr, "Error: waveOutUnprepareHeader:", winmmErrorText(res))
-	}
+		for wavehdr.dwFlags&C.WHDR_DONE == 0 {
+			// still playing
+			time.Sleep(time.Millisecond)
+		}
+		res = C.waveOutUnprepareHeader(hwaveout, &wavehdr, wdrsize)
+		if res != C.MMSYSERR_NOERROR {
+			fmt.Fprintln(os.Stderr, "Error: waveOutUnprepareHeader:", winmmErrorText(res))
+		}
 
-	for wavehdr.dwFlags&C.WHDR_DONE == 0 {
-		// still playing
-		time.Sleep(time.Millisecond)
-	}
-	res = C.waveOutUnprepareHeader(hwaveout, &wavehdr, wdrsize)
-	if res != C.MMSYSERR_NOERROR {
-		fmt.Fprintln(os.Stderr, "Error: waveOutUnprepareHeader:", winmmErrorText(res))
+		for wavehdr.dwFlags&C.WHDR_DONE == 0 {
+			// still playing
+			time.Sleep(time.Millisecond)
+		}
+		res = C.waveOutUnprepareHeader(hwaveout, &wavehdr, wdrsize)
+		if res != C.MMSYSERR_NOERROR {
+			fmt.Fprintln(os.Stderr, "Error: waveOutUnprepareHeader:", winmmErrorText(res))
+		}
 	}
 
 	wavehdrLast = &wavehdr
 
-	linePlayed <- true // notify that playback is done
+	music.linePlayed <- true // notify that playback is done
 }
 
 func flushSoundBuffer() {
@@ -121,6 +124,12 @@ func closeSoundDevice() {
 	}
 }
 
+func stopPlayBack() {
+	res := C.waveOutReset(hwaveout)
+	if res != C.MMSYSERR_NOERROR {
+		fmt.Fprintln(os.Stderr, "Error: waveOutReset:", winmmErrorText(res))
+	}
+}
 func sendBell() {
 	bell := []byte{7}
 	os.Stdout.Write(bell)
