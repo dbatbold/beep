@@ -472,12 +472,6 @@ func playMusicNotes(reader *bufio.Reader, volume100 int) {
 			bufMix = nil
 			line = lineMix + "\n" + line
 		}
-		if printNotes {
-			fmt.Println()
-		}
-		if printSheet {
-			fmt.Println(line)
-		}
 		if outputFile == nil {
 			if len(bufWave) > 0 {
 				if waitNext {
@@ -503,7 +497,6 @@ func playMusicNotes(reader *bufio.Reader, volume100 int) {
 			if printSheet {
 				fmt.Println(line)
 			}
-			bufOutput = append(bufOutput, buf...)
 		}
 		clearBuffer(sustain.buf)
 		count++
