@@ -26,8 +26,8 @@ On Windows: (requires MinGW, Go compiler from golang.org)
 ```
 Prebuilt binaries
 ===============
- Windows: [beep.exe](http://angiud.com/beep/binary/windows/beep.exe) &nbsp; ```MD5: be86d51f5f9d703ace563565e9800685```<br>
- Linux 64-bit: [beep](http://angiud.com/beep/binary/linux/beep) &nbsp; ```MD5: 482f74e8503daa06c878b8f8452c6313```
+ Windows: [beep.exe](http://angiud.com/beep/binary/windows/beep.exe) &nbsp; ```MD5: 94b84e2ae31964bcd0f08484a4c822ff```<br>
+ Linux 64-bit: [beep](http://angiud.com/beep/binary/linux/beep) &nbsp; ```MD5: 46291d4668866950189c7ab7665e7f0f```
 Usage
 =====
 ```
@@ -210,13 +210,14 @@ Usage Examples
  C:\>beep -m demo
  
  # dump music waveform to a WAV file
- $ beep -m demo -o music.wav
+ $ beep -m -o music.wav demo 
  
  # pipe to MP3 encoder
- $ beep -m demo -o - | lame - music.mp3
+ $ beep -m -o - demo | lame - music.mp3
  
- # play misic sheet from a file
+ # play misic sheet from a files
  $ beep -m sheet.txt
+ $ beep -m sheet1.txt sheet2.txt demo
  C:\>beep -m sheet.txt
 
  # generate 528Hz sine wave for 60 seconds (wine glass frequency)

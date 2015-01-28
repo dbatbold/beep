@@ -253,7 +253,8 @@ func playMusicSheet(volume int) {
 			time.Sleep(time.Second * 1)
 		}
 		initSoundDevice()
-		playMusicNotes(reader, volume)
+		go playMusicNotes(reader, volume)
+		<-music.played
 		flushSoundBuffer()
 	}
 	for _, file := range files {

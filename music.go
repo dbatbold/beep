@@ -475,12 +475,6 @@ func playMusicNotes(reader *bufio.Reader, volume100 int) {
 			bufMix = nil
 			line = lineMix + "\n" + line
 		}
-		if printNotes {
-			fmt.Println()
-		}
-		if printSheet {
-			fmt.Println(line)
-		}
 		if outputFile == nil {
 			if len(bufWave) > 0 {
 				if waitNext {
@@ -488,7 +482,12 @@ func playMusicNotes(reader *bufio.Reader, volume100 int) {
 				}
 				// prepare next line while playing
 				go playback(bufWave, bufWave)
+				if printSheet {
+					fmt.Println(line)
+				}
 				waitNext = true
+			} else if printSheet {
+				fmt.Println(line)
 			}
 		} else {
 			// saving to file
@@ -498,9 +497,15 @@ func playMusicNotes(reader *bufio.Reader, volume100 int) {
 				buf[i*2+1] = bar
 			}
 			bufOutput = append(bufOutput, buf...)
+			if printSheet {
+				fmt.Println(line)
+			}
 		}
 		clearBuffer(sustain.buf)
 		count++
+		if music.stopping {
+			break
+		}
 	}
 	if waitNext {
 		<-music.linePlayed // wait until last line
