@@ -174,11 +174,7 @@ func (w *Web) serveSearch() {
 	response := loadResponse{
 		Names: names,
 	}
-	jres, err := json.Marshal(response)
-	if err != nil {
-		panic(err)
-	}
-	w.res.Write(jres)
+	w.jsonResponse(response)
 }
 
 // Loads a sheet
@@ -204,11 +200,7 @@ func (w *Web) serveLoadSheet() {
 		Name:     filepath.Join(sheet.Dir, sheet.Name),
 		Notation: sheet.Notation,
 	}
-	jres, err := json.Marshal(response)
-	if err != nil {
-		panic(err)
-	}
-	w.res.Write(jres)
+	w.jsonResponse(response)
 }
 
 // Saves a sheet
@@ -221,11 +213,7 @@ func (w *Web) serveSaveSheet() {
 		response := &saveSheetResponse{
 			Result: result,
 		}
-		jres, err := json.Marshal(response)
-		if err != nil {
-			panic(err)
-		}
-		w.res.Write(jres)
+		w.jsonResponse(response)
 	}()
 	type saveSheetRequest struct {
 		Name     string
@@ -293,13 +281,25 @@ func (w *Web) execTemplate(name string, data interface{}) {
 	}
 }
 
-// Gets JSON request
+// Reads JSON request
 func (w *Web) jsonRequest(request interface{}) {
 	requestBody, err := ioutil.ReadAll(w.req.Body)
 	if err != nil {
 		panic(err)
 	}
 	if err = json.Unmarshal(requestBody, request); err != nil {
+		panic(err)
+	}
+}
+
+// Writes JSON response
+func (w *Web) jsonResponse(response interface{}) {
+	jres, err := json.Marshal(response)
+	if err != nil {
+		panic(err)
+	}
+	_, err = w.res.Write(jres)
+	if err != nil {
 		panic(err)
 	}
 }
