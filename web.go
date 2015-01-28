@@ -318,7 +318,7 @@ func (w *Web) execTemplate(name string, data interface{}) {
 
 // Downloads natural voices
 func downloadVoiceFiles(writer io.Writer, names []string) {
-	dir := filepath.Join(beepHomeDir(), "/voices")
+	dir := filepath.Join(beepHomeDir(), "voices")
 	if len(names) == 0 {
 		names = []string{"piano", "violin"}
 	}
@@ -476,17 +476,17 @@ function Ajax() {
 	this.send = function(url, data) {
 		var ajax = this
 		this.ajax.onreadystatechange = function() {
-			if (this.readyState == 4) {
-				if (this.status != 200) {
-					alert('Request failed.\n\n'+
-						'Status Code:'+ this.status +'\n'+
-						'Status:'+ this.statusText +'\n'+
-						'Response:'+ this.responseText)
-					return
-				}
-				if (ajax.onready)
-					ajax.onready(this.responseText)
+			if (this.readyState != 4)
+				return
+			if (this.status != 200) {
+				alert('Request failed.\n\n'+
+					'Status Code:'+ this.status +'\n'+
+					'Status:'+ this.statusText +'\n'+
+					'Response:'+ this.responseText)
+				return
 			}
+			if (ajax.onready)
+				ajax.onready(this.responseText)
 		}
 		this.ajax.open('POST', url, true)
 		this.ajax.send(data)
@@ -503,7 +503,6 @@ function Ajax() {
 				return jres
 			} catch (e) {
 				alert('JSON Error:\n\n'+ e)
-				return null
 			}
 		}
 		return null

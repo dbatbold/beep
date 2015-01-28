@@ -58,10 +58,10 @@ Beep notation:
  T#     - where # is 0-9, default is 4
 
  Sustain:
- SA#    - attack time, where # is 0-9, default is 4
- SD#    - decay time, 0-9, default 4
- SS#    - sustain level, 0-9, default 4
- SR#    - release time, 0-9, default 4
+ SA#    - attack level, where # is 0-9, default is 8
+ SD#    - decay level, 0-9, default 7
+ SS#    - sustain level, 0-9, default 7
+ SR#    - release level, 0-9, default 8
 
  Voice:
  VD     - Computer generated default voice
@@ -154,7 +154,7 @@ type Chord struct {
 // SustainNote: Used for sustaining computer generated voice
 // Sustain: Indicates whether the instrument sustain note
 // NaturalVoice: Indicates whether natural voice file is loaded
-// ComputerVoice: Enabled or disable computer voice
+// ComputerVoice: Enable or disable computer voice
 type Voice interface {
 	GetNote(note *Note, sustain *Sustain) bool
 	SustainNote(note *Note, sustain *Sustain)
@@ -192,7 +192,6 @@ func playMusicNotes(reader *bufio.Reader, volume100 int) {
 		music.piano = NewPiano()
 	}
 
-	var violin *Violin
 	var outputFile *os.File
 	var err error
 
@@ -343,12 +342,10 @@ func playMusicNotes(reader *bufio.Reader, volume100 int) {
 						case 'P':
 							voice = music.piano
 						case 'V':
-							if violin == nil {
-								if music.violin == nil {
-									music.violin = NewViolin()
-								}
-								voice = music.violin
+							if music.violin == nil {
+								music.violin = NewViolin()
 							}
+							voice = music.violin
 						}
 					}
 				case 'C': // chord
@@ -475,6 +472,12 @@ func playMusicNotes(reader *bufio.Reader, volume100 int) {
 			bufMix = nil
 			line = lineMix + "\n" + line
 		}
+		if printNotes {
+			fmt.Println()
+		}
+		if printSheet {
+			fmt.Println(line)
+		}
 		if outputFile == nil {
 			if len(bufWave) > 0 {
 				if waitNext {
@@ -500,6 +503,7 @@ func playMusicNotes(reader *bufio.Reader, volume100 int) {
 			if printSheet {
 				fmt.Println(line)
 			}
+			bufOutput = append(bufOutput, buf...)
 		}
 		clearBuffer(sustain.buf)
 		count++

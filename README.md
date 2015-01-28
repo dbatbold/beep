@@ -209,6 +209,13 @@ Usage Examples
  # play demo music by Mozart
  $ beep -m demo
  C:\>beep -m demo
+
+ # start beep web server and serve pages locally
+ $ beep -w
+ C:\>beep -w  (or click Start then Run and type: beep -w)
+ 
+ # start beep web server with open access
+ $ beep -w :4444
  
  # dump music waveform to a WAV file
  $ beep -m -o music.wav demo 
