@@ -39,7 +39,7 @@ beep [options]
   -l: beep per line from stdin
   -m: play music from sheet file, reads stdin if no arguments given (see beep notation)
   -p: print demo music sheet (Mozart K33b)
-  -t=1: beep time duration in millisecond (1-60000)
+  -t=250: beep time duration in millisecond (1-60000)
   -v=100: volume (1-100)
   -b: send bell to PC speaker
   -q: quiet stdout while playing music
