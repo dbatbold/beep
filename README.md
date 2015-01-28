@@ -175,7 +175,7 @@ To start the web interface, run:
 ```
 $ beep -w
 ```
-then navigate to http://localhost:4444 with your browser. If the web interface
+then open your browser and navigate to ```http://localhost:4444```. If the web interface
 needs to be accessible from other computers, run:
 ```
 $ beep -w :4444
