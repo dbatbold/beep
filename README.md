@@ -223,7 +223,7 @@ Usage Examples
  # pipe to MP3 encoder
  $ beep -m -o - demo | lame - music.mp3
  
- # play misic sheet from a files
+ # play misic sheet from files
  $ beep -m sheet.txt
  $ beep -m sheet1.txt sheet2.txt demo
  C:\>beep -m sheet.txt
