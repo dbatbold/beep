@@ -97,9 +97,9 @@ Control keys:
 
  Sustain:
  SA#    - attack level, where # is 0-9, default is 8
- SD#    - decay level, 0-9, default 7
- SS#    - sustain level, 0-9, default 7
- SR#    - release level, 0-9, default 8
+ SD#    - decay level, 0-9, default 4
+ SS#    - sustain level, 0-9, default 4
+ SR#    - release level, 0-9, default 9
 
  Voice:
  VD     - Computer generated default voice
