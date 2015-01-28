@@ -101,8 +101,8 @@ func (w *Web) serve() {
 		w.servePlay()
 	case "/stop":
 		w.serveStop()
-	case "/load":
-		w.serveLoad()
+	case "/search":
+		w.serveSearch()
 	case "/loadSheet":
 		w.serveLoadSheet()
 	case "/saveSheet":
@@ -134,18 +134,11 @@ func (w *Web) servePlay() {
 	if music.playing {
 		return
 	}
-	requestBody, err := ioutil.ReadAll(w.req.Body)
-	if err != nil {
-		panic(err)
-	}
 	type playRequest struct {
 		Notation string
 	}
 	request := &playRequest{}
-	err = json.Unmarshal(requestBody, request)
-	if err != nil {
-		panic(err)
-	}
+	w.jsonRequest(request)
 	initSoundDevice()
 	notation := bytes.NewBuffer([]byte(request.Notation))
 	reader := bufio.NewReader(notation)
@@ -167,9 +160,14 @@ func (w *Web) serveStop() {
 	fmt.Fprint(w.res, "stopped")
 }
 
-// Loads all sheet names
-func (w *Web) serveLoad() {
-	names := sheetList()
+// Search sheet names
+func (w *Web) serveSearch() {
+	type searchRequest struct {
+		Keyword string
+	}
+	request := &searchRequest{}
+	w.jsonRequest(request)
+	names := sheetSearch(request.Keyword)
 	type loadResponse struct {
 		Names []string
 	}
@@ -185,18 +183,11 @@ func (w *Web) serveLoad() {
 
 // Loads a sheet
 func (w *Web) serveLoadSheet() {
-	requestBody, err := ioutil.ReadAll(w.req.Body)
-	if err != nil {
-		panic(err)
-	}
 	type loadSheetRequest struct {
 		Name string
 	}
 	request := &loadSheetRequest{}
-	err = json.Unmarshal(requestBody, request)
-	if err != nil {
-		panic(err)
-	}
+	w.jsonRequest(request)
 	type loadSheetResponse struct {
 		Name     string
 		Notation string
@@ -205,7 +196,7 @@ func (w *Web) serveLoadSheet() {
 		Name: filepath.Base(request.Name),
 		Dir:  filepath.Dir(request.Name),
 	}
-	err = sheet.Load()
+	err := sheet.Load()
 	if err != nil {
 		panic(err)
 	}
@@ -236,19 +227,12 @@ func (w *Web) serveSaveSheet() {
 		}
 		w.res.Write(jres)
 	}()
-	requestBody, err := ioutil.ReadAll(w.req.Body)
-	if err != nil {
-		panic(err)
-	}
 	type saveSheetRequest struct {
 		Name     string
 		Notation string
 	}
 	request := &saveSheetRequest{}
-	err = json.Unmarshal(requestBody, request)
-	if err != nil {
-		panic(err)
-	}
+	w.jsonRequest(request)
 	name := filepath.Base(request.Name)
 	id := stringNumber(strings.Split(name, "-")[0])
 	if id > 0 && id <= 100 {
@@ -262,7 +246,7 @@ func (w *Web) serveSaveSheet() {
 	}
 	if len(request.Notation) == 0 && sheet.Exists() {
 		// delete sheet
-		err = sheet.Delete()
+		err := sheet.Delete()
 		if err != nil {
 			result = fmt.Sprintf("Error: %v", err)
 		} else {
@@ -270,7 +254,7 @@ func (w *Web) serveSaveSheet() {
 		}
 	} else {
 		// save sheet
-		err = sheet.Save()
+		err := sheet.Save()
 		if err != nil {
 			result = fmt.Sprintf("Error: %v", err)
 		} else {
@@ -294,14 +278,7 @@ func (w *Web) serveDownloadVoice() {
 		Name string
 	}
 	request := &downloadRequest{}
-	requestBody, err := ioutil.ReadAll(w.req.Body)
-	if err != nil {
-		panic(err)
-	}
-	err = json.Unmarshal(requestBody, request)
-	if err != nil {
-		panic(err)
-	}
+	w.jsonRequest(request)
 	var names []string
 	if len(request.Name) > 0 {
 		names = append(names, request.Name)
@@ -312,6 +289,17 @@ func (w *Web) serveDownloadVoice() {
 // Execute template with name and data
 func (w *Web) execTemplate(name string, data interface{}) {
 	if err := w.tmpl.ExecuteTemplate(w.res, name, data); err != nil {
+		panic(err)
+	}
+}
+
+// Gets JSON request
+func (w *Web) jsonRequest(request interface{}) {
+	requestBody, err := ioutil.ReadAll(w.req.Body)
+	if err != nil {
+		panic(err)
+	}
+	if err = json.Unmarshal(requestBody, request); err != nil {
 		panic(err)
 	}
 }
@@ -402,6 +390,7 @@ var webTemplates = `{{define "header"}}
 			<a id='stop' class='button' href='javascript:;'>Stop</a>
 			<a id='save' class='button' href='javascript:;'>Save</a>
 			<a id='load' class='button' href='javascript:;'>Load</a>
+			<input id='search' title='Search' style='width:100px;margin-left:5px'>
 		</div>
 		<div id='result' style='padding-top:10px'>
 		</div>
@@ -517,6 +506,10 @@ window.onload = function() {
 	ids.stop.onclick = stop
 	ids.load.onclick = load
 	ids.save.onclick = saveSheet
+	ids.search.onkeypress = searchPress
+	ids.search.onfocus = searchFocus
+	ids.search.onblur = searchFocus
+	ids.search.onfocus()
 }
 function newSheet() {
 	ids.sheetName.innerText = ''
@@ -540,20 +533,46 @@ function play() {
 	ajax.send('/play', JSON.stringify(data))
 }
 function load() {
+	search('')
+}
+function searchFocus() {
+	if (this.value) {
+		this.style.color = ''
+		if (this.value == this.title)
+			this.value = ''
+	} else {
+		this.style.color = '#aaa'
+		this.value = this.title
+	}
+}
+function searchPress(e) {
+	e = e || event
+	if (e.keyCode == 13) {
+		search(this.value)
+	}
+}
+function search(keyword) {
 	var ajax = new Ajax
 	ajax.onready = function(data) {
 		var h = []
 		var jres = this.jsonResp()
-		var names = jres.Names
-		for (i=0; i<names.length; i++) {
-			h.push("<div class='item'>")
-			h.push("<a href='javascript:;' class='link' onclick='loadSheet(this.innerText)'>")
-			h.push(names[i])
-			h.push("</a></div><br>\n")
+		if (jres.Names) {
+			var names = jres.Names 
+			for (i=0; i<names.length; i++) {
+				h.push("<div class='item'>")
+				h.push("<a href='javascript:;' class='link' onclick='loadSheet(this.innerText)'>")
+				h.push(names[i])
+				h.push("</a></div><br>\n")
+			}
+		} else {
+			h.push('No matches found.')
 		}
 		ids.result.innerHTML = h.join('')
 	}
-	ajax.send('/load', null)
+	var data = {
+		'Keyword': keyword
+	}
+	ajax.send('/search', JSON.stringify(data))
 }
 function loadSheet(name) {
 	var ajax = new Ajax

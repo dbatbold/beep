@@ -5,7 +5,6 @@ package main
 /*
 #cgo LDFLAGS: -lwinmm
 
-#include <stdio.h>
 #include <windows.h>
 */
 import "C"

@@ -18,7 +18,7 @@ import (
 	"time"
 )
 
-var (
+const (
 	sampleRate     = 44100
 	sampleRate64   = float64(sampleRate)
 	bitsPerSample  = 16
@@ -26,7 +26,9 @@ var (
 	sampleAmp16bit = 32767.0
 	sampleAmp8bit  = 127.0
 	noteC5         = 523.25
+)
 
+var (
 	flagHelp      = flag.Bool("h", false, "help")
 	flagCount     = flag.Int("c", 1, "beep count")
 	flagFreq      = flag.Float64("f", noteC5, "frequency in Hertz (1-22050)")
@@ -247,7 +249,6 @@ func playMusicSheet(volume int) {
 	}
 	for i, file := range files {
 		reader := bufio.NewReader(file)
-		file = file
 		if i > 0 {
 			fmt.Println()
 			time.Sleep(time.Second * 1)

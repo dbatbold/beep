@@ -105,7 +105,7 @@ func NewPiano() *Piano {
 	}
 
 	// load natural voice file, if exists
-	filename := beepHomeDir() + "/voices/piano.zip"
+	filename := filepath.Join(beepHomeDir(), "voices", "piano.zip")
 	voiceFile, err := zip.OpenReader(filename)
 	if err == nil {
 		// voice file exists

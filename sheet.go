@@ -86,17 +86,22 @@ func (s *Sheet) Delete() error {
 	return nil
 }
 
-func sheetList() []string {
+func sheetSearch(keyword string) []string {
 	var names []string
+	keyword = strings.ToLower(keyword)
 	root := filepath.Join(beepHomeDir(), "sheets") + string(os.PathSeparator)
 	for _, sheet := range builtinMusic {
 		name := strings.TrimPrefix(sheet.Path(), root)
-		names = append(names, name)
+		if len(keyword) == 0 || strings.Contains(strings.ToLower(name), keyword) {
+			names = append(names, name)
+		}
 	}
 	walkFn := func(path string, info os.FileInfo, err error) error {
 		if err == nil && !info.IsDir() {
 			name := strings.TrimPrefix(path, root)
-			names = append(names, name)
+			if len(keyword) == 0 || strings.Contains(strings.ToLower(name), keyword) {
+				names = append(names, name)
+			}
 		}
 		return nil
 	}

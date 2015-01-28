@@ -32,7 +32,7 @@ func NewViolin() *Violin {
 	keys := "q2w3er5t6y7ui9o0p[=]azsxcfvgbnjmk,l."
 
 	octaveFreq3 := []float64{
-		// C3, Db3, D3, Eb3, E3, F3, Gb3, G3, Ab3, A3, Bb3, B3
+		// C3, Db3, D3, Eb3, E3
 		196.0, 207.6, 220.0, 233.0, 246.9, // 3
 	}
 	octaveFreq456 := []float64{
@@ -86,7 +86,7 @@ func NewViolin() *Violin {
 	}
 
 	// load natural voice file, if exists
-	filename := beepHomeDir() + "/voices/violin.zip"
+	filename := filepath.Join(beepHomeDir(), "voices", "violin.zip")
 	voiceFile, err := zip.OpenReader(filename)
 	if err == nil {
 		// voice file exists
