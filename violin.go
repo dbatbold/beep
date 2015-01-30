@@ -200,9 +200,9 @@ func (v *Violin) GetNote(note *Note, sustain *Sustain) bool {
 	buf := make([]int16, len(bufNote))
 	copy(buf, bufNote) // get a copy of the note
 	applyNoteVolume(buf, note.volume, note.amplitude)
-	buflen := len(buf)
-	cut := buflen
-	if note.tempo < 4 && buflen > 1024 {
+	bufsize := len(buf)
+	cut := bufsize
+	if note.tempo < 4 && bufsize > 1024 {
 		// slow tempo
 		releaseNote(buf, 0, 0.7)
 		for t := 0; t < 4-note.tempo; t++ {
@@ -223,24 +223,19 @@ func (v *Violin) GetNote(note *Note, sustain *Sustain) bool {
 		}
 		buf = trimWave(buf[:cut])
 	}
-	sustRatio := float64(sustain.sustain) / 10.0
+	//sustRatio := float64(sustain.sustain) / 10.0
 	if divide > 1 {
 		cut = len(buf) / divide
-		bufDiv := trimWave(buf[:cut])
-		if v.Sustain() && v.NaturalVoice() {
-			mixSoundWave(bufDiv, sustain.buf)
-			copyBuffer(sustain.buf, buf[cut-1:])
-			release := (wholeNote / divide) / 10 * sustain.sustain
-			releaseNote(sustain.buf, release, sustRatio)
+		if note.dotted {
+			cut += cut / 2
 		}
+		bufDiv := trimWave(buf[:cut])
 		buf = bufDiv
-		buflen = len(buf)
 	} else {
-		if v.Sustain() && v.NaturalVoice() {
-			mixSoundWave(buf, sustain.buf)
-			copyBuffer(sustain.buf, buf[buflen/3:])
-			release := buflen / 10 * sustain.sustain
-			releaseNote(sustain.buf, release, sustRatio)
+		// whole note
+		if note.dotted {
+			dotBuf := make([]int16, halfNote)
+			buf = append(buf, dotBuf...)
 		}
 	}
 

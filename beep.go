@@ -109,6 +109,7 @@ func main() {
 		played:     make(chan bool),
 		stopped:    make(chan bool),
 		linePlayed: make(chan bool),
+		output:     *flagOutput,
 	}
 
 	openSoundDevice(device)

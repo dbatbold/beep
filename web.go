@@ -111,6 +111,8 @@ func (w *Web) serve() {
 		w.serveVoices()
 	case "/downloadVoice":
 		w.serveDownloadVoice()
+	case "/exportWave":
+		w.serveExportWave()
 	default:
 		w.execTemplate("header", nil)
 		w.execTemplate("pageNotFound", w.req.URL.Path)
@@ -274,6 +276,34 @@ func (w *Web) serveDownloadVoice() {
 	downloadVoiceFiles(w.res, names)
 }
 
+// Export to WAV file
+func (w *Web) serveExportWave() {
+	defer func() {
+		music.output = ""
+	}()
+	type exportWaveRequest struct {
+		Output   string
+		Notation string
+	}
+	request := &exportWaveRequest{}
+	w.jsonRequest(request)
+
+	notation := bytes.NewBuffer([]byte(request.Notation))
+	reader := bufio.NewReader(notation)
+	music.output = filepath.Join(beepHomeDir(), "export", request.Output)
+	os.MkdirAll(filepath.Dir(music.output), 0755)
+	go playMusicNotes(reader, 100)
+	<-music.played
+
+	type exportWaveResponse struct {
+		Result string
+	}
+	response := exportWaveResponse{
+		Result: "WAV file has been save to: " + music.output,
+	}
+	w.jsonResponse(response)
+}
+
 // Execute template with name and data
 func (w *Web) execTemplate(name string, data interface{}) {
 	if err := w.tmpl.ExecuteTemplate(w.res, name, data); err != nil {
@@ -360,6 +390,10 @@ func downloadVoiceFiles(writer io.Writer, names []string) {
 		fmt.Fprintf(writer, "  Saving %s\n", filename)
 		beepDefault()
 	}
+
+	// reload voices
+	music.piano = NewPiano()
+	music.violin = NewViolin()
 }
 
 // All HTML templates
@@ -371,7 +405,7 @@ var webTemplates = `{{define "header"}}
 		<script src='js/system.js'></script>
 	</head>
 	<body>
-	<div class="header">beep</div>
+	<div class="header" ondblclick="this.style.display='none'">beep</div>
 	<div class="menu">
 		<a class="menu" href="/">Home</a> |
 		<a class="menu" href="/voices">Voices</a>
@@ -390,6 +424,7 @@ var webTemplates = `{{define "header"}}
 			<a id='stop' class='button' href='javascript:;'>Stop</a>
 			<a id='save' class='button' href='javascript:;'>Save</a>
 			<a id='load' class='button' href='javascript:;'>Load</a>
+			<a id='exportWave' class='button' href='javascript:;'>Export</a>
 			<input id='search' title='Search' style='width:100px;margin-left:5px'>
 		</div>
 		<div id='result' style='padding-top:10px'>
@@ -509,6 +544,7 @@ window.onload = function() {
 	ids.search.onkeypress = searchPress
 	ids.search.onfocus = searchFocus
 	ids.search.onblur = searchFocus
+	ids.exportWave.onclick = exportPath
 	ids.search.onfocus()
 }
 function newSheet() {
@@ -552,6 +588,7 @@ function searchPress(e) {
 	}
 }
 function search(keyword) {
+	ids.result.innerHTML = 'Searching ...'
 	var ajax = new Ajax
 	ajax.onready = function(data) {
 		var h = []
@@ -567,7 +604,7 @@ function search(keyword) {
 		} else {
 			h.push('No matches found.')
 		}
-		ids.result.innerHTML = h.join('')
+		setTimeout(function() {ids.result.innerHTML = h.join('')}, 200)
 	}
 	var data = {
 		'Keyword': keyword
@@ -601,16 +638,39 @@ function saveSheet() {
 		ids.result.childNodes[1].focus()
 		return
 	}
+	ids.result.innerHTML = 'Saving ...'
 	var ajax = new Ajax
 	ajax.onready = function(data) {
 		var jres = this.jsonResp()
-		ids.result.innerHTML = jres.Result
+		setTimeout(function() {ids.result.innerHTML = jres.Result}, 200)
 	}
 	var data = {
 		'Name': ids.sheetName.innerText,
 		'Notation': ids.notation.value
 	}
 	ajax.send('/saveSheet', JSON.stringify(data))
+}
+function exportPath() {
+	var h = []
+	h.push("File Path: <input style='width:350px;margin-right:5px' value='output.wav'>")
+	h.push("<a href='javascript:;' onclick='exportWave(this)' class='button'>Export</a>")
+	ids.result.innerHTML = h.join('')
+	ids.result.childNodes[1].focus()
+}
+function exportWave(elem) {
+	var output = elem.previousSibling.value
+	if (!output) return
+	ids.result.innerHTML = 'Exporting ...'
+	var ajax = new Ajax
+	ajax.onready = function(data) {
+		var jres = this.jsonResp()
+		ids.result.innerHTML = jres.Result
+	}
+	var data = {
+		'Output': output,
+		'Notation': ids.notation.value
+	}
+	ajax.send('/exportWave', JSON.stringify(data))
 }
 function reset() {
 	ids.play.innerHTML = 'Play'

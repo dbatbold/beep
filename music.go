@@ -124,6 +124,7 @@ type Music struct {
 	linePlayed chan bool // for syncing lines
 	piano      *Piano
 	violin     *Violin
+	output     string
 }
 
 type Note struct {
@@ -186,7 +187,7 @@ func playMusicNotes(reader *bufio.Reader, volume100 int) {
 	volume := int(sampleAmp16bit * (float64(volume100) / 100.0))
 	printSheet := !*flagQuiet
 	printNotes := *flagNotes
-	outputFileName := *flagOutput
+	outputFileName := music.output
 
 	if music.piano == nil {
 		music.piano = NewPiano()
@@ -417,12 +418,12 @@ func playMusicNotes(reader *bufio.Reader, volume100 int) {
 						chord.buf = make([]int16, len(note.buf))
 						copy(chord.buf, note.buf)
 						if voice.NaturalVoice() {
-							copyBuffer(sustain.buf, chord.buf)
+							//copyBuffer(sustain.buf, chord.buf)
 						}
 					} else {
 						mixSoundWave(chord.buf, note.buf)
 						if voice.NaturalVoice() {
-							mixSoundWave(sustain.buf, note.buf)
+							//mixSoundWave(sustain.buf, note.buf)
 						}
 					}
 					if chord.count == chord.number {
