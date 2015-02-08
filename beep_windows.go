@@ -129,6 +129,7 @@ func stopPlayBack() {
 		fmt.Fprintln(os.Stderr, "Error: waveOutReset:", winmmErrorText(res))
 	}
 }
+
 func sendBell() {
 	bell := []byte{7}
 	os.Stdout.Write(bell)
