@@ -6,7 +6,6 @@ Beep can also play music sheet with natural voices. To play a demo music, run:<b
 
 ```$ beep -m demo```<br>
 
-[Play demo&nbsp; ▶](http://angiud.com/beep/demo-mozart-k33b.mp3)<br>
 [Play demo with piano voice&nbsp; ▶](http://angiud.com/beep/demo-mozart-k33b-piano.mp3)
 Compiling
 =========
@@ -50,6 +49,11 @@ beep [options]
 ```
 Beep notation
 =============
+To play music with beep, music notation need to be converted into text that computer program can read. Beep uses its own notation called beep notation. All piano octaves are divided into computer keyboard keys with similar layout. All 88 piano keys can be written as below.
+```
+H0,l.HLq2w3er5t6y7ui9o0p[=]azsxcfvgbnjmk,l.HRq2w3er5t6y7ui9o0p[=]azsxcfvgbnjmk,l.H7q2w3er5t6y7ui
+```
+Uppercase "H" letter is a control key that changes the current octave. Lowercase letters are notes. Using all control keys shown below are used to convert musical notation.
 ```
 Piano key map:
   | | | | | | | | | | | | | | | | | | | | | | 
