@@ -1,6 +1,2 @@
-@echo off
-REM Windows build script (requires MinGW)
-set LIB=c:\mingw\lib
-set INCLUDE=c:\mingw\include
-set PATH=%PATH%;c:\mingw\bin
+set PATH=c:\mingw64\bin;c:\mingw\bin;c:\go\bin
 go build
