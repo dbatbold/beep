@@ -123,6 +123,10 @@ Control keys:
  |      - bar, ignored
  ' '    - space, ignored
  Tab    - tab, ignored
+
+ Comments:
+ #      - a line comment
+ ##     - start or end of a block comment
 ```
 Demo Music
 ==========

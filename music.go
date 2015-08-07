@@ -276,16 +276,30 @@ func playMusicNotes(reader *bufio.Reader, volume100 int) {
 	var bufMix []int16
 	var lineMix string
 	var waitNext bool
+	var blockComment bool
 	for {
 		line, done := nextMusicLine(reader)
 		if done {
 			break
 		}
 		if strings.HasPrefix(line, "#") {
-			// ignore comments
-			if printSheet {
-				fmt.Println(line)
+			if strings.HasPrefix(line, "##") {
+				// ignore block comment
+				if blockComment {
+					blockComment = false
+				} else {
+					blockComment = true
+				}
+				continue
+			} else {
+				// ignore comments
+				if printSheet {
+					fmt.Println(line)
+				}
+				continue
 			}
+		}
+		if blockComment {
 			continue
 		}
 		if strings.HasSuffix(line, "VN") {
