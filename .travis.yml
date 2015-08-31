@@ -1,3 +1,7 @@
 language: go
 go:
 - tip
+
+before_install:
+  - sudo apt-get update -qq
+  - sudo apt-get install -y libasound2-dev
