@@ -6,5 +6,5 @@ import (
 
 func TestComma(t *testing.T) {
 	//t.Skip()
-	t.Log(readableComma(-1234567))
+	//t.Log(readableComma(-1234567))
 }
