@@ -23,7 +23,7 @@ On Windows: (requires MinGW, Go compiler from golang.org)
  C:\beep> build.bat
  C:\beep> copy beep.exe \windows\system32
 ```
-![alt tag](https://travis-ci.org/dbatbold/beep.svg?branch=master)
+[![Build Status](https://travis-ci.org/dbatbold/beep.svg?branch=master)](https://travis-ci.org/dbatbold/beep)
 Prebuilt binaries
 ===============
  Windows: [beep.exe](http://angiud.com/beep/binary/windows/beep.exe) &nbsp; ```MD5: 399d00a74093923ad1345472b37a1b1b```<br>
