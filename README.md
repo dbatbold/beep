@@ -26,8 +26,8 @@ On Windows: (requires MinGW, Go compiler from golang.org)
 [![Build Status](https://travis-ci.org/dbatbold/beep.svg?branch=master)](https://travis-ci.org/dbatbold/beep)
 Prebuilt binaries
 ===============
- Windows: [beep.exe](http://angiud.com/beep/binary/windows/beep.exe) &nbsp; ```MD5: 399d00a74093923ad1345472b37a1b1b```<br>
- Linux 64-bit: [beep](http://angiud.com/beep/binary/linux/beep) &nbsp; ```MD5: a4b149e486efd5e0192f9147cf1b8120```
+ Windows: [beep.exe](http://angiud.com/beep/binary/windows/beep.exe) &nbsp; ```MD5: 1504ff3a83640ec1732fb3b9030dd881```<br>
+ Linux 64-bit: [beep](http://angiud.com/beep/binary/linux/beep) &nbsp; ```MD5: c3c348d8c3c119bb10f7a81e8ab78398```
 Usage
 =====
 ```
@@ -47,6 +47,8 @@ beep [options]
   -o=file: output music waveform to a WAV file. Use '-' for stdout
   -w [ip:port]: start beep web server, if no address given, listens on localhost:4444
   -vd [name ..]: download voice files, if no names given, downloads all voices
+  -mb MIDI file: parses MIDI file to beep notation
+  -mp MIDI file: parses MIDI file and print notes
 ```
 Beep notation
 =============
@@ -255,4 +257,10 @@ Usage Examples
  
  # middle C note
  $ beep -f 261.625565 -t 1500
+ 
+ # parse MIDI file to beep notation (timing is missing)
+ $ beep -mb music.mid
+ 
+ # parse MIDI file and print notes
+ $ beep -mp music.mid
 ```

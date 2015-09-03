@@ -44,6 +44,8 @@ var (
 	flagOutput    = flag.String("o", "", "output music waveform to file. Use '-' for stdout")
 	flagWeb       = flag.Bool("w", false, "start beep web server, by default listens on localhost:4444")
 	flagVoiceDl   = flag.Bool("vd", false, "download voice files, by default downloads all voices")
+	flagMidiBeep  = flag.String("mb", "", "parses MIDI file to beep notation")
+	flagMidiNote  = flag.String("mp", "", "parses MIDI file and print notes")
 )
 
 var beepOptions = `Usage: beep [options]
@@ -62,6 +64,8 @@ var beepOptions = `Usage: beep [options]
   -o=file: output music waveform to a WAV file. Use '-' for stdout
   -w [ip:port]: start beep web server, by default listens on localhost:4444 
   -vd [name ..]: download voice files, by default downloads all voices
+  -mb MIDI file: parses MIDI file to beep notation
+  -mp MIDI file: parses MIDI file and print notes
 `
 
 func main() {
@@ -79,6 +83,8 @@ func main() {
 	writeBell := *flagBell
 	webServer := *flagWeb
 	downloadVoices := *flagVoiceDl
+	midiBeep := *flagMidiBeep
+	midiNote := *flagMidiNote
 
 	if help {
 		fmt.Printf("%s%s\n%s\n%s",
@@ -145,6 +151,16 @@ func main() {
 			names = append(names, arg)
 		}
 		downloadVoiceFiles(os.Stdout, names)
+		return
+	}
+
+	if len(midiBeep) > 0 {
+		parseMidiBeep(midiBeep)
+		return
+	}
+
+	if len(midiNote) > 0 {
+		parseMidiNote(midiNote)
 		return
 	}
 
@@ -265,5 +281,21 @@ func playMusicSheet(volume int) {
 				closer.Close()
 			}
 		}
+	}
+}
+
+// Parses a MIDI file and print beep notation
+func parseMidiBeep(filename string) {
+	_, err := ParseMidiNote(filename, false)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+	}
+}
+
+// Parses a MIDI file and print notes
+func parseMidiNote(filename string) {
+	_, err := ParseMidiNote(filename, true)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 	}
 }

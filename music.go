@@ -82,6 +82,10 @@ Beep notation:
  ' '    - space, ignored
  Tab    - tab, ignored
 
+ Comments:
+ #      - a line comment
+ ##     - start or end of a block comment
+
 Demo music: Mozart K33b:`
 
 var demoMusic = `
@@ -290,14 +294,13 @@ func playMusicNotes(reader *bufio.Reader, volume100 int) {
 				} else {
 					blockComment = true
 				}
-				continue
 			} else {
 				// ignore comments
 				if printSheet {
 					fmt.Println(line)
 				}
-				continue
 			}
+			continue
 		}
 		if blockComment {
 			continue
