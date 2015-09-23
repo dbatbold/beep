@@ -2,7 +2,7 @@ beep
 ====
 
 A Go program that is useful for alerting the end of a long running command execution.
-Beep can also play music sheet with natural voices. To play a demo music, run:<br>
+Beep can also play a MIDI file or music sheet with natural voices. To play a demo music, run:<br>
 
 ```$ beep -m demo```<br>
 
@@ -258,9 +258,9 @@ Usage Examples
  # middle C note
  $ beep -f 261.625565 -t 1500
  
- # parse MIDI file to beep notation (timing is missing)
- $ beep -mb music.mid
- 
- # parse MIDI file and print notes
+ # play MIDI file
  $ beep -mp music.mid
+ 
+ # print notes with keyboard from MIDI file
+ $ beep -mn music.mid
 ```
