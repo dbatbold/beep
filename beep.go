@@ -44,8 +44,8 @@ var (
 	flagOutput    = flag.String("o", "", "output music waveform to file. Use '-' for stdout")
 	flagWeb       = flag.Bool("w", false, "start beep web server, by default listens on localhost:4444")
 	flagVoiceDl   = flag.Bool("vd", false, "download voice files, by default downloads all voices")
-	flagMidiBeep  = flag.String("mb", "", "parses MIDI file to beep notation")
-	flagMidiNote  = flag.String("mp", "", "parses MIDI file and print notes")
+	flagMidiPlay  = flag.String("mp", "", "play MIDI file")
+	flagMidiNote  = flag.String("mn", "", "parses MIDI file and print notes")
 )
 
 var beepOptions = `Usage: beep [options]
@@ -64,8 +64,8 @@ var beepOptions = `Usage: beep [options]
   -o=file: output music waveform to a WAV file. Use '-' for stdout
   -w [ip:port]: start beep web server, by default listens on localhost:4444 
   -vd [name ..]: download voice files, by default downloads all voices
-  -mb MIDI file: parses MIDI file to beep notation
-  -mp MIDI file: parses MIDI file and print notes
+  -mp=file: play MIDI file
+  -mn=file: parses MIDI file and print notes
 `
 
 func main() {
@@ -83,14 +83,14 @@ func main() {
 	writeBell := *flagBell
 	webServer := *flagWeb
 	downloadVoices := *flagVoiceDl
-	midiBeep := *flagMidiBeep
+	midiPlay := *flagMidiPlay
 	midiNote := *flagMidiNote
 
 	if help {
 		fmt.Printf("%s%s\n%s\n%s",
 			beepOptions,
 			beepNotation,
-			demoMusic,
+			builtinMusic[0].Notation, //demoMusic,
 			demoHelp,
 		)
 		return
@@ -154,8 +154,8 @@ func main() {
 		return
 	}
 
-	if len(midiBeep) > 0 {
-		parseMidiBeep(midiBeep)
+	if len(midiPlay) > 0 {
+		parseMidiBeep(midiPlay)
 		return
 	}
 
@@ -284,17 +284,19 @@ func playMusicSheet(volume int) {
 	}
 }
 
-// Parses a MIDI file and print beep notation
+// Play a MIDI file
 func parseMidiBeep(filename string) {
-	_, err := ParseMidiNote(filename, false)
+	midi, err := ParseMidi(filename, false)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+	} else {
+		midi.play()
 	}
 }
 
 // Parses a MIDI file and print notes
 func parseMidiNote(filename string) {
-	_, err := ParseMidiNote(filename, true)
+	_, err := ParseMidi(filename, true)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 	}

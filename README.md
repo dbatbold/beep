@@ -26,7 +26,7 @@ On Windows: (requires MinGW, Go compiler from golang.org)
 [![Build Status](https://travis-ci.org/dbatbold/beep.svg?branch=master)](https://travis-ci.org/dbatbold/beep)
 Prebuilt binaries
 ===============
- Windows: [beep.exe](http://angiud.com/beep/binary/windows/beep.exe) &nbsp; ```MD5: 1504ff3a83640ec1732fb3b9030dd881```<br>
+ Windows: [beep.exe](http://angiud.com/beep/binary/windows/beep.exe) &nbsp; ```MD5: f14ee92e908c525d17372d3afa8fb194```<br>
  Linux 64-bit: [beep](http://angiud.com/beep/binary/linux/beep) &nbsp; ```MD5: c3c348d8c3c119bb10f7a81e8ab78398```
 Usage
 =====
@@ -47,8 +47,8 @@ beep [options]
   -o=file: output music waveform to a WAV file. Use '-' for stdout
   -w [ip:port]: start beep web server, if no address given, listens on localhost:4444
   -vd [name ..]: download voice files, if no names given, downloads all voices
-  -mb MIDI file: parses MIDI file to beep notation
-  -mp MIDI file: parses MIDI file and print notes
+  -mp=file: play MIDI file
+  -mn=file: parses MIDI file and print notes
 ```
 Beep notation
 =============
