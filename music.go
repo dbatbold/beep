@@ -1,6 +1,6 @@
 // music.go - beep music note engine
 // Batbold Dashzeveg
-// GPL v2
+// BSD
 
 package main
 
