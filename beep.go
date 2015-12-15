@@ -1,7 +1,7 @@
 /*
  beep - A sound notifier with a music note engine
  Batbold Dashzeveg
- 2014-12-31 GPL v2
+ 2014-12-31 BSD
 */
 
 package main
