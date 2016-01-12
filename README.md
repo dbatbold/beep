@@ -52,7 +52,7 @@ beep [options]
 ```
 Beep notation
 =============
-To play music with beep, music notation need to be converted into text that computer program can read. Beep uses its own notation called beep notation. All piano octaves are divided into computer keyboard keys with similar layout. All 88 piano keys can be written as below.
+To play music with beep, music notation needs to be converted into text that a computer program can read. Beep uses its own notation called beep notation. All piano octaves are divided into computer keyboard keys with similar layout. All 88 piano keys can be written as below.
 ```
 H0,l.HLq2w3er5t6y7ui9o0p[=]azsxcfvgbnjmk,l.HRq2w3er5t6y7ui9o0p[=]azsxcfvgbnjmk,l.H7q2w3er5t6y7ui
 ```
@@ -166,10 +166,9 @@ A3HLDE z,  ]m    |[n   ov|]m  [n    |pb   ic|nz     sc  |DQn      [RQ|
 Natural Voices
 ==============
 
-Beep uses computer generated voices, if there are no voice files exist.
-A voice file is a ZIP file contains sound samples of all notes that the
-music instrument can play. By downloading and placing voice files to
-specific locations where beep find will improve sound quality.
+Beep uses computer generated voices, if no voice files exist.
+A voice file is a ZIP file that contains sound samples of all notes that the
+music instrument can play. By downloading and placing voice files in specific locations can improve music sound quality.
 
 To download voice files, run:<br>
 ```
@@ -191,7 +190,7 @@ downloading:
 Web Interface
 =============
 
-Playing music sheet from command line can be slow to start. Because voice
+Playing a music sheet from command line can be slow to start, because voice
 files are loaded at startup for every time running beep.
 Beep has a built-in web server for playing and storing music sheets.
 The web server loads voice files only once and uses them for all playback.
