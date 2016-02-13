@@ -203,7 +203,9 @@ needs to be accessible from other computers, run:
 ```
 $ beep -w :4444
 ```
-The number 4444 is the default port number for the web server that can be changed.
+
+Screenshot:<br>
+![alt tag](http://angiud.com/dl/beep/beep-web.png)
 
 Usage Examples
 ==============
