@@ -12,12 +12,13 @@ import (
 )
 
 type Violin struct {
-	naturalVoice bool
-	keyDefMap    map[rune][]int16 // default voice
-	keyNatMap    map[rune][]int16 // natural voice
-	keyFreqMap   map[rune]float64
-	keyNoteMap   map[rune]string
-	noteKeyMap   map[string]rune
+	naturalVoice      bool
+	naturalVoiceFound bool
+	keyDefMap         map[rune][]int16 // default voice
+	keyNatMap         map[rune][]int16 // natural voice
+	keyFreqMap        map[rune]float64
+	keyNoteMap        map[rune]string
+	noteKeyMap        map[string]rune
 }
 
 func NewViolin() *Violin {
@@ -250,6 +251,10 @@ func (v *Violin) Sustain() bool {
 
 func (v *Violin) NaturalVoice() bool {
 	return v.naturalVoice
+}
+
+func (v *Violin) NaturalVoiceFound() bool {
+	return v.naturalVoiceFound
 }
 
 func (v *Violin) ComputerVoice(enable bool) {

@@ -12,12 +12,13 @@ import (
 )
 
 type Piano struct {
-	naturalVoice bool
-	keyDefMap    map[rune][]int16 // default voice
-	keyNatMap    map[rune][]int16 // natural voice
-	keyFreqMap   map[rune]float64
-	keyNoteMap   map[rune]string
-	noteKeyMap   map[string]rune
+	naturalVoice      bool
+	naturalVoiceFound bool
+	keyDefMap         map[rune][]int16 // default voice
+	keyNatMap         map[rune][]int16 // natural voice
+	keyFreqMap        map[rune]float64
+	keyNoteMap        map[rune]string
+	noteKeyMap        map[string]rune
 }
 
 func NewPiano() *Piano {
@@ -121,6 +122,7 @@ func NewPiano() *Piano {
 			if !strings.HasSuffix(zfile.Name, ".wav") {
 				continue
 			}
+			p.naturalVoiceFound = true
 			noteName := strings.Split(filepath.Base(zfile.Name), ".")[0]
 			if key, found := p.noteKeyMap[noteName]; found {
 				var header WaveHeader
@@ -277,6 +279,10 @@ func (p *Piano) Sustain() bool {
 
 func (p *Piano) NaturalVoice() bool {
 	return p.naturalVoice
+}
+
+func (p *Piano) NaturalVoiceFound() bool {
+	return p.naturalVoiceFound
 }
 
 func (p *Piano) ComputerVoice(enable bool) {

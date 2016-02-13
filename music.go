@@ -149,6 +149,7 @@ type Voice interface {
 	SustainNote(note *Note, sustain *Sustain)
 	Sustain() bool
 	NaturalVoice() bool
+	NaturalVoiceFound() bool
 	ComputerVoice(enable bool)
 }
 
@@ -343,7 +344,9 @@ func playMusicNotes(reader *bufio.Reader, volume100 int) {
 							voice.ComputerVoice(true)
 						case 'P':
 							voice = music.piano
-							//voice.ComputerVoice(false)
+							if voice.NaturalVoiceFound() {
+								voice.ComputerVoice(false)
+							}
 						case 'V':
 							if music.violin == nil {
 								music.violin = NewViolin()
