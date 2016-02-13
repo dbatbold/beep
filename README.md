@@ -205,7 +205,7 @@ $ beep -w :4444
 ```
 
 **Screenshot:**<br>
-![alt tag](http://angiud.com/dl/beep/beep-web.png)
+![alt tag](http://angiud.com/dl/beep/beep-web.png?1)
 
 Usage Examples
 ==============
