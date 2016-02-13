@@ -194,9 +194,14 @@ Playing a music sheet from command line can be slow to start, because voice
 files are loaded at startup for every time running beep.
 Beep has a built-in web server for playing and storing music sheets.
 The web server loads voice files only once and uses them for all playback.
-To start the web interface, run:
+To start the web interface, run:<br><br>
+Linux:<br>
 ```
 $ beep -w
+```
+Windows:<br>
+```
+C:\>beep -w
 ```
 then open your browser and navigate to ```http://localhost:4444```. If the web interface
 needs to be accessible from other computers, run:
