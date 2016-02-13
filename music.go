@@ -343,7 +343,7 @@ func playMusicNotes(reader *bufio.Reader, volume100 int) {
 							voice.ComputerVoice(true)
 						case 'P':
 							voice = music.piano
-							voice.ComputerVoice(false)
+							//voice.ComputerVoice(false)
 						case 'V':
 							if music.violin == nil {
 								music.violin = NewViolin()
