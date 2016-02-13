@@ -204,7 +204,7 @@ needs to be accessible from other computers, run:
 $ beep -w :4444
 ```
 
-Screenshot:<br>
+**Screenshot:**<br>
 ![alt tag](http://angiud.com/dl/beep/beep-web.png)
 
 Usage Examples
