@@ -26,8 +26,8 @@ On Windows: (requires MinGW, Go compiler from golang.org)
 [![Build Status](https://travis-ci.org/dbatbold/beep.svg?branch=master)](https://travis-ci.org/dbatbold/beep)
 Prebuilt binaries
 ===============
- Windows: [beep.exe](http://angiud.com/beep/binary/windows/beep.exe) &nbsp; ```MD5: 268a6597311efc65d45cf8e93f11aa30```<br>
- Linux 64-bit: [beep](http://angiud.com/beep/binary/linux/beep) &nbsp; ```MD5: 725ab513fbf4afcf6f31ed4677f13881```
+ Windows: [beep.exe](http://angiud.com/beep/binary/windows/beep.exe) &nbsp; ```MD5: c9c9b8e965afcc1104bdd0addf1cb93b```<br>
+ Linux 64-bit: [beep](http://angiud.com/beep/binary/linux/beep) &nbsp; ```MD5: 37d85ef055f9f0ded9969a68b5c4c775```
 Usage
 =====
 ```
