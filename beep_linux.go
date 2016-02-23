@@ -6,6 +6,8 @@ package main
 #cgo LDFLAGS: -lasound
 
 #include <alsa/asoundlib.h>
+
+void *cbuf[2];
 */
 import "C"
 
@@ -61,13 +63,13 @@ func playback(buf1, buf2 []int16) {
 		buf1 = append(buf1, rest...)
 		buf2 = append(buf2, rest...)
 	}
-	buffers := []unsafe.Pointer{
-		unsafe.Pointer(&buf1[0]),
-		unsafe.Pointer(&buf2[0]),
-	}
-	pos := &buffers[0]
+
+	// Go 1.6 cgocheck fix: Can't pass Go pointer to C function
+	C.cbuf[0] = unsafe.Pointer(&buf1[0])
+	C.cbuf[1] = unsafe.Pointer(&buf2[0])
+
 	for {
-		n := C.snd_pcm_writen(pcm_handle, pos, C.snd_pcm_uframes_t(bufsize))
+		n := C.snd_pcm_writen(pcm_handle, &(C.cbuf[0]), C.snd_pcm_uframes_t(bufsize))
 		written := int(n)
 		if written < 0 {
 			if music.stopping {

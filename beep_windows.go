@@ -6,6 +6,7 @@ package main
 #cgo LDFLAGS: -lwinmm
 
 #include <windows.h>
+size_t wavehdrsize = sizeof(WAVEHDR);
 */
 import "C"
 
@@ -50,12 +51,13 @@ func playback(buf1, buf2 []int16) {
 		bufWave[i*2+1] = buf2[i]
 	}
 
-	var wavehdr C.WAVEHDR
-	wdrsize := C.UINT(unsafe.Sizeof(wavehdr))
+	// Go 1.6 cgocheck fix: Can't pass Go pointer to C function
+	wavehdr := (*C.WAVEHDR)(C.malloc(C.wavehdrsize))
+	C.memset(unsafe.Pointer(wavehdr), 0, C.wavehdrsize)
 	wavehdr.lpData = C.LPSTR(unsafe.Pointer(&bufWave[0]))
 	wavehdr.dwBufferLength = C.DWORD(len(bufWave) * 2)
 
-	res := C.waveOutPrepareHeader(hwaveout, &wavehdr, wdrsize)
+	res := C.waveOutPrepareHeader(hwaveout, unsafe.Pointer(wavehdr), C.UINT(C.wavehdrsize))
 	if res != C.MMSYSERR_NOERROR {
 		fmt.Fprintln(os.Stderr, "Error: waveOutPrepareHeader:", winmmErrorText(res))
 		os.Exit(1)
@@ -69,7 +71,7 @@ func playback(buf1, buf2 []int16) {
 	}
 
 	if !music.stopping {
-		res = C.waveOutWrite(hwaveout, &wavehdr, wdrsize)
+		res = C.waveOutWrite(hwaveout, unsafe.Pointer(wavehdr), C.UINT(C.wavehdrsize))
 		if res != C.MMSYSERR_NOERROR {
 			fmt.Fprintln(os.Stderr, "Error: waveOutWrite:", winmmErrorText(res))
 		}
@@ -78,7 +80,7 @@ func playback(buf1, buf2 []int16) {
 			// still playing
 			time.Sleep(time.Millisecond)
 		}
-		res = C.waveOutUnprepareHeader(hwaveout, &wavehdr, wdrsize)
+		res = C.waveOutUnprepareHeader(hwaveout, unsafe.Pointer(wavehdr), C.UINT(C.wavehdrsize))
 		if res != C.MMSYSERR_NOERROR {
 			fmt.Fprintln(os.Stderr, "Error: waveOutUnprepareHeader:", winmmErrorText(res))
 		}
@@ -87,13 +89,13 @@ func playback(buf1, buf2 []int16) {
 			// still playing
 			time.Sleep(time.Millisecond)
 		}
-		res = C.waveOutUnprepareHeader(hwaveout, &wavehdr, wdrsize)
+		res = C.waveOutUnprepareHeader(hwaveout, unsafe.Pointer(wavehdr), C.UINT(C.wavehdrsize))
 		if res != C.MMSYSERR_NOERROR {
 			fmt.Fprintln(os.Stderr, "Error: waveOutUnprepareHeader:", winmmErrorText(res))
 		}
 	}
 
-	wavehdrLast = &wavehdr
+	wavehdrLast = wavehdr
 
 	music.linePlayed <- true // notify that playback is done
 }
@@ -105,10 +107,11 @@ func flushSoundBuffer() {
 			time.Sleep(time.Millisecond)
 		}
 		wdrsize := C.UINT(unsafe.Sizeof(wavehdr))
-		res := C.waveOutUnprepareHeader(hwaveout, wavehdrLast, wdrsize)
+		res := C.waveOutUnprepareHeader(hwaveout, unsafe.Pointer(wavehdrLast), wdrsize)
 		if res != C.MMSYSERR_NOERROR {
 			fmt.Fprintln(os.Stderr, "Error: waveOutUnprepareHeader:", winmmErrorText(res))
 		}
+		C.free(unsafe.Pointer(wavehdrLast))
 	}
 }
 
@@ -129,7 +132,6 @@ func stopPlayBack() {
 		fmt.Fprintln(os.Stderr, "Error: waveOutReset:", winmmErrorText(res))
 	}
 }
-
 func sendBell() {
 	bell := []byte{7}
 	os.Stdout.Write(bell)
