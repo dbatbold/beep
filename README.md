@@ -27,7 +27,7 @@ On Windows: (requires MinGW, Go compiler from golang.org)
 Prebuilt binaries
 ===============
  Windows: [beep.exe](http://angiud.com/beep/binary/windows/beep.exe) &nbsp; ```MD5: 3197c594c052e27ef3511eca81f7fc74```<br>
- Linux 64-bit: [beep](http://angiud.com/beep/binary/linux/beep) &nbsp; ```MD5: 11c0301a213d23db93e9fe8c5264f26a```
+ Linux 64-bit: [beep](http://angiud.com/beep/binary/linux/beep) &nbsp; ```MD5: 1fc8dd621e82a1665603fa32dcdd090e```
 Usage
 =====
 ```
@@ -49,6 +49,7 @@ beep [options]
   -vd [name ..]: download voice files, if no names given, downloads all voices
   -mp=file: play MIDI file
   -mn=file: parses MIDI file and print notes
+  -play=notes: play notes from command argument
 ```
 Beep notation
 =============

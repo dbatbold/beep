@@ -46,6 +46,7 @@ var (
 	flagVoiceDl   = flag.Bool("vd", false, "download voice files, by default downloads all voices")
 	flagMidiPlay  = flag.String("mp", "", "play MIDI file")
 	flagMidiNote  = flag.String("mn", "", "parses MIDI file and print notes")
+	flagPlayNotes = flag.String("play", "", "play notes from command argument")
 )
 
 var beepOptions = `Usage: beep [options]
@@ -66,9 +67,15 @@ var beepOptions = `Usage: beep [options]
   -vd [name ..]: download voice files, by default downloads all voices
   -mp=file: play MIDI file
   -mn=file: parses MIDI file and print notes
+  -play=notes: play notes from command argument
 `
 
 func main() {
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Println("recover: ", r)
+		}
+	}()
 	flag.Parse()
 
 	help := *flagHelp
@@ -85,6 +92,7 @@ func main() {
 	downloadVoices := *flagVoiceDl
 	midiPlay := *flagMidiPlay
 	midiNote := *flagMidiNote
+	musicNotes := *flagPlayNotes
 
 	if help {
 		fmt.Printf("%s%s\n%s\n%s",
@@ -161,6 +169,11 @@ func main() {
 
 	if len(midiNote) > 0 {
 		parseMidiNote(midiNote)
+		return
+	}
+
+	if len(musicNotes) > 0 {
+		playMusicNotesFromCL(musicNotes, volume)
 		return
 	}
 
@@ -300,4 +313,12 @@ func parseMidiNote(filename string) {
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 	}
+}
+
+func playMusicNotesFromCL(musicNotes string, volume int) {
+	reader := bufio.NewReader(strings.NewReader(musicNotes))
+	initSoundDevice()
+	go playMusicNotes(reader, volume)
+	<-music.played
+	flushSoundBuffer()
 }

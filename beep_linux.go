@@ -19,11 +19,16 @@ import (
 )
 
 var (
-	pcm_handle *C.snd_pcm_t
+	pcm_handle    *C.snd_pcm_t
+	pcm_hw_params *C.snd_pcm_hw_params_t
 )
 
 func openSoundDevice(device string) {
-	code := C.snd_pcm_open(&pcm_handle, C.CString(device), C.SND_PCM_STREAM_PLAYBACK, 0)
+	code := C.snd_pcm_open(
+		&pcm_handle,
+		C.CString(device),
+		C.SND_PCM_STREAM_PLAYBACK,
+		0)
 	if code < 0 {
 		fmt.Println("snd_pcm_open:", strerror(code))
 		os.Exit(1)
@@ -36,11 +41,22 @@ func initSoundDevice() {
 	if sample16bit {
 		sampleFormat = C.SND_PCM_FORMAT_S16
 	}
+
+	if code := C.snd_pcm_hw_params_malloc(&pcm_hw_params); code < 0 {
+		fmt.Println("snd_pcm_hw_params_malloc:", strerror(code))
+		os.Exit(1)
+	}
+	if code := C.snd_pcm_hw_params_any(pcm_handle, pcm_hw_params); code < 0 {
+		fmt.Println("snd_pcm_hw_params_any:", strerror(code))
+		os.Exit(1)
+	}
+
+	// C.SND_PCM_ACCESS_RW_NONINTERLEAVED - is not working with PulseAudio
 	code := C.snd_pcm_set_params(
 		pcm_handle,
 		sampleFormat,
-		C.SND_PCM_ACCESS_RW_NONINTERLEAVED,
-		2,
+		C.SND_PCM_ACCESS_RW_INTERLEAVED,
+		1,
 		44100,
 		1,
 		500000)
@@ -65,11 +81,14 @@ func playback(buf1, buf2 []int16) {
 	}
 
 	// Go 1.6 cgocheck fix: Can't pass Go pointer to C function
-	C.cbuf[0] = unsafe.Pointer(&buf1[0])
-	C.cbuf[1] = unsafe.Pointer(&buf2[0])
+	//C.cbuf[0] = unsafe.Pointer(&buf1[0])
+	//C.cbuf[1] = unsafe.Pointer(&buf2[0])
+
+	// Changing to single channel interleaved buffer format for PulseAudio
+	buf := unsafe.Pointer(&buf1[0])
 
 	for {
-		n := C.snd_pcm_writen(pcm_handle, &(C.cbuf[0]), C.snd_pcm_uframes_t(bufsize))
+		n := C.snd_pcm_writei(pcm_handle, buf, C.snd_pcm_uframes_t(bufsize))
 		written := int(n)
 		if written < 0 {
 			if music.stopping {
