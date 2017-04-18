@@ -7,6 +7,7 @@ Beep can also play a MIDI file or music sheet with natural voices. To play a dem
 ```$ beep -m demo```<br>
 
 [Play demo with piano voice&nbsp; ▶](http://angiud.com/beep/demo-mozart-k33b-piano.mp3)
+
 Compiling
 =========
 ```
@@ -24,12 +25,16 @@ On Windows: (requires MinGW, Go compiler from golang.org)
  C:\beep> copy beep.exe \windows\system32
 ```
 [![Build Status](https://travis-ci.org/dbatbold/beep.svg?branch=master)](https://travis-ci.org/dbatbold/beep)
+
 Prebuilt binaries
 ===============
+
  Windows: [beep.exe](http://angiud.com/beep/binary/windows/beep.exe) &nbsp; ```MD5: 3197c594c052e27ef3511eca81f7fc74```<br>
  Linux 64-bit: [beep](http://angiud.com/beep/binary/linux/beep) &nbsp; ```MD5: 38283f4c0769e9cfef3811f15f39a138```
+
 Usage
 =====
+
 ```
 beep [options]
   -c=1: beep count
@@ -53,6 +58,7 @@ beep [options]
 ```
 Beep notation
 =============
+
 To play music with beep, music notation needs to be converted into text that a computer program can read. Beep uses its own notation called beep notation. All piano octaves are divided into computer keyboard keys with similar layout. All 88 piano keys can be written as below.
 ```
 H0,l.HLq2w3er5t6y7ui9o0p[=]azsxcfvgbnjmk,l.HRq2w3er5t6y7ui9o0p[=]azsxcfvgbnjmk,l.H7q2w3er5t6y7ui
@@ -164,6 +170,7 @@ A3HLDE z,  ]m    |[n   ov|]m  [n    |pb   ic|nz     sc  |DQn      [RQ|
 [Play with default voice&nbsp; ▶](http://angiud.com/beep/demo-mozart-k33b.mp3)<br>
 [Play with natural piano voice&nbsp; ▶](http://angiud.com/beep/demo-mozart-k33b-piano.mp3)<br>
 [View music sheet](http://imslp.org/images/1/15/TN-Mozart%2C_Wofgang_Amadeus-NMA_09_27_Band_02_I_01_KV_33b.jpg)
+
 Natural Voices
 ==============
 
@@ -188,6 +195,7 @@ downloading:
  Windows: ```C:\Users\{username}\_beep\voices\``` <br>
  Windows XP: ```C:\Documents and Settings\{username}\_beep\voices\``` <br>
  Linux: ```/home/{username}/.beep/voices/```
+
 Web Interface
 =============
 
