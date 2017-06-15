@@ -24,8 +24,11 @@ type Web struct {
 // Starts beep web server
 func startWebServer(address string) {
 	var err error
+	var ip string
+	if len(address) == 0 {
+		ip = "127.0.0.1"
+	}
 	parts := strings.Split(address, ":")
-	ip := "127.0.0.1"
 	if len(parts[0]) > 0 {
 		ip = parts[0]
 	}
@@ -39,7 +42,11 @@ func startWebServer(address string) {
 	}
 
 	bind := fmt.Sprintf("%s:%d", ip, port)
-	fmt.Printf("Listening on http://%s/\n", bind)
+	if len(ip) == 0 {
+		fmt.Println("Listening on port", port)
+	} else {
+		fmt.Printf("Listening on http://%s/\n", bind)
+	}
 
 	web := NewWeb()
 	music.quietMode = true

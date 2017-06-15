@@ -75,7 +75,7 @@ func main() {
 
 	if help {
 		flag.Usage()
-		fmt.Printf("%s\n%s\n%s\n%s\n",
+		fmt.Fprintf(os.Stderr, "\n%s\n%s\n%s\n%s\n",
 			intro,
 			beepNotation,
 			builtinMusic[0].Notation, //demoMusic,
