@@ -7,7 +7,7 @@ Beep can also play a MIDI file or music sheet files with natural voices. To play
 ```
 $ go get -u github.com/dbatbold/beep
 $ $GOPATH/bin/beep -vd      # download natural voices
-$ $GOPATH/bin/beep -m demo  # plac demo music
+$ $GOPATH/bin/beep -m demo  # play demo music
 ```
 
 [Play demo with piano voice&nbsp; ▶](http://angiud.com/beep/demo-mozart-k33b-piano.mp3)
@@ -192,7 +192,6 @@ downloading:
 
 **Voice file location:**<br>
  Windows: ```C:\Users\{username}\_beep\voices\``` <br>
- Windows XP: ```C:\Documents and Settings\{username}\_beep\voices\``` <br>
  Linux: ```/home/{username}/.beep/voices/```
 
 Web Interface
