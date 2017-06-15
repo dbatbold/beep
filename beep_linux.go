@@ -77,7 +77,7 @@ func playback(buf1, buf2 []int16) {
 		// prevent buffer underrun
 		rest := make([]int16, sampleRate)
 		buf1 = append(buf1, rest...)
-		buf2 = append(buf2, rest...)
+		//buf2 = append(buf2, rest...)
 	}
 
 	// Go 1.6 cgocheck fix: Can't pass Go pointer to C function
@@ -97,7 +97,8 @@ func playback(buf1, buf2 []int16) {
 			// error
 			code := C.int(written)
 			written = 0
-			fmt.Fprintln(os.Stderr, "snd_pcm_writen:", code, strerror(code))
+			_ = written
+			fmt.Fprintln(os.Stderr, "snd_pcm_writei:", code, strerror(code))
 			code = C.snd_pcm_recover(pcmHandle, code, 0)
 			if code < 0 {
 				fmt.Fprintln(os.Stderr, "snd_pcm_recover:", strerror(code))
@@ -113,7 +114,7 @@ func playback(buf1, buf2 []int16) {
 				C.snd_pcm_wait(pcmHandle, 1000)
 				continue
 			}
-			fmt.Fprintf(os.Stderr, "snd_pcm_writen: wrote: %d/%d\n", written, bufsize)
+			fmt.Fprintf(os.Stderr, "snd_pcm_writei: wrote: %d/%d\n", written, bufsize)
 			buffers = []unsafe.Pointer{
 				unsafe.Pointer(&buf1[written]),
 				unsafe.Pointer(&buf2[written]),

@@ -117,7 +117,7 @@ func sheetSearch(keyword string) []string {
 }
 
 var builtinMusic = []*Sheet{
-	&Sheet{
+	{
 		ID:   1,
 		Name: "mozart-k33b-klavierstuck-in-f.txt",
 		Dir:  "beep",
