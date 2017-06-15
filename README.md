@@ -1,10 +1,13 @@
 beep
 ====
 
-A Go program that is useful for alerting the end of a long running command execution.
-Beep can also play a MIDI file or music sheet with natural voices. To play a demo music, run:<br>
+A beeper for alerting the end of a long running command execution.
+Beep can also play a MIDI file or music sheet files with natural voices. To play a demo music, run:<br>
 
-```$ beep -m demo```<br>
+```
+$ go get -u github.com/dbatbold/beep
+$ $GOPATH/bin/beep -m demo
+```
 
 [Play demo with piano voice&nbsp; ▶](http://angiud.com/beep/demo-mozart-k33b-piano.mp3)
 
