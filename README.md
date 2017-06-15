@@ -8,8 +8,8 @@ Beep can also play a MIDI file or music sheet with natural voices. To play a dem
 
 [Play demo with piano voice&nbsp; ▶](http://angiud.com/beep/demo-mozart-k33b-piano.mp3)
 
-Compiling
-=========
+Building
+========
 ```
 On Linux:
  $ apt-get install golang libasound2-dev  # for Debian and Ubuntu
@@ -25,12 +25,6 @@ On Windows: (requires MinGW, Go compiler from golang.org)
  C:\beep> copy beep.exe \windows\system32
 ```
 [![Build Status](https://travis-ci.org/dbatbold/beep.svg?branch=master)](https://travis-ci.org/dbatbold/beep)
-
-Prebuilt binaries
-===============
-
- Windows: [beep.exe](http://angiud.com/beep/binary/windows/beep.exe) &nbsp; ```MD5: 3197c594c052e27ef3511eca81f7fc74```<br>
- Linux 64-bit: [beep](http://angiud.com/beep/binary/linux/beep) &nbsp; ```MD5: 38283f4c0769e9cfef3811f15f39a138```
 
 Usage
 =====
@@ -50,7 +44,8 @@ beep [options]
   -q: quiet stdout while playing music
   -n: print notes while playing music
   -o=file: output music waveform to a WAV file. Use '-' for stdout
-  -w [ip:port]: start beep web server, if no address given, listens on localhost:4444
+  -w: start beep web server
+  -a ip:port: web server address (default 127.0.0.1:4444)
   -vd [name ..]: download voice files, if no names given, downloads all voices
   -mp=file: play MIDI file
   -mn=file: parses MIDI file and print notes
