@@ -1,9 +1,4 @@
-/*
- beep - A sound notifier with a music note engine
- Batbold Dashzeveg
- 2014-12-31 BSD
-*/
-
+// beep - Sound notifier with music note engine
 package main
 
 import (
@@ -42,33 +37,17 @@ var (
 	flagQuiet     = flag.Bool("q", false, "quiet stdout while playing music")
 	flagNotes     = flag.Bool("n", false, "print notes while playing music")
 	flagOutput    = flag.String("o", "", "output music waveform to file. Use '-' for stdout")
-	flagWeb       = flag.Bool("w", false, "start beep web server, by default listens on localhost:4444")
+	flagWeb       = flag.Bool("w", false, "start beep web server")
+	flagWebIP     = flag.String("a", "127.0.0.1:4444", "web server address")
 	flagVoiceDl   = flag.Bool("vd", false, "download voice files, by default downloads all voices")
 	flagMidiPlay  = flag.String("mp", "", "play MIDI file")
 	flagMidiNote  = flag.String("mn", "", "parses MIDI file and print notes")
 	flagPlayNotes = flag.String("play", "", "play notes from command argument")
 )
 
-var beepOptions = `Usage: beep [options]
-  -c=1: beep count
-  -d="default": audio device, Linux example: hw:0,0
-  -f=523.25: frequency in Hertz (1-22050)
-  -h: print help
-  -l: beep per line from stdin
-  -m: play music from sheet file, reads stdin if no arguments given (see beep notation)
-  -p: print demo music sheet (Mozart K33b)
-  -t=250: beep time duration in millisecond (1-60000)
-  -v=100: volume (1-100)
-  -b: send bell to PC speaker
-  -q: quiet stdout while playing music
-  -n: print notes while playing music
-  -o=file: output music waveform to a WAV file. Use '-' for stdout
-  -w [ip:port]: start beep web server, by default listens on localhost:4444 
-  -vd [name ..]: download voice files, by default downloads all voices
-  -mp=file: play MIDI file
-  -mn=file: parses MIDI file and print notes
-  -play=notes: play notes from command argument
-`
+const intro = `beep - Sound notifier with music note engine
+
+Batbold Dashzeveg 2014-12-31`
 
 func main() {
 	defer func() {
@@ -95,8 +74,9 @@ func main() {
 	musicNotes := *flagPlayNotes
 
 	if help {
-		fmt.Printf("%s%s\n%s\n%s",
-			beepOptions,
+		flag.Usage()
+		fmt.Printf("%s\n%s\n%s\n%s\n",
+			intro,
 			beepNotation,
 			builtinMusic[0].Notation, //demoMusic,
 			demoHelp,
@@ -146,7 +126,7 @@ func main() {
 	}
 
 	if webServer {
-		startWebServer()
+		startWebServer(*flagWebIP)
 		return
 	}
 
@@ -198,7 +178,7 @@ func beep(volume, duration, count int, freq float64) {
 	if samples < fade {
 		fade = 1
 	}
-	for i, _ := range buf {
+	for i := range buf {
 		if i < samples-fade {
 			buf[i] = int16(bar * math.Sin(float64(i)*freq))
 			last = buf[i]
@@ -225,7 +205,7 @@ func beepPerLine(volume int, freq float64) {
 	bar := sampleAmp16bit * (float64(volume) / 100.0)
 	gap := sampleRate / 6
 	var last int16
-	for i, _ := range buf {
+	for i := range buf {
 		if i < gap {
 			buf[i] = int16(bar * math.Sin(float64(i)*freq))
 			last = buf[i]

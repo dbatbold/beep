@@ -1,7 +1,3 @@
-// music.go - beep music note engine
-// Batbold Dashzeveg
-// BSD
-
 package main
 
 import (
@@ -88,8 +84,14 @@ Beep notation:
 
 Demo music: Mozart K33b:`
 
-var demoMusic = builtinMusic[0].Notation
-var demoHelp = "To play a demo music, run:\n$ beep -m demo"
+var (
+	demoMusic = builtinMusic[0].Notation
+	demoHelp  = `To play a demo music, run:
+
+$ beep -vd
+$ beep -m demo
+`
+)
 
 const (
 	quarterNote = 1024 * 22
@@ -102,6 +104,7 @@ var (
 	wholeRest = make([]int16, wholeNote)
 )
 
+// Music player
 type Music struct {
 	playing    bool
 	stopping   bool
@@ -114,6 +117,7 @@ type Music struct {
 	output     string
 }
 
+// Note data
 type Note struct {
 	key       rune
 	duration  rune
@@ -125,6 +129,7 @@ type Note struct {
 	velocity  int
 }
 
+// Sustain params
 type Sustain struct {
 	attack  int
 	decay   int
@@ -133,12 +138,14 @@ type Sustain struct {
 	buf     []int16
 }
 
+// Chord params
 type Chord struct {
 	number int
 	count  int
 	buf    []int16
 }
 
+// Voice interface
 // GetNote: Gets a whole note for the key
 // SustainNote: Used for sustaining computer generated voice
 // Sustain: Indicates whether the instrument sustain note
@@ -153,10 +160,12 @@ type Voice interface {
 	ComputerVoice(enable bool)
 }
 
+// Ratio returns sustain ratio
 func (s *Sustain) Ratio() float64 {
 	return float64(s.sustain) / 10.0
 }
 
+// Reset chord
 func (c *Chord) Reset() {
 	c.number = 0
 	c.count = 0
@@ -237,23 +246,27 @@ func playMusicNotes(reader *bufio.Reader, volume100 int) {
 	sustainTypes := "ADSR"
 	sustainLevels := zeroToNine
 	voiceControls := "DPVN"
-	var bufOutput []int16
-	var duration = 'Q' // default note duration
-	var dotted bool
-	var rest rune
-	var ctrl rune
-	var voice Voice = music.piano // default voice is piano
-	var sustainType rune
-	var hand rune = 'R' // default is middle C octave
-	var handLevel rune
-	var count int         // line counter
-	var tempo int = 4     // normal speed
-	var amplitude int = 9 // max volume
-	var mixNextLine bool
-	var bufMix []int16
-	var lineMix string
-	var waitNext bool
-	var blockComment bool
+
+	var (
+		bufOutput    []int16
+		duration     = 'Q' // default note duration
+		dotted       bool
+		rest         rune
+		ctrl         rune
+		voice        Voice = music.piano // default voice is piano
+		sustainType  rune
+		hand         = 'R' // default is middle C octave
+		handLevel    rune
+		count        int // line counter
+		tempo        = 4 // normal speed
+		amplitude    = 9 // max volume
+		mixNextLine  bool
+		bufMix       []int16
+		lineMix      string
+		waitNext     bool
+		blockComment bool
+	)
+
 	for {
 		line, done := nextMusicLine(reader)
 		if done {
@@ -577,7 +590,7 @@ func applyNoteVolume(buf []int16, volume, amplitude int) {
 func mixSoundWave(buf1, buf2 []int16) {
 	buflen2 := len(buf2)
 	gap := sampleAmp16bit - 500.0
-	for i, _ := range buf1 {
+	for i := range buf1 {
 		if i == buflen2 {
 			break
 		}
@@ -595,7 +608,7 @@ func mixSoundWave(buf1, buf2 []int16) {
 
 func copyBuffer(target, src []int16) {
 	bufsize := len(src)
-	for i, _ := range target {
+	for i := range target {
 		if i < bufsize {
 			target[i] = src[i]
 		} else {
@@ -605,7 +618,7 @@ func copyBuffer(target, src []int16) {
 }
 
 func clearBuffer(buf []int16) {
-	for i, _ := range buf {
+	for i := range buf {
 		buf[i] = 0
 	}
 }
@@ -617,7 +630,7 @@ func trimWave(buf []int16) []int16 {
 	}
 	cut := len(buf) - 1
 	var last int16
-	for i, _ := range buf {
+	for i := range buf {
 		if i == 0 {
 			last = buf[cut]
 		}

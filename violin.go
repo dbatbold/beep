@@ -1,4 +1,3 @@
-// violin.go - violin voice for beep
 package main
 
 import (
@@ -11,6 +10,7 @@ import (
 	"strings"
 )
 
+// Violin voice
 type Violin struct {
 	naturalVoice      bool
 	naturalVoiceFound bool
@@ -21,6 +21,7 @@ type Violin struct {
 	noteKeyMap        map[string]rune
 }
 
+// NewViolin return new violin voice
 func NewViolin() *Violin {
 	v := &Violin{
 		keyDefMap:  make(map[rune][]int16),
@@ -58,30 +59,30 @@ func NewViolin() *Violin {
 	// initialize maps
 	ni := 0
 	for i, key := range keys[31:] { // actave 3
-		keyId := 2000 + key
+		keyID := 2000 + key
 		note := noteNames[ni]
-		v.keyFreqMap[keyId] = octaveFreq3[i]
-		v.keyNoteMap[keyId] = note
-		v.noteKeyMap[note] = keyId
+		v.keyFreqMap[keyID] = octaveFreq3[i]
+		v.keyNoteMap[keyID] = note
+		v.noteKeyMap[note] = keyID
 		ni++
 	}
 	for i, key := range keys { // actave 4, 5, 6
-		keyId := 3000 + key
+		keyID := 3000 + key
 		note := noteNames[ni]
-		v.keyFreqMap[keyId] = octaveFreq456[i]
-		v.keyNoteMap[keyId] = note
-		v.noteKeyMap[note] = keyId
+		v.keyFreqMap[keyID] = octaveFreq456[i]
+		v.keyNoteMap[keyID] = note
+		v.noteKeyMap[note] = keyID
 		ni++
 	}
 	for i, key := range keys[:5] { // actave 7
-		keyId := 4000 + key
+		keyID := 4000 + key
 		note := noteNames[ni]
-		v.keyFreqMap[keyId] = octaveFreq7[i]
-		v.keyNoteMap[keyId] = note
-		v.noteKeyMap[note] = keyId
+		v.keyFreqMap[keyID] = octaveFreq7[i]
+		v.keyNoteMap[keyID] = note
+		v.noteKeyMap[note] = keyID
 		ni++
 	}
-	for key, _ := range v.keyFreqMap {
+	for key := range v.keyFreqMap {
 		// generate default violin voice
 		v.keyDefMap[key] = v.generateNote(key, wholeNote)
 	}
@@ -153,7 +154,7 @@ func (v *Violin) generateNote(key rune, duration int) []int16 {
 	tick2 := tick1 * 3
 	tick3 := tick2 * 4
 	amp := sampleAmp16bit * 0.5
-	for i, _ := range buf {
+	for i := range buf {
 		sin0 := math.Sin(timer0)
 		sin1 := sin0 * math.Sin(timer1)
 		sin2 := sin1 * math.Sin(timer2)
@@ -171,8 +172,8 @@ func (v *Violin) generateNote(key rune, duration int) []int16 {
 	return trimWave(buf)
 }
 
-func (v *Violin) GetNote(note *Note, sustain *Sustain) bool {
-	var found bool
+// GetNote prepares note wave form
+func (v *Violin) GetNote(note *Note, sustain *Sustain) (found bool) {
 	var bufNote []int16
 	if v.naturalVoice {
 		bufNote, found = v.keyNatMap[note.key]
@@ -181,8 +182,9 @@ func (v *Violin) GetNote(note *Note, sustain *Sustain) bool {
 		bufNote, found = v.keyDefMap[note.key]
 	}
 	if !found {
-		return false
+		return
 	}
+
 	divide := 1
 	switch note.duration {
 	case 'H':
@@ -198,11 +200,13 @@ func (v *Violin) GetNote(note *Note, sustain *Sustain) bool {
 	case 'I':
 		divide = 64
 	}
+
 	buf := make([]int16, len(bufNote))
 	copy(buf, bufNote) // get a copy of the note
 	applyNoteVolume(buf, note.volume, note.amplitude)
 	bufsize := len(buf)
 	cut := bufsize
+
 	if note.tempo < 4 && bufsize > 1024 {
 		// slow tempo
 		releaseNote(buf, 0, 0.7)
@@ -242,21 +246,25 @@ func (v *Violin) GetNote(note *Note, sustain *Sustain) bool {
 
 	note.buf = buf
 
-	return true
+	return
 }
 
+// Sustain flag
 func (v *Violin) Sustain() bool {
 	return false
 }
 
+// NaturalVoice flag
 func (v *Violin) NaturalVoice() bool {
 	return v.naturalVoice
 }
 
+// NaturalVoiceFound flag
 func (v *Violin) NaturalVoiceFound() bool {
 	return v.naturalVoiceFound
 }
 
+// ComputerVoice flag
 func (v *Violin) ComputerVoice(enable bool) {
 	v.naturalVoice = !enable
 }
@@ -277,7 +285,9 @@ func (v *Violin) raiseNote(note *Note, ratio float64) {
 	}
 }
 
+// SustainNote applies sustain settings to a note
 func (v *Violin) SustainNote(note *Note, sustain *Sustain) {
+
 	// |    ___ release
 	// |  /      \
 	// | /         ----|    <----------- sustain
@@ -289,6 +299,7 @@ func (v *Violin) SustainNote(note *Note, sustain *Sustain) {
 	//
 	// attack: allows overriting the beginning by the previous note
 	//
+
 	buf := note.buf
 	buflen := len(buf)
 	volume64 := float64(note.volume)
@@ -306,6 +317,7 @@ func (v *Violin) SustainNote(note *Note, sustain *Sustain) {
 	// |/  |  |    | \   S - sustain
 	// |--------------   R - release
 	//   A  D  S    R
+
 	if note.volume == 0 {
 		return
 	}

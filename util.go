@@ -57,7 +57,7 @@ func int16ToByteBuf(buf16 []int16) []byte {
 // Converts []byte to []int16
 func byteToInt16Buf(buf []byte) []int16 {
 	buf16 := make([]int16, len(buf)/2)
-	for i, _ := range buf16 {
+	for i := range buf16 {
 		buf16[i] = int16(buf[i*2]) + int16(buf[i*2+1])<<8
 	}
 	return buf16
@@ -72,6 +72,7 @@ func hertzToFreq(hertz float64) float64 {
 	return freq
 }
 
+// WaveHeader - WAV file header
 type WaveHeader struct {
 	header        [44]byte
 	ChunkID       string
@@ -89,6 +90,7 @@ type WaveHeader struct {
 	Subchunk2Size int
 }
 
+// NewWaveHeader returns new WAV header
 func NewWaveHeader(channels, sampleRate, bitsPerSample, dataSize int) *WaveHeader {
 	wh := &WaveHeader{
 		ChunkID:       "RIFF",
@@ -108,6 +110,7 @@ func NewWaveHeader(channels, sampleRate, bitsPerSample, dataSize int) *WaveHeade
 	return wh
 }
 
+// WriteHeader writer WAV header
 func (w *WaveHeader) WriteHeader(writer io.Writer) (int, error) {
 	copy(w.header[0:], stringToBytes(w.ChunkID[:4]))
 	copy(w.header[4:], int32ToBytes(w.ChunkSize))
@@ -125,6 +128,7 @@ func (w *WaveHeader) WriteHeader(writer io.Writer) (int, error) {
 	return writer.Write(w.header[:])
 }
 
+// ReadHeader reads WAV header
 func (w *WaveHeader) ReadHeader(reader io.Reader) (int, error) {
 	n, err := reader.Read(w.header[:])
 	if err != nil {
@@ -191,7 +195,7 @@ func numberComma(number int64) string {
 	}
 	var s []string
 	last := len(parts) - 1
-	for i, _ := range parts {
+	for i := range parts {
 		format := "%0.3d"
 		if i == 0 {
 			format = "%d"

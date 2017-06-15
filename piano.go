@@ -1,4 +1,3 @@
-// piano.go - piano voice for beep
 package main
 
 import (
@@ -11,6 +10,7 @@ import (
 	"strings"
 )
 
+// Piano voice
 type Piano struct {
 	naturalVoice      bool
 	naturalVoiceFound bool
@@ -21,6 +21,7 @@ type Piano struct {
 	noteKeyMap        map[string]rune
 }
 
+// NewPiano returns new piano voice
 func NewPiano() *Piano {
 	p := &Piano{
 		keyDefMap:  make(map[rune][]int16),
@@ -69,38 +70,38 @@ func NewPiano() *Piano {
 	// initialize maps
 	ni := 0
 	for i, key := range keys[33:] { // actave 0
-		keyId := 1000 + key
+		keyID := 1000 + key
 		note := noteNames[ni]
-		p.keyFreqMap[keyId] = octaveFreq0[i]
-		p.keyNoteMap[keyId] = note
-		p.noteKeyMap[note] = keyId
+		p.keyFreqMap[keyID] = octaveFreq0[i]
+		p.keyNoteMap[keyID] = note
+		p.noteKeyMap[note] = keyID
 		ni++
 	}
 	for i, key := range keys { // actave 1, 2, 3
-		keyId := 2000 + key
+		keyID := 2000 + key
 		note := noteNames[ni]
-		p.keyFreqMap[keyId] = octaveFreqLeft[i]
-		p.keyNoteMap[keyId] = note
-		p.noteKeyMap[note] = keyId
+		p.keyFreqMap[keyID] = octaveFreqLeft[i]
+		p.keyNoteMap[keyID] = note
+		p.noteKeyMap[note] = keyID
 		ni++
 	}
 	for i, key := range keys { // actave 4, 5, 6
-		keyId := 3000 + key
+		keyID := 3000 + key
 		note := noteNames[ni]
-		p.keyFreqMap[keyId] = octaveFreqRight[i]
-		p.keyNoteMap[keyId] = note
-		p.noteKeyMap[note] = keyId
+		p.keyFreqMap[keyID] = octaveFreqRight[i]
+		p.keyNoteMap[keyID] = note
+		p.noteKeyMap[note] = keyID
 		ni++
 	}
 	for i, key := range keys[:13] { // actave 7, 8
-		keyId := 4000 + key
+		keyID := 4000 + key
 		note := noteNames[ni]
-		p.keyFreqMap[keyId] = octaveFreq78[i]
-		p.keyNoteMap[keyId] = note
-		p.noteKeyMap[note] = keyId
+		p.keyFreqMap[keyID] = octaveFreq78[i]
+		p.keyNoteMap[keyID] = note
+		p.noteKeyMap[note] = keyID
 		ni++
 	}
-	for key, _ := range p.keyFreqMap {
+	for key := range p.keyFreqMap {
 		// generate default piano voice
 		p.keyDefMap[key] = p.generateNote(key, wholeNote)
 	}
@@ -173,7 +174,7 @@ func (p *Piano) generateNote(key rune, duration int) []int16 {
 	tick2 := tick1 * 3
 	tick3 := tick2 * 4
 	amp := sampleAmp16bit * 0.5
-	for i, _ := range buf {
+	for i := range buf {
 		sin0 := math.Sin(timer0)
 		sin1 := sin0 * math.Sin(timer1)
 		sin2 := sin1 * math.Sin(timer2)
@@ -191,8 +192,8 @@ func (p *Piano) generateNote(key rune, duration int) []int16 {
 	return trimWave(buf)
 }
 
-func (p *Piano) GetNote(note *Note, sustain *Sustain) bool {
-	var found bool
+// GetNote prepares piano note wave buffer
+func (p *Piano) GetNote(note *Note, sustain *Sustain) (found bool) {
 	var bufNote []int16
 	if p.naturalVoice {
 		bufNote, found = p.keyNatMap[note.key]
@@ -201,8 +202,9 @@ func (p *Piano) GetNote(note *Note, sustain *Sustain) bool {
 		bufNote, found = p.keyDefMap[note.key]
 	}
 	if !found {
-		return false
+		return
 	}
+
 	divide := 1
 	switch note.duration {
 	case 'H':
@@ -218,11 +220,13 @@ func (p *Piano) GetNote(note *Note, sustain *Sustain) bool {
 	case 'I':
 		divide = 64
 	}
+
 	buf := make([]int16, len(bufNote))
 	copy(buf, bufNote) // get a copy of the note
 	applyNoteVolume(buf, note.volume, note.amplitude)
 	bufsize := len(buf)
 	cut := bufsize
+
 	if note.tempo < 4 && bufsize > 1024 {
 		// slow tempo
 		//releaseNote(buf, 0, 0.7)
@@ -270,25 +274,30 @@ func (p *Piano) GetNote(note *Note, sustain *Sustain) bool {
 
 	note.buf = buf
 
-	return true
+	return
 }
 
+// Sustain flag
 func (p *Piano) Sustain() bool {
 	return true
 }
 
+// NaturalVoice flag
 func (p *Piano) NaturalVoice() bool {
 	return p.naturalVoice
 }
 
+// NaturalVoiceFound flag
 func (p *Piano) NaturalVoiceFound() bool {
 	return p.naturalVoiceFound
 }
 
+// ComputerVoice enables or disables computer voice
 func (p *Piano) ComputerVoice(enable bool) {
 	p.naturalVoice = !enable
 }
 
+// SustainNote applies sustain settings to note
 func (p *Piano) SustainNote(note *Note, sustain *Sustain) {
 	buflen := len(note.buf)
 	volume64 := float64(note.volume)
@@ -310,9 +319,11 @@ func (p *Piano) SustainNote(note *Note, sustain *Sustain) {
 	// |/  |  |    | \   S - sustain
 	// |--------------   R - release
 	//   A  D  S    R
+
 	if note.volume == 0 {
 		return
 	}
+
 	sustain.attack = 9 // overriding
 	sustain.sustain = 4
 	attack := int(float64(buflen/200) * float64(sustain.attack))
@@ -326,6 +337,7 @@ func (p *Piano) SustainNote(note *Note, sustain *Sustain) {
 	release64 := float64(R)
 	countD := 0.0
 	countR := 0.0
+
 	for i, bar := range note.buf {
 		i64 := float64(i)
 		bar64 := float64(bar)

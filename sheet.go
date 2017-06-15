@@ -1,4 +1,3 @@
-// sheet.go - music sheet storage for beep
 package main
 
 import (
@@ -10,14 +9,16 @@ import (
 	"strings"
 )
 
+// Sheet - music sheet
 type Sheet struct {
-	Id       int
+	ID       int
 	Name     string
 	Dir      string
 	Notation string
 	file     *os.File
 }
 
+// NewSheet returns new music sheet
 func NewSheet(name, dir, notation string) *Sheet {
 	s := &Sheet{
 		Name:     name,
@@ -27,16 +28,18 @@ func NewSheet(name, dir, notation string) *Sheet {
 	return s
 }
 
+// Path returns music sheet path
 func (s *Sheet) Path() string {
 	var filename string
 	var name = s.Name
-	if s.Id > 0 {
-		name = fmt.Sprintf("%d-%s", s.Id, s.Name)
+	if s.ID > 0 {
+		name = fmt.Sprintf("%d-%s", s.ID, s.Name)
 	}
 	filename = filepath.Join(beepHomeDir(), "sheets", s.Dir, name)
 	return filename
 }
 
+// Save persists music sheet
 func (s *Sheet) Save() error {
 	dir := filepath.Join(beepHomeDir(), "sheets", s.Dir)
 	os.MkdirAll(dir, 0755)
@@ -51,11 +54,12 @@ func (s *Sheet) Save() error {
 	return nil
 }
 
+// Load reads music sheet from file
 func (s *Sheet) Load() error {
-	sheetId := stringNumber(strings.Split(s.Name, "-")[0])
+	sheetID := stringNumber(strings.Split(s.Name, "-")[0])
 	for _, sheet := range builtinMusic {
-		if sheet.Id == sheetId {
-			s.Id = sheet.Id
+		if sheet.ID == sheetID {
+			s.ID = sheet.ID
 			s.Dir = sheet.Dir
 			s.Notation = sheet.Notation
 			return nil
@@ -69,6 +73,7 @@ func (s *Sheet) Load() error {
 	return nil
 }
 
+// Exists checks existing music sheet file
 func (s *Sheet) Exists() bool {
 	filename := filepath.Join(beepHomeDir(), "sheets", s.Dir, s.Name)
 	_, err := os.Stat(filename)
@@ -78,6 +83,7 @@ func (s *Sheet) Exists() bool {
 	return true
 }
 
+// Delete removes music sheet file
 func (s *Sheet) Delete() error {
 	err := os.Remove(s.Path())
 	if err != nil {
@@ -112,7 +118,7 @@ func sheetSearch(keyword string) []string {
 
 var builtinMusic = []*Sheet{
 	&Sheet{
-		Id:   1,
+		ID:   1,
 		Name: "mozart-k33b-klavierstuck-in-f.txt",
 		Dir:  "beep",
 		Notation: `# Mozart K33b

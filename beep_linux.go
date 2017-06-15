@@ -19,13 +19,13 @@ import (
 )
 
 var (
-	pcm_handle    *C.snd_pcm_t
-	pcm_hw_params *C.snd_pcm_hw_params_t
+	pcmHandle   *C.snd_pcm_t
+	pcmHwParams *C.snd_pcm_hw_params_t
 )
 
 func openSoundDevice(device string) {
 	code := C.snd_pcm_open(
-		&pcm_handle,
+		&pcmHandle,
 		C.CString(device),
 		C.SND_PCM_STREAM_PLAYBACK,
 		0)
@@ -33,7 +33,7 @@ func openSoundDevice(device string) {
 		fmt.Println("snd_pcm_open:", strerror(code))
 		os.Exit(1)
 	}
-	C.snd_pcm_drop(pcm_handle)
+	C.snd_pcm_drop(pcmHandle)
 }
 
 func initSoundDevice() {
@@ -42,18 +42,18 @@ func initSoundDevice() {
 		sampleFormat = C.SND_PCM_FORMAT_S16
 	}
 
-	if code := C.snd_pcm_hw_params_malloc(&pcm_hw_params); code < 0 {
+	if code := C.snd_pcm_hw_params_malloc(&pcmHwParams); code < 0 {
 		fmt.Println("snd_pcm_hw_params_malloc:", strerror(code))
 		os.Exit(1)
 	}
-	if code := C.snd_pcm_hw_params_any(pcm_handle, pcm_hw_params); code < 0 {
+	if code := C.snd_pcm_hw_params_any(pcmHandle, pcmHwParams); code < 0 {
 		fmt.Println("snd_pcm_hw_params_any:", strerror(code))
 		os.Exit(1)
 	}
 
 	// C.SND_PCM_ACCESS_RW_NONINTERLEAVED - is not working with PulseAudio
 	code := C.snd_pcm_set_params(
-		pcm_handle,
+		pcmHandle,
 		sampleFormat,
 		C.SND_PCM_ACCESS_RW_INTERLEAVED,
 		1,
@@ -64,7 +64,7 @@ func initSoundDevice() {
 		fmt.Println("snd_pcm_set_params:", strerror(code))
 		os.Exit(1)
 	}
-	code = C.snd_pcm_prepare(pcm_handle)
+	code = C.snd_pcm_prepare(pcmHandle)
 	if code < 0 {
 		fmt.Println("snd_pcm_prepare:", strerror(code))
 		os.Exit(1)
@@ -88,7 +88,7 @@ func playback(buf1, buf2 []int16) {
 	buf := unsafe.Pointer(&buf1[0])
 
 	for {
-		n := C.snd_pcm_writei(pcm_handle, buf, C.snd_pcm_uframes_t(bufsize))
+		n := C.snd_pcm_writei(pcmHandle, buf, C.snd_pcm_uframes_t(bufsize))
 		written := int(n)
 		if written < 0 {
 			if music.stopping {
@@ -98,7 +98,7 @@ func playback(buf1, buf2 []int16) {
 			code := C.int(written)
 			written = 0
 			fmt.Fprintln(os.Stderr, "snd_pcm_writen:", code, strerror(code))
-			code = C.snd_pcm_recover(pcm_handle, code, 0)
+			code = C.snd_pcm_recover(pcmHandle, code, 0)
 			if code < 0 {
 				fmt.Fprintln(os.Stderr, "snd_pcm_recover:", strerror(code))
 				break
@@ -110,7 +110,7 @@ func playback(buf1, buf2 []int16) {
 				break
 			}
 			if written == 0 {
-				C.snd_pcm_wait(pcm_handle, 1000)
+				C.snd_pcm_wait(pcmHandle, 1000)
 				continue
 			}
 			fmt.Fprintf(os.Stderr, "snd_pcm_writen: wrote: %d/%d\n", written, bufsize)
@@ -126,14 +126,14 @@ func playback(buf1, buf2 []int16) {
 }
 
 func flushSoundBuffer() {
-	if pcm_handle != nil {
-		C.snd_pcm_drain(pcm_handle)
+	if pcmHandle != nil {
+		C.snd_pcm_drain(pcmHandle)
 	}
 }
 
 func stopPlayBack() {
-	if pcm_handle != nil {
-		C.snd_pcm_drop(pcm_handle)
+	if pcmHandle != nil {
+		C.snd_pcm_drop(pcmHandle)
 	}
 }
 
@@ -142,9 +142,9 @@ func strerror(code C.int) string {
 }
 
 func closeSoundDevice() {
-	if pcm_handle != nil {
-		C.snd_pcm_close(pcm_handle)
-		C.snd_pcm_hw_free(pcm_handle)
+	if pcmHandle != nil {
+		C.snd_pcm_close(pcmHandle)
+		C.snd_pcm_hw_free(pcmHandle)
 	}
 }
 

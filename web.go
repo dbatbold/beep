@@ -1,4 +1,3 @@
-// web.go - web interface for beep
 package main
 
 import (
@@ -17,50 +16,41 @@ import (
 	"strings"
 )
 
+// Web params
 type Web struct {
-	req  *http.Request
-	res  http.ResponseWriter
 	tmpl *template.Template
 }
 
 // Starts beep web server
-func startWebServer() {
+func startWebServer(address string) {
 	var err error
-	ip := "localhost" // serve locally by default
-	port := 4444
-
-	for i, arg := range os.Args {
-		if i == 0 || strings.HasPrefix(arg, "-") {
-			continue
-		}
-		parts := strings.Split(arg, ":")
-		if len(parts) != 2 {
-			continue
-		}
-		if len(parts[0]) > 0 {
-			ip = parts[0]
-		}
-		if len(parts[1]) > 0 {
-			port, err = strconv.Atoi(parts[1])
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "Invalid port number: %v", parts[1])
-				os.Exit(1)
-			}
-		}
-		break
+	parts := strings.Split(address, ":")
+	ip := "127.0.0.1"
+	if len(parts[0]) > 0 {
+		ip = parts[0]
 	}
-	address := fmt.Sprintf("%s:%d", ip, port)
-	fmt.Printf("Listening on http://%s/\n", address)
+	port := 4444
+	if len(parts) > 1 && len(parts[1]) > 0 {
+		port, err = strconv.Atoi(parts[1])
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "Invalid port number:", parts[1])
+			os.Exit(1)
+		}
+	}
+
+	bind := fmt.Sprintf("%s:%d", ip, port)
+	fmt.Printf("Listening on http://%s/\n", bind)
 
 	web := NewWeb()
 	music.quietMode = true
-	err = http.ListenAndServe(address, web)
+	err = http.ListenAndServe(bind, web)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "Unable to start web server:", err)
 		os.Exit(1)
 	}
 }
 
+// NewWeb returns new handler
 func NewWeb() *Web {
 	w := &Web{
 		tmpl: template.Must(template.New("tmpl").Parse(webTemplates)),
@@ -69,70 +59,63 @@ func NewWeb() *Web {
 }
 
 func (w *Web) ServeHTTP(res http.ResponseWriter, req *http.Request) {
-	w.req = req
-	w.res = res
-	w.serve()
-}
-
-// Serve pages
-func (w *Web) serve() {
 	defer func() {
 		if obj := recover(); obj != nil {
 			format := "\" ><pre>\nError: %s\nStack:%s\n</pre>"
-			fmt.Fprintf(w.res, format, obj, debug.Stack())
+			fmt.Fprintf(res, format, obj, debug.Stack())
 		}
 	}()
-	path := w.req.URL.Path
+	path := req.URL.Path
 	if file, found := webFileMap[path]; found {
 		if strings.HasSuffix(path, ".css") {
-			w.res.Header().Add("Content-Type", "text/css")
+			res.Header().Add("Content-Type", "text/css")
 		}
 		if strings.HasSuffix(path, ".js") {
-			w.res.Header().Add("Content-Type", "text/javascript")
+			res.Header().Add("Content-Type", "text/javascript")
 		}
-		fmt.Fprint(w.res, file)
+		fmt.Fprint(res, file)
 		return
 	}
-	defer w.req.Body.Close()
+	defer req.Body.Close()
 	switch path {
 	case "/":
-		w.serveHome()
+		w.serveHome(res, req)
 	case "/play":
-		w.servePlay()
+		w.servePlay(res, req)
 	case "/stop":
-		w.serveStop()
+		w.serveStop(res, req)
 	case "/search":
-		w.serveSearch()
+		w.serveSearch(res, req)
 	case "/loadSheet":
-		w.serveLoadSheet()
+		w.serveLoadSheet(res, req)
 	case "/saveSheet":
-		w.serveSaveSheet()
+		w.serveSaveSheet(res, req)
 	case "/voices":
-		w.serveVoices()
+		w.serveVoices(res, req)
 	case "/downloadVoice":
-		w.serveDownloadVoice()
+		w.serveDownloadVoice(res, req)
 	case "/exportWave":
-		w.serveExportWave()
+		w.serveExportWave(res, req)
 	default:
-		w.execTemplate("header", nil)
-		w.execTemplate("pageNotFound", w.req.URL.Path)
+		w.execTemplate("header", nil, res)
+		w.execTemplate("pageNotFound", req.URL.Path, res)
 	}
 }
 
 // Serves home page
-func (w *Web) serveHome() {
+func (w *Web) serveHome(res http.ResponseWriter, req *http.Request) {
 	type homePage struct {
 		Demo string
 	}
 	data := &homePage{
 		Demo: demoMusic,
 	}
-	w.execTemplate("header", nil)
-	w.execTemplate("/", data)
+	w.execTemplate("header", nil, res)
+	w.execTemplate("/", data, res)
 }
 
 // Playback
-func (w *Web) servePlay() {
+func (w *Web) servePlay(res http.ResponseWriter, req *http.Request) {
 	if music.playing {
 		return
 	}
@@ -140,7 +123,7 @@ func (w *Web) servePlay() {
 		Notation string
 	}
 	request := &playRequest{}
-	w.jsonRequest(request)
+	w.jsonRequest(request, req)
 	initSoundDevice()
 	notation := bytes.NewBuffer([]byte(request.Notation))
 	reader := bufio.NewReader(notation)
@@ -149,7 +132,7 @@ func (w *Web) servePlay() {
 }
 
 // Stops playback
-func (w *Web) serveStop() {
+func (w *Web) serveStop(res http.ResponseWriter, req *http.Request) {
 	if music.stopping {
 		return
 	}
@@ -159,16 +142,15 @@ func (w *Web) serveStop() {
 		<-music.stopped
 	}
 	music.stopping = false
-	fmt.Fprint(w.res, "stopped")
 }
 
 // Search sheet names
-func (w *Web) serveSearch() {
+func (w *Web) serveSearch(res http.ResponseWriter, req *http.Request) {
 	type searchRequest struct {
 		Keyword string
 	}
 	request := &searchRequest{}
-	w.jsonRequest(request)
+	w.jsonRequest(request, req)
 	names := sheetSearch(request.Keyword)
 	type loadResponse struct {
 		Names []string
@@ -176,16 +158,16 @@ func (w *Web) serveSearch() {
 	response := loadResponse{
 		Names: names,
 	}
-	w.jsonResponse(response)
+	w.jsonResponse(response, res)
 }
 
 // Loads a sheet
-func (w *Web) serveLoadSheet() {
+func (w *Web) serveLoadSheet(res http.ResponseWriter, req *http.Request) {
 	type loadSheetRequest struct {
 		Name string
 	}
 	request := &loadSheetRequest{}
-	w.jsonRequest(request)
+	w.jsonRequest(request, req)
 	type loadSheetResponse struct {
 		Name     string
 		Notation string
@@ -202,11 +184,11 @@ func (w *Web) serveLoadSheet() {
 		Name:     filepath.Join(sheet.Dir, sheet.Name),
 		Notation: sheet.Notation,
 	}
-	w.jsonResponse(response)
+	w.jsonResponse(response, res)
 }
 
 // Saves a sheet
-func (w *Web) serveSaveSheet() {
+func (w *Web) serveSaveSheet(res http.ResponseWriter, req *http.Request) {
 	type saveSheetResponse struct {
 		Result string
 	}
@@ -215,14 +197,14 @@ func (w *Web) serveSaveSheet() {
 		response := &saveSheetResponse{
 			Result: result,
 		}
-		w.jsonResponse(response)
+		w.jsonResponse(response, res)
 	}()
 	type saveSheetRequest struct {
 		Name     string
 		Notation string
 	}
 	request := &saveSheetRequest{}
-	w.jsonRequest(request)
+	w.jsonRequest(request, req)
 	name := filepath.Base(request.Name)
 	id := stringNumber(strings.Split(name, "-")[0])
 	if id > 0 && id <= 100 {
@@ -254,30 +236,30 @@ func (w *Web) serveSaveSheet() {
 }
 
 // Serves voices page
-func (w *Web) serveVoices() {
+func (w *Web) serveVoices(res http.ResponseWriter, req *http.Request) {
 	type homePage struct {
 	}
 	data := &homePage{}
-	w.execTemplate("header", nil)
-	w.execTemplate("/voices", data)
+	w.execTemplate("header", nil, res)
+	w.execTemplate("/voices", data, res)
 }
 
 // Downloads a voice file
-func (w *Web) serveDownloadVoice() {
+func (w *Web) serveDownloadVoice(res http.ResponseWriter, req *http.Request) {
 	type downloadRequest struct {
 		Name string
 	}
 	request := &downloadRequest{}
-	w.jsonRequest(request)
+	w.jsonRequest(request, req)
 	var names []string
 	if len(request.Name) > 0 {
 		names = append(names, request.Name)
 	}
-	downloadVoiceFiles(w.res, names)
+	downloadVoiceFiles(res, names)
 }
 
 // Export to WAV file
-func (w *Web) serveExportWave() {
+func (w *Web) serveExportWave(res http.ResponseWriter, req *http.Request) {
 	defer func() {
 		music.output = ""
 	}()
@@ -286,7 +268,7 @@ func (w *Web) serveExportWave() {
 		Notation string
 	}
 	request := &exportWaveRequest{}
-	w.jsonRequest(request)
+	w.jsonRequest(request, req)
 
 	notation := bytes.NewBuffer([]byte(request.Notation))
 	reader := bufio.NewReader(notation)
@@ -301,19 +283,19 @@ func (w *Web) serveExportWave() {
 	response := exportWaveResponse{
 		Result: "WAV file has been save to: " + music.output,
 	}
-	w.jsonResponse(response)
+	w.jsonResponse(response, res)
 }
 
 // Execute template with name and data
-func (w *Web) execTemplate(name string, data interface{}) {
-	if err := w.tmpl.ExecuteTemplate(w.res, name, data); err != nil {
+func (w *Web) execTemplate(name string, data interface{}, res http.ResponseWriter) {
+	if err := w.tmpl.ExecuteTemplate(res, name, data); err != nil {
 		panic(err)
 	}
 }
 
 // Reads JSON request
-func (w *Web) jsonRequest(request interface{}) {
-	requestBody, err := ioutil.ReadAll(w.req.Body)
+func (w *Web) jsonRequest(request interface{}, req *http.Request) {
+	requestBody, err := ioutil.ReadAll(req.Body)
 	if err != nil {
 		panic(err)
 	}
@@ -323,12 +305,12 @@ func (w *Web) jsonRequest(request interface{}) {
 }
 
 // Writes JSON response
-func (w *Web) jsonResponse(response interface{}) {
+func (w *Web) jsonResponse(response interface{}, res http.ResponseWriter) {
 	jres, err := json.Marshal(response)
 	if err != nil {
 		panic(err)
 	}
-	_, err = w.res.Write(jres)
+	_, err = res.Write(jres)
 	if err != nil {
 		panic(err)
 	}

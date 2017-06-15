@@ -1,5 +1,3 @@
-// MIDI file parser and player
-
 package main
 
 import (
@@ -10,12 +8,14 @@ import (
 	"strings"
 )
 
+// MidiChunk - MIDI chunk
 type MidiChunk struct {
 	Type string
 	Size int
 	Data []byte
 }
 
+// Midi - MIDI file
 type Midi struct {
 	Chunks     []*MidiChunk
 	Format     int
@@ -26,12 +26,14 @@ type Midi struct {
 	OutputBuf  []int16
 }
 
+// MIDI events
 const (
 	MidiEventMidi = iota
 	MidiEventSysEx
 	MidiEventMeta
 )
 
+// MidiEvent - MIDI event
 type MidiEvent struct {
 	Type       int
 	Delta      int
@@ -40,6 +42,7 @@ type MidiEvent struct {
 	NoteNumber byte  // MIDI note number
 }
 
+// CalcDuration calculates duration for ticks
 func (m *MidiEvent) CalcDuration(duration int, tickDiv int) {
 	switch {
 	case duration <= tickDiv/16:
@@ -74,11 +77,14 @@ var midiNoteMap = map[byte]string{
 	104: "H76", 105: "H7y", 106: "H77", 107: "H7u", 108: "H7i",
 }
 
-var midiOctave string
-var midiNoteCount int
-var midiSaveWaveFile bool = false
-var midiNoteOnMap = make(map[byte]*MidiEvent)
+var (
+	midiOctave       string
+	midiNoteCount    int
+	midiSaveWaveFile = false
+	midiNoteOnMap    = make(map[byte]*MidiEvent)
+)
 
+// ParseMidi parses MIDI file
 func ParseMidi(filename string, printKeyboard bool) (*Midi, error) {
 	midi := &Midi{}
 	data, err := ioutil.ReadFile(filename)
@@ -123,13 +129,13 @@ func ParseMidi(filename string, printKeyboard bool) (*Midi, error) {
 	piano[0] = 'A'
 	piano[1] = 'a'
 	piano[2] = 'B'
-	for i, _ := range piano {
+	for i := range piano {
 		if i > 2 {
 			piano[i] = byte(notes[(i-3)%12])
 		}
 	}
 	printKeys := func() {
-		for i, _ := range piano {
+		for i := range piano {
 			fmt.Print(string(piano[i]))
 			if i == 2 || (i-3)%12 == 11 {
 				fmt.Print(" ")
