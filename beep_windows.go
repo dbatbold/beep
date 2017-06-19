@@ -28,8 +28,8 @@ func OpenSoundDevice(device string) {
 
 	wfx.wFormatTag = C.WAVE_FORMAT_PCM
 	wfx.nChannels = 2
-	wfx.nSamplesPerSec = C.DWORD(sampleRate)
-	wfx.nAvgBytesPerSec = C.DWORD(sampleRate) * 2 * 2
+	wfx.nSamplesPerSec = C.DWORD(SampleRate)
+	wfx.nAvgBytesPerSec = C.DWORD(SampleRate) * 2 * 2
 	wfx.nBlockAlign = 2 * 2
 	wfx.wBitsPerSample = 16
 
@@ -57,7 +57,7 @@ func Playback(buf1, buf2 []int16) {
 	wavehdr.lpData = C.LPSTR(unsafe.Pointer(&bufWave[0]))
 	wavehdr.dwBufferLength = C.DWORD(len(bufWave) * 2)
 
-	res := C.waveOutPrepareHeader(hwaveout, unsafe.Pointer(wavehdr), C.UINT(C.wavehdrsize))
+	res := C.waveOutPrepareHeader(hwaveout, wavehdr, C.UINT(C.wavehdrsize))
 	if res != C.MMSYSERR_NOERROR {
 		fmt.Fprintln(os.Stderr, "Error: waveOutPrepareHeader:", winmmErrorText(res))
 		os.Exit(1)
@@ -71,7 +71,7 @@ func Playback(buf1, buf2 []int16) {
 	}
 
 	if !music.stopping {
-		res = C.waveOutWrite(hwaveout, unsafe.Pointer(wavehdr), C.UINT(C.wavehdrsize))
+		res = C.waveOutWrite(hwaveout, wavehdr, C.UINT(C.wavehdrsize))
 		if res != C.MMSYSERR_NOERROR {
 			fmt.Fprintln(os.Stderr, "Error: waveOutWrite:", winmmErrorText(res))
 		}
@@ -80,7 +80,7 @@ func Playback(buf1, buf2 []int16) {
 			// still playing
 			time.Sleep(time.Millisecond)
 		}
-		res = C.waveOutUnprepareHeader(hwaveout, unsafe.Pointer(wavehdr), C.UINT(C.wavehdrsize))
+		res = C.waveOutUnprepareHeader(hwaveout, wavehdr, C.UINT(C.wavehdrsize))
 		if res != C.MMSYSERR_NOERROR {
 			fmt.Fprintln(os.Stderr, "Error: waveOutUnprepareHeader:", winmmErrorText(res))
 		}
@@ -89,7 +89,7 @@ func Playback(buf1, buf2 []int16) {
 			// still playing
 			time.Sleep(time.Millisecond)
 		}
-		res = C.waveOutUnprepareHeader(hwaveout, unsafe.Pointer(wavehdr), C.UINT(C.wavehdrsize))
+		res = C.waveOutUnprepareHeader(hwaveout, wavehdr, C.UINT(C.wavehdrsize))
 		if res != C.MMSYSERR_NOERROR {
 			fmt.Fprintln(os.Stderr, "Error: waveOutUnprepareHeader:", winmmErrorText(res))
 		}
@@ -107,7 +107,7 @@ func FlushSoundBuffer() {
 			time.Sleep(time.Millisecond)
 		}
 		wdrsize := C.UINT(unsafe.Sizeof(wavehdr))
-		res := C.waveOutUnprepareHeader(hwaveout, unsafe.Pointer(wavehdrLast), wdrsize)
+		res := C.waveOutUnprepareHeader(hwaveout, wavehdrLast, wdrsize)
 		if res != C.MMSYSERR_NOERROR {
 			fmt.Fprintln(os.Stderr, "Error: waveOutUnprepareHeader:", winmmErrorText(res))
 		}
@@ -144,7 +144,7 @@ func winmmErrorText(res C.MMRESULT) string {
 	return fmt.Sprintf("%v: %s", res, string(buf[:]))
 }
 
-func BeepHomeDir() string {
+func HomeDir() string {
 	var home string
 	usr, err := user.Current()
 	if err != nil {

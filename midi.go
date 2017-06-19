@@ -383,23 +383,27 @@ func (midi *Midi) Play() {
 	if music.piano == nil {
 		music.piano = NewPiano()
 	}
-	var tickDiv = midi.TickDiv
-	var events []*MidiEvent
-	var handLevel rune
-	var deltaTime int32
-	var byteSize int
-	var event *MidiEvent
-	var lastStatus byte
-	var noteNumber byte
-	var velocity byte
-	var msgLength int32
-	var timer int
+	var (
+		tickDiv    = midi.TickDiv
+		events     []*MidiEvent
+		handLevel  rune
+		deltaTime  int32
+		byteSize   int
+		event      *MidiEvent
+		lastStatus byte
+		noteNumber byte
+		velocity   byte
+		msgLength  int32
+		timer      int
+	)
+
 	fmt.Println("TickDiv:", tickDiv)
 	fmt.Println("Tracks:", midi.Ntracks)
 	fmt.Println("Format:", midi.Format)
 	if len(music.output) > 0 {
 		fmt.Print("Saving ... ")
 	}
+
 	for _, chunk := range midi.Chunks {
 		if chunk.Type != "MTrk" {
 			continue
