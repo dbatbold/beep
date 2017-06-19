@@ -89,13 +89,6 @@ Beep notation:
 
 Demo music: Mozart K33b:`
 
-var (
-	// DemoMusic notation
-	DemoMusic = BuiltinMusic[0].Notation
-
-	// Demo
-)
-
 const (
 	// SampleAmp16bit - 16-bit sample amplitude
 	SampleAmp16bit = 32767.0
@@ -115,13 +108,16 @@ const (
 )
 
 var (
-	wholeRest = make([]int16, wholeNote)
+	// DemoMusic notation
+	DemoMusic = BuiltinMusic[0].Notation
 
-	// PrintSheet - print music flag
+	// PrintSheet enables printing beep notation while playing music
 	PrintSheet bool
 
-	// PrintNotes - print music notes flag
+	// PrintNotes enables printing each notes while playing music
 	PrintNotes bool
+
+	wholeRest = make([]int16, wholeNote)
 )
 
 // Music player
@@ -134,7 +130,7 @@ type Music struct {
 	linePlayed chan bool // for syncing lines
 	piano      *Piano
 	violin     *Violin
-	output     string
+	output     string // output file name
 }
 
 // Note data
@@ -180,7 +176,7 @@ type Voice interface {
 	ComputerVoice(enable bool)
 }
 
-// NewMusic returns new music for output
+// NewMusic returns new music for output file name, or stdout if output is empty
 func NewMusic(output string) *Music {
 	music := &Music{
 		played:     make(chan bool),
@@ -531,6 +527,9 @@ func PlayMusicNotes(music *Music, reader *bufio.Reader, volume100 int) {
 			bufWave = bufMix
 			bufMix = nil
 			line = lineMix + "\n" + line
+		}
+		if PrintNotes {
+			fmt.Println()
 		}
 		if outputFile == nil {
 			if len(bufWave) > 0 {

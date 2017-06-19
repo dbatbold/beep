@@ -27,7 +27,7 @@ import (
 )
 
 func main() {
-    music := beep.NewMusic("")
+    music := beep.NewMusic("") // output can be file as "music.wav"
     volume := 100
 
     beep.OpenSoundDevice("default")
