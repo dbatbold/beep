@@ -1,6 +1,6 @@
 // +build linux
 
-package main
+package beep
 
 /*
 #cgo LDFLAGS: -lasound
@@ -23,7 +23,8 @@ var (
 	pcmHwParams *C.snd_pcm_hw_params_t
 )
 
-func openSoundDevice(device string) {
+// OpenSoundDevice opens hardware sound device
+func OpenSoundDevice(device string) {
 	code := C.snd_pcm_open(
 		&pcmHandle,
 		C.CString(device),
@@ -36,7 +37,8 @@ func openSoundDevice(device string) {
 	C.snd_pcm_drop(pcmHandle)
 }
 
-func initSoundDevice() {
+// InitSoundDevice initialize sound device
+func InitSoundDevice() {
 	var sampleFormat C.snd_pcm_format_t = C.SND_PCM_FORMAT_S8
 	if sample16bit {
 		sampleFormat = C.SND_PCM_FORMAT_S16
@@ -71,11 +73,12 @@ func initSoundDevice() {
 	}
 }
 
-func playback(buf1, buf2 []int16) {
+// Playback sends wave buffer to sound device
+func Playback(buf1, buf2 []int16) {
 	bufsize := len(buf1)
-	if bufsize < sampleRate {
+	if bufsize < SampleRate {
 		// prevent buffer underrun
-		rest := make([]int16, sampleRate)
+		rest := make([]int16, SampleRate)
 		buf1 = append(buf1, rest...)
 		//buf2 = append(buf2, rest...)
 	}
@@ -126,13 +129,15 @@ func playback(buf1, buf2 []int16) {
 	music.linePlayed <- true // notify that playback is done
 }
 
-func flushSoundBuffer() {
+// FlushSoundBuffer flushes sound buffer
+func FlushSoundBuffer() {
 	if pcmHandle != nil {
 		C.snd_pcm_drain(pcmHandle)
 	}
 }
 
-func stopPlayBack() {
+// StopPlayBack stops play back
+func StopPlayBack() {
 	if pcmHandle != nil {
 		C.snd_pcm_drop(pcmHandle)
 	}
@@ -142,14 +147,16 @@ func strerror(code C.int) string {
 	return C.GoString(C.snd_strerror(code))
 }
 
-func closeSoundDevice() {
+// CloseSoundDevice closes sound device
+func CloseSoundDevice() {
 	if pcmHandle != nil {
 		C.snd_pcm_close(pcmHandle)
 		C.snd_pcm_hw_free(pcmHandle)
 	}
 }
 
-func sendBell() {
+// SendBell send bell sound to console
+func SendBell() {
 	bell := []byte{7}
 	os.Stdout.Write(bell)
 
@@ -164,7 +171,8 @@ func sendBell() {
 	console.Write(bell)
 }
 
-func beepHomeDir() string {
+// HomeDir returns user's home directory
+func HomeDir() string {
 	var home string
 	usr, err := user.Current()
 	if err != nil {

@@ -1,4 +1,4 @@
-package main
+package beep
 
 import (
 	"bufio"
@@ -21,8 +21,8 @@ type Web struct {
 	tmpl *template.Template
 }
 
-// Starts beep web server
-func startWebServer(address string) {
+// StartWebServer starts beep web server
+func StartWebServer(address string) {
 	var err error
 	var ip string
 	if len(address) == 0 {
@@ -115,7 +115,7 @@ func (w *Web) serveHome(res http.ResponseWriter, req *http.Request) {
 		Demo string
 	}
 	data := &homePage{
-		Demo: demoMusic,
+		Demo: DemoMusic,
 	}
 	w.execTemplate("header", nil, res)
 	w.execTemplate("/", data, res)
@@ -131,11 +131,11 @@ func (w *Web) servePlay(res http.ResponseWriter, req *http.Request) {
 	}
 	request := &playRequest{}
 	w.jsonRequest(request, req)
-	initSoundDevice()
+	InitSoundDevice()
 	notation := bytes.NewBuffer([]byte(request.Notation))
 	reader := bufio.NewReader(notation)
-	go playMusicNotes(reader, 100)
-	<-music.played
+	go PlayMusicNotes(reader, 100)
+	music.Wait()
 }
 
 // Stops playback
@@ -144,7 +144,7 @@ func (w *Web) serveStop(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 	music.stopping = music.playing
-	go stopPlayBack()
+	go StopPlayBack()
 	if music.playing {
 		<-music.stopped
 	}
@@ -262,7 +262,7 @@ func (w *Web) serveDownloadVoice(res http.ResponseWriter, req *http.Request) {
 	if len(request.Name) > 0 {
 		names = append(names, request.Name)
 	}
-	downloadVoiceFiles(res, names)
+	DownloadVoiceFiles(res, names)
 }
 
 // Export to WAV file
@@ -279,10 +279,10 @@ func (w *Web) serveExportWave(res http.ResponseWriter, req *http.Request) {
 
 	notation := bytes.NewBuffer([]byte(request.Notation))
 	reader := bufio.NewReader(notation)
-	music.output = filepath.Join(beepHomeDir(), "export", request.Output)
+	music.output = filepath.Join(HomeDir(), "export", request.Output)
 	os.MkdirAll(filepath.Dir(music.output), 0755)
-	go playMusicNotes(reader, 100)
-	<-music.played
+	go PlayMusicNotes(reader, 100)
+	music.Wait()
 
 	type exportWaveResponse struct {
 		Result string
@@ -323,9 +323,9 @@ func (w *Web) jsonResponse(response interface{}, res http.ResponseWriter) {
 	}
 }
 
-// Downloads natural voices
-func downloadVoiceFiles(writer io.Writer, names []string) {
-	dir := filepath.Join(beepHomeDir(), "voices")
+// DownloadVoiceFiles downloads natural voice files
+func DownloadVoiceFiles(writer io.Writer, names []string) {
+	dir := filepath.Join(HomeDir(), "voices")
 	if len(names) == 0 {
 		names = []string{"piano", "violin"}
 	}
@@ -377,7 +377,6 @@ func downloadVoiceFiles(writer io.Writer, names []string) {
 		}
 
 		fmt.Fprintf(writer, "  Saving %s\n", filename)
-		beepDefault()
 	}
 
 	// reload voices

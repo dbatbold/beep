@@ -1,4 +1,4 @@
-package main
+package beep
 
 import (
 	"fmt"
@@ -63,12 +63,12 @@ func byteToInt16Buf(buf []byte) []int16 {
 	return buf16
 }
 
-// Converts Hertz to frequency unit
-func hertzToFreq(hertz float64) float64 {
+// HertzToFreq converts Hertz to frequency unit
+func HertzToFreq(hertz float64) float64 {
 	// 1 second = 44100 samples
 	// 1 hertz = freq * 2Pi
 	// freq = 2Pi / 44100 * hertz
-	freq := 2.0 * math.Pi / sampleRate64 * hertz
+	freq := 2.0 * math.Pi / SampleRate64 * hertz
 	return freq
 }
 

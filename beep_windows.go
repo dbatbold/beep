@@ -1,6 +1,6 @@
 // +build windows
 
-package main
+package beep
 
 /*
 #cgo LDFLAGS: -lwinmm
@@ -23,7 +23,7 @@ var (
 	wavehdrLast *C.WAVEHDR
 )
 
-func openSoundDevice(device string) {
+func OpenSoundDevice(device string) {
 	var wfx C.WAVEFORMATEX
 
 	wfx.wFormatTag = C.WAVE_FORMAT_PCM
@@ -40,11 +40,11 @@ func openSoundDevice(device string) {
 	}
 }
 
-func initSoundDevice() {
+func InitSoundDevice() {
 	wavehdrLast = nil
 }
 
-func playback(buf1, buf2 []int16) {
+func Playback(buf1, buf2 []int16) {
 	bufWave := make([]int16, len(buf1)*2)
 	for i, bar := range buf1 {
 		bufWave[i*2] = bar
@@ -100,7 +100,7 @@ func playback(buf1, buf2 []int16) {
 	music.linePlayed <- true // notify that playback is done
 }
 
-func flushSoundBuffer() {
+func FlushSoundBuffer() {
 	if wavehdrLast != nil {
 		var wavehdr C.WAVEHDR
 		for wavehdrLast.dwFlags&C.WHDR_DONE == 0 {
@@ -115,7 +115,7 @@ func flushSoundBuffer() {
 	}
 }
 
-func closeSoundDevice() {
+func CloseSoundDevice() {
 	res := C.waveOutReset(hwaveout)
 	if res != C.MMSYSERR_NOERROR {
 		fmt.Fprintln(os.Stderr, "Error: waveOutReset:", winmmErrorText(res))
@@ -126,13 +126,14 @@ func closeSoundDevice() {
 	}
 }
 
-func stopPlayBack() {
+func StopPlayBack() {
 	res := C.waveOutReset(hwaveout)
 	if res != C.MMSYSERR_NOERROR {
 		fmt.Fprintln(os.Stderr, "Error: waveOutReset:", winmmErrorText(res))
 	}
 }
-func sendBell() {
+
+func SendBell() {
 	bell := []byte{7}
 	os.Stdout.Write(bell)
 }
@@ -143,7 +144,7 @@ func winmmErrorText(res C.MMRESULT) string {
 	return fmt.Sprintf("%v: %s", res, string(buf[:]))
 }
 
-func beepHomeDir() string {
+func BeepHomeDir() string {
 	var home string
 	usr, err := user.Current()
 	if err != nil {

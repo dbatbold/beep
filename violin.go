@@ -1,4 +1,4 @@
-package main
+package beep
 
 import (
 	"archive/zip"
@@ -88,7 +88,7 @@ func NewViolin() *Violin {
 	}
 
 	// load natural voice file, if exists
-	filename := filepath.Join(beepHomeDir(), "voices", "violin.zip")
+	filename := filepath.Join(HomeDir(), "voices", "violin.zip")
 	voiceFile, err := zip.OpenReader(filename)
 	if err == nil {
 		// voice file exists
@@ -149,11 +149,11 @@ func (v *Violin) generateNote(key rune, duration int) []int16 {
 	timer1 := 0.0
 	timer2 := 0.0
 	timer3 := 0.0
-	tick0 := 2 * math.Pi / sampleRate64 * freq
+	tick0 := 2 * math.Pi / SampleRate64 * freq
 	tick1 := tick0 * 2
 	tick2 := tick1 * 3
 	tick3 := tick2 * 4
-	amp := sampleAmp16bit * 0.5
+	amp := SampleAmp16bit * 0.5
 	for i := range buf {
 		sin0 := math.Sin(timer0)
 		sin1 := sin0 * math.Sin(timer1)
@@ -272,14 +272,14 @@ func (v *Violin) ComputerVoice(enable bool) {
 func (v *Violin) raiseNote(note *Note, ratio float64) {
 	buflen := len(note.buf)
 	raise := float64(buflen) * ratio
-	tick := sampleAmp16bit / raise
+	tick := SampleAmp16bit / raise
 	volume := 0.0
 	for i, bar := range note.buf {
 		bar64 := float64(bar)
-		bar64 = bar64 * (volume / sampleAmp16bit)
+		bar64 = bar64 * (volume / SampleAmp16bit)
 		note.buf[i] = int16(bar64)
 		volume += tick
-		if sampleAmp16bit <= volume {
+		if SampleAmp16bit <= volume {
 			break
 		}
 	}

@@ -1,4 +1,4 @@
-package main
+package beep
 
 import (
 	"errors"
@@ -346,7 +346,7 @@ func (midi *Midi) playEvents(events []*MidiEvent) {
 			if event.Note.duration == 0 {
 				event.Note.duration = 'E'
 			}
-			event.Note.volume = int(float32(sampleAmp16bit) * (float32(event.Note.velocity) / 127))
+			event.Note.volume = int(float32(SampleAmp16bit) * (float32(event.Note.velocity) / 127))
 			if voice.GetNote(event.Note, sustain) {
 				voice.SustainNote(event.Note, sustain)
 			} else {
@@ -369,12 +369,13 @@ func (midi *Midi) playEvents(events []*MidiEvent) {
 		if midi.Playing {
 			<-music.linePlayed
 		}
-		go playback(bufWave, bufWave)
+		go Playback(bufWave, bufWave)
 		midi.Playing = true
 	}
 }
 
-func (midi *Midi) play() {
+// Play - plays MIDI
+func (midi *Midi) Play() {
 	if midi.TickDiv < 0 {
 		fmt.Println("Metric TickDiv is not supported.")
 		return
@@ -458,7 +459,7 @@ func (midi *Midi) play() {
 				delta := quarterNote / tickDiv * int(deltaTime)
 				note := &Note{
 					key:       handLevel + key,
-					volume:    int(sampleAmp16bit) / 4 * 3,
+					volume:    int(SampleAmp16bit) / 4 * 3,
 					amplitude: 9,
 					duration:  0,
 					dotted:    false,
@@ -511,7 +512,7 @@ func (midi *Midi) play() {
 				}
 				note := &Note{
 					key:       handLevel + key,
-					volume:    int(sampleAmp16bit) / 4 * 3,
+					volume:    int(SampleAmp16bit) / 4 * 3,
 					amplitude: 9,
 					duration:  0,
 					dotted:    false,
@@ -617,7 +618,7 @@ func (midi *Midi) play() {
 			buf[i*2+1] = bar
 		}
 		buf16 := int16ToByteBuf(buf)
-		header := NewWaveHeader(2, sampleRate, 16, len(buf16))
+		header := NewWaveHeader(2, SampleRate, 16, len(buf16))
 		_, err = header.WriteHeader(midi.OutputFile)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "Error writing to output file:", err)

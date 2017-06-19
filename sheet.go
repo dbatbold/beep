@@ -1,4 +1,4 @@
-package main
+package beep
 
 import (
 	"fmt"
@@ -35,13 +35,13 @@ func (s *Sheet) Path() string {
 	if s.ID > 0 {
 		name = fmt.Sprintf("%d-%s", s.ID, s.Name)
 	}
-	filename = filepath.Join(beepHomeDir(), "sheets", s.Dir, name)
+	filename = filepath.Join(HomeDir(), "sheets", s.Dir, name)
 	return filename
 }
 
 // Save persists music sheet
 func (s *Sheet) Save() error {
-	dir := filepath.Join(beepHomeDir(), "sheets", s.Dir)
+	dir := filepath.Join(HomeDir(), "sheets", s.Dir)
 	os.MkdirAll(dir, 0755)
 	opt := os.O_CREATE | os.O_TRUNC | os.O_WRONLY
 	file, err := os.OpenFile(s.Path(), opt, 0644)
@@ -57,7 +57,7 @@ func (s *Sheet) Save() error {
 // Load reads music sheet from file
 func (s *Sheet) Load() error {
 	sheetID := stringNumber(strings.Split(s.Name, "-")[0])
-	for _, sheet := range builtinMusic {
+	for _, sheet := range BuiltinMusic {
 		if sheet.ID == sheetID {
 			s.ID = sheet.ID
 			s.Dir = sheet.Dir
@@ -75,7 +75,7 @@ func (s *Sheet) Load() error {
 
 // Exists checks existing music sheet file
 func (s *Sheet) Exists() bool {
-	filename := filepath.Join(beepHomeDir(), "sheets", s.Dir, s.Name)
+	filename := filepath.Join(HomeDir(), "sheets", s.Dir, s.Name)
 	_, err := os.Stat(filename)
 	if err != nil {
 		return false
@@ -95,8 +95,8 @@ func (s *Sheet) Delete() error {
 func sheetSearch(keyword string) []string {
 	var names []string
 	keyword = strings.ToLower(keyword)
-	root := filepath.Join(beepHomeDir(), "sheets") + string(os.PathSeparator)
-	for _, sheet := range builtinMusic {
+	root := filepath.Join(HomeDir(), "sheets") + string(os.PathSeparator)
+	for _, sheet := range BuiltinMusic {
 		name := strings.TrimPrefix(sheet.Path(), root)
 		if len(keyword) == 0 || strings.Contains(strings.ToLower(name), keyword) {
 			names = append(names, name)
@@ -116,7 +116,8 @@ func sheetSearch(keyword string) []string {
 	return names
 }
 
-var builtinMusic = []*Sheet{
+// BuiltinMusic stores builin music scores
+var BuiltinMusic = []*Sheet{
 	{
 		ID:   1,
 		Name: "mozart-k33b-klavierstuck-in-f.txt",

@@ -1,4 +1,4 @@
-package main
+package beep
 
 import (
 	"archive/zip"
@@ -107,7 +107,7 @@ func NewPiano() *Piano {
 	}
 
 	// load natural voice file, if exists
-	filename := filepath.Join(beepHomeDir(), "voices", "piano.zip")
+	filename := filepath.Join(HomeDir(), "voices", "piano.zip")
 	voiceFile, err := zip.OpenReader(filename)
 	if err == nil {
 		// voice file exists
@@ -169,11 +169,11 @@ func (p *Piano) generateNote(key rune, duration int) []int16 {
 	timer1 := 0.0
 	timer2 := 0.0
 	timer3 := 0.0
-	tick0 := 2 * math.Pi / sampleRate64 * freq
+	tick0 := 2 * math.Pi / SampleRate64 * freq
 	tick1 := tick0 * 2
 	tick2 := tick1 * 3
 	tick3 := tick2 * 4
-	amp := sampleAmp16bit * 0.5
+	amp := SampleAmp16bit * 0.5
 	for i := range buf {
 		sin0 := math.Sin(timer0)
 		sin1 := sin0 * math.Sin(timer1)
