@@ -124,7 +124,7 @@ func main() {
 	}
 
 	if webServer {
-		beep.StartWebServer(*flagWebIP)
+		beep.StartWebServer(music, *flagWebIP)
 		return
 	}
 
@@ -136,12 +136,12 @@ func main() {
 			}
 			names = append(names, arg)
 		}
-		beep.DownloadVoiceFiles(os.Stdout, names)
+		beep.DownloadVoiceFiles(music, os.Stdout, names)
 		return
 	}
 
 	if len(midiPlay) > 0 {
-		parseMidiBeep(midiPlay)
+		parseMidiBeep(music, midiPlay)
 		return
 	}
 
@@ -159,12 +159,12 @@ func main() {
 }
 
 // Play a MIDI file
-func parseMidiBeep(filename string) {
+func parseMidiBeep(music *beep.Music, filename string) {
 	midi, err := beep.ParseMidi(filename, false)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 	} else {
-		midi.Play()
+		midi.Play(music)
 	}
 }
 
@@ -178,7 +178,7 @@ func parseMidiNote(filename string) {
 
 func playMusicNotesFromCL(music *beep.Music, musicNotes string, volume int) {
 	reader := bufio.NewReader(strings.NewReader(musicNotes))
-	go beep.PlayMusicNotes(reader, volume)
+	go beep.PlayMusicNotes(music, reader, volume)
 	music.Wait()
 	beep.FlushSoundBuffer()
 }

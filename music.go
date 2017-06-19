@@ -115,7 +115,6 @@ const (
 )
 
 var (
-	music     *Music
 	wholeRest = make([]int16, wholeNote)
 
 	// PrintSheet - print music flag
@@ -183,7 +182,7 @@ type Voice interface {
 
 // NewMusic returns new music for output
 func NewMusic(output string) *Music {
-	music = &Music{
+	music := &Music{
 		played:     make(chan bool),
 		stopped:    make(chan bool),
 		linePlayed: make(chan bool),
@@ -194,12 +193,12 @@ func NewMusic(output string) *Music {
 
 // Wait until sheet is played
 func (m *Music) Wait() {
-	<-music.played
+	<-m.played
 }
 
 // WaitLine waits until line is played
 func (m *Music) WaitLine() {
-	<-music.linePlayed
+	<-m.linePlayed
 }
 
 // Ratio returns sustain ratio
@@ -215,7 +214,7 @@ func (c *Chord) Reset() {
 }
 
 // PlayMusicNotes plays music sheet from reader
-func PlayMusicNotes(reader *bufio.Reader, volume100 int) {
+func PlayMusicNotes(music *Music, reader *bufio.Reader, volume100 int) {
 	music.playing = true
 	defer func() {
 		music.played <- true
@@ -536,10 +535,10 @@ func PlayMusicNotes(reader *bufio.Reader, volume100 int) {
 		if outputFile == nil {
 			if len(bufWave) > 0 {
 				if waitNext {
-					<-music.linePlayed // wait until previous line is done playing
+					music.WaitLine() // wait until previous line is done playing
 				}
 				// prepare next line while playing
-				go Playback(bufWave, bufWave)
+				go Playback(music, bufWave, bufWave)
 				if PrintSheet {
 					fmt.Println(line)
 				}
@@ -566,7 +565,7 @@ func PlayMusicNotes(reader *bufio.Reader, volume100 int) {
 		}
 	}
 	if waitNext {
-		<-music.linePlayed // wait until last line
+		music.WaitLine()
 	}
 
 	if outputFile != nil {
@@ -772,8 +771,8 @@ func PlayBeep(music *Music, volume, duration, count int, freq float64) {
 	}
 	InitSoundDevice()
 	for i := 0; i < count; i++ {
-		go Playback(buf, buf)
-		<-music.linePlayed
+		go Playback(music, buf, buf)
+		music.WaitLine()
 	}
 	FlushSoundBuffer()
 }
@@ -806,7 +805,7 @@ func PlayPerLine(music *Music, volume int, freq float64) {
 		fmt.Print(string(line))
 		if !isPrefix {
 			fmt.Println()
-			go Playback(buf, buf)
+			go Playback(music, buf, buf)
 			music.WaitLine()
 		}
 	}
@@ -843,7 +842,7 @@ func PlayMusicSheet(music *Music, volume int) {
 			time.Sleep(time.Second * 1)
 		}
 		InitSoundDevice()
-		go PlayMusicNotes(reader, volume)
+		go PlayMusicNotes(music, reader, volume)
 		music.Wait()
 		FlushSoundBuffer()
 	}

@@ -74,7 +74,7 @@ func InitSoundDevice() {
 }
 
 // Playback sends wave buffer to sound device
-func Playback(buf1, buf2 []int16) {
+func Playback(music *Music, buf1, buf2 []int16) {
 	bufsize := len(buf1)
 	if bufsize < SampleRate {
 		// prevent buffer underrun

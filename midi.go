@@ -329,7 +329,7 @@ func (midi *Midi) variableLengthValue(data []byte) (value int32, byteSize int) {
 	return value, byteSize
 }
 
-func (midi *Midi) playEvents(events []*MidiEvent) {
+func (midi *Midi) playEvents(music *Music, events []*MidiEvent) {
 	var bufsize int
 	//var count = len(events)
 	var voice Voice = music.piano
@@ -367,15 +367,15 @@ func (midi *Midi) playEvents(events []*MidiEvent) {
 		midi.OutputBuf = append(midi.OutputBuf, bufWave...)
 	} else {
 		if midi.Playing {
-			<-music.linePlayed
+			music.WaitLine()
 		}
-		go Playback(bufWave, bufWave)
+		go Playback(music, bufWave, bufWave)
 		midi.Playing = true
 	}
 }
 
 // Play - plays MIDI
-func (midi *Midi) Play() {
+func (midi *Midi) Play(music *Music) {
 	if midi.TickDiv < 0 {
 		fmt.Println("Metric TickDiv is not supported.")
 		return
@@ -536,7 +536,7 @@ func (midi *Midi) Play() {
 				events = append(events, event)
 				if (len(events) > 100 && event.Note.velocity == 0) || len(events) > 125 {
 					// play 100 notes and prepare next 100 while playing
-					midi.playEvents(events)
+					midi.playEvents(music, events)
 					events = nil
 				}
 
@@ -598,9 +598,9 @@ func (midi *Midi) Play() {
 		}
 
 		if events != nil {
-			midi.playEvents(events)
+			midi.playEvents(music, events)
 			if len(music.output) == 0 {
-				<-music.linePlayed
+				music.WaitLine()
 			}
 		}
 	}

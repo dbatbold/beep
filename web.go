@@ -18,11 +18,12 @@ import (
 
 // Web params
 type Web struct {
-	tmpl *template.Template
+	music *Music
+	tmpl  *template.Template
 }
 
 // StartWebServer starts beep web server
-func StartWebServer(address string) {
+func StartWebServer(music *Music, address string) {
 	var err error
 	var ip string
 	if len(address) == 0 {
@@ -48,7 +49,7 @@ func StartWebServer(address string) {
 		fmt.Printf("Listening on http://%s/\n", bind)
 	}
 
-	web := NewWeb()
+	web := NewWeb(music)
 	music.quietMode = true
 	err = http.ListenAndServe(bind, web)
 	if err != nil {
@@ -58,9 +59,10 @@ func StartWebServer(address string) {
 }
 
 // NewWeb returns new handler
-func NewWeb() *Web {
+func NewWeb(music *Music) *Web {
 	w := &Web{
-		tmpl: template.Must(template.New("tmpl").Parse(webTemplates)),
+		music: music,
+		tmpl:  template.Must(template.New("tmpl").Parse(webTemplates)),
 	}
 	return w
 }
@@ -123,7 +125,7 @@ func (w *Web) serveHome(res http.ResponseWriter, req *http.Request) {
 
 // Playback
 func (w *Web) servePlay(res http.ResponseWriter, req *http.Request) {
-	if music.playing {
+	if w.music.playing {
 		return
 	}
 	type playRequest struct {
@@ -134,21 +136,21 @@ func (w *Web) servePlay(res http.ResponseWriter, req *http.Request) {
 	InitSoundDevice()
 	notation := bytes.NewBuffer([]byte(request.Notation))
 	reader := bufio.NewReader(notation)
-	go PlayMusicNotes(reader, 100)
-	music.Wait()
+	go PlayMusicNotes(w.music, reader, 100)
+	w.music.Wait()
 }
 
 // Stops playback
 func (w *Web) serveStop(res http.ResponseWriter, req *http.Request) {
-	if music.stopping {
+	if w.music.stopping {
 		return
 	}
-	music.stopping = music.playing
+	w.music.stopping = w.music.playing
 	go StopPlayBack()
-	if music.playing {
-		<-music.stopped
+	if w.music.playing {
+		<-w.music.stopped
 	}
-	music.stopping = false
+	w.music.stopping = false
 }
 
 // Search sheet names
@@ -262,13 +264,13 @@ func (w *Web) serveDownloadVoice(res http.ResponseWriter, req *http.Request) {
 	if len(request.Name) > 0 {
 		names = append(names, request.Name)
 	}
-	DownloadVoiceFiles(res, names)
+	DownloadVoiceFiles(w.music, res, names)
 }
 
 // Export to WAV file
 func (w *Web) serveExportWave(res http.ResponseWriter, req *http.Request) {
 	defer func() {
-		music.output = ""
+		w.music.output = ""
 	}()
 	type exportWaveRequest struct {
 		Output   string
@@ -279,16 +281,16 @@ func (w *Web) serveExportWave(res http.ResponseWriter, req *http.Request) {
 
 	notation := bytes.NewBuffer([]byte(request.Notation))
 	reader := bufio.NewReader(notation)
-	music.output = filepath.Join(HomeDir(), "export", request.Output)
-	os.MkdirAll(filepath.Dir(music.output), 0755)
-	go PlayMusicNotes(reader, 100)
-	music.Wait()
+	w.music.output = filepath.Join(HomeDir(), "export", request.Output)
+	os.MkdirAll(filepath.Dir(w.music.output), 0755)
+	go PlayMusicNotes(w.music, reader, 100)
+	w.music.Wait()
 
 	type exportWaveResponse struct {
 		Result string
 	}
 	response := exportWaveResponse{
-		Result: "WAV file has been save to: " + music.output,
+		Result: "WAV file has been save to: " + w.music.output,
 	}
 	w.jsonResponse(response, res)
 }
@@ -324,7 +326,7 @@ func (w *Web) jsonResponse(response interface{}, res http.ResponseWriter) {
 }
 
 // DownloadVoiceFiles downloads natural voice files
-func DownloadVoiceFiles(writer io.Writer, names []string) {
+func DownloadVoiceFiles(music *Music, writer io.Writer, names []string) {
 	dir := filepath.Join(HomeDir(), "voices")
 	if len(names) == 0 {
 		names = []string{"piano", "violin"}

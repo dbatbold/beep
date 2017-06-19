@@ -44,7 +44,7 @@ func InitSoundDevice() {
 	wavehdrLast = nil
 }
 
-func Playback(buf1, buf2 []int16) {
+func Playback(music *Music, buf1, buf2 []int16) {
 	bufWave := make([]int16, len(buf1)*2)
 	for i, bar := range buf1 {
 		bufWave[i*2] = bar
