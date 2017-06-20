@@ -99,7 +99,7 @@ beep [options]
 Beep notation
 =============
 
-To play music with beep, music score needs to be converted into text. Beep uses its own music notation called beep notation. All music octaves are divided into computer keyboard keys similar to piano key layout. All 88 piano keys can be written as below.
+To play music with beep, music score needs to be converted into text. Beep uses its own music notation called beep notation. All music octaves are divided into computer keyboard keys similar to piano key layout. All 88 piano notes can be played as following.
 ```
 $ beep -play 'H0,l.HLq2w3er5t6y7ui9o0p[=]azsxcfvgbnjmk,l.HRq2w3er5t6y7ui9o0p[=]azsxcfvgbnjmk,l.H7q2w3er5t6y7ui'
 ```
