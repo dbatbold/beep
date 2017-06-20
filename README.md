@@ -14,8 +14,8 @@ $ $GOPATH/bin/beep -m demo  # play demo music by Mozart
 
 [Play demo with piano voice&nbsp; ▶](http://angiud.com/beep/demo-mozart-k33b-piano.mp3)
 
-Library
-=======
+Library Usage Example
+=====================
 
 ```go
 package main
@@ -52,8 +52,8 @@ func main() {
 
 ```
 
-Building
-========
+Building from Source
+====================
 ```
 On Linux:
  $ apt-get install golang libasound2-dev  # for Debian and Ubuntu
