@@ -23,7 +23,7 @@ package main
 import (
     "bufio"
     "strings"
-	"log"
+    "log"
     "github.com/dbatbold/beep"
 )
 
@@ -31,12 +31,12 @@ func main() {
     music := beep.NewMusic("") // output can be file as "music.wav"
     volume := 100
 
-	if err := beep.OpenSoundDevice("default"); err != nil {
-		log.Fatal(err)
-	}
-	if err := beep.InitSoundDevice(); err != nil {
-		log.Fatal(err)
-	}
+    if err := beep.OpenSoundDevice("default"); err != nil {
+        log.Fatal(err)
+    }
+    if err := beep.InitSoundDevice(); err != nil {
+        log.Fatal(err)
+    }
     beep.PrintSheet = true
     defer beep.CloseSoundDevice()
 

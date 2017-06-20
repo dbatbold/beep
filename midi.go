@@ -29,11 +29,29 @@ type Midi struct {
 	music *Music
 }
 
-// MIDI events
 const (
-	MidiEventMidi = iota
-	MidiEventSysEx
-	MidiEventMeta
+	// MIDI events
+	MidiEventTrack            = 0x00
+	MidiEventMeta             = 0xFF
+	MidiEventSystemExclusive1 = 0xF0
+	MidiEventSystemExclusive2 = 0xF7
+
+	// MIDI event types
+	MidiEventTypeSeqNum         = 0x00
+	MidiEventTypeText           = 0x01
+	MidiEventTypeCopyright      = 0x02
+	MidiEventTypeSeqOrTrackName = 0x03
+	MidiEventTypeInstName       = 0x04
+	MidiEventTypeLyricText      = 0x05
+	MidiEventTypeMarkerText     = 0x06
+	MidiEventTypeCuePoint       = 0x07
+	MidiEventTypeChanPrefix     = 0x20
+	MidiEventTypeEndOfTrack     = 0x2F
+	MidiEventTypeTempo          = 0x51
+	MidiEventTypeSMPTEOffset    = 0x54
+	MidiEventTypeTimeSig        = 0x58
+	MidiEventTypeKeySig         = 0x59
+	MidiEventTypeSeqSpecEvent   = 0x7F
 )
 
 var (
@@ -183,7 +201,7 @@ func ParseMidi(music *Music, filename string, printKeyboard bool) (*Midi, error)
 				cbyte := chunk.Data[i]
 				isEvent = !isEvent
 				if !isEvent {
-					deltaTime, byteSize = midi.variableLengthValue(chunk.Data[i:])
+					deltaTime, byteSize = VariableLengthValue(chunk.Data[i:])
 					_ = deltaTime
 					i += byteSize - 1
 					//fmt.Printf("delta-time=%d\n", deltaTime)
@@ -256,27 +274,50 @@ func ParseMidi(music *Music, filename string, printKeyboard bool) (*Midi, error)
 
 				// SysEx events
 				switch cbyte {
-				case 0xF0: // SysEx
-					msgLength, byteSize = midi.variableLengthValue(chunk.Data[i+1:])
+				case MidiEventSystemExclusive1, MidiEventSystemExclusive2:
+					msgLength, byteSize = VariableLengthValue(chunk.Data[i+1:])
 					msg := i + 1 + byteSize
 					message := chunk.Data[msg : msg+int(msgLength)]
-					_ = message
 					i += byteSize + int(msgLength)
-					//fmt.Printf("message=%s length=%d\n", message, msgLength)
+					fmt.Printf("Track=%d, SysEx Message=%q length=%d\n", message, msgLength)
 					continue
 
-				case 0xFF: // Meta event
+				case MidiEventMeta:
 					msgType := chunk.Data[i+1]
-					msgLength, byteSize = midi.variableLengthValue(chunk.Data[i+2:])
+					msgLength, byteSize = VariableLengthValue(chunk.Data[i+2:])
 					msg := i + 2 + byteSize
 					message := chunk.Data[msg : msg+int(msgLength)]
-					_ = message
 					i += byteSize + int(msgLength)
-					switch msgType {
-					case 0x01: // Text
-						//fmt.Printf("Message=%s length=%d\n", message, msgLength)
+					var messageVal int32
+					if len(message) > 0 {
+						messageVal, _ = VariableLengthValue(message)
 					}
-					//fmt.Printf("Meta event: type=%02X\n", msgType)
+
+					switch msgType {
+					//case MidiEventTypeText:
+					//case MidiEventTypeSeqNum:
+					//case MidiEventTypeText:
+					//case MidiEventTypeCopyright:
+					//case MidiEventTypeInstName:
+					//case MidiEventTypeLyricText:
+					//case MidiEventTypeMarkerText:
+					//case MidiEventTypeCuePoint:
+					//case MidiEventTypeChanPrefix:
+					//case MidiEventTypeSMPTEOffset:
+					//case MidiEventTypeTimeSig:
+					//case MidiEventTypeSeqSpecEvent:
+					case MidiEventTypeTempo:
+						fmt.Printf("MidiEventTypeTempo: %d\n", messageVal)
+					case MidiEventTypeSeqOrTrackName:
+						fmt.Printf("MidiEventTypeSeqOrTrackName: %s\n", message)
+					case MidiEventTypeKeySig:
+						fmt.Printf("MidiEventTypeKeySig: %d\n", messageVal)
+					case MidiEventTypeEndOfTrack:
+						// end of track
+					default:
+						fmt.Printf("Track=%d, Meta event type=%02X, Msg=%q\n",
+							len(midi.Tracks), msgType, message)
+					}
 					continue
 
 				default:
@@ -307,8 +348,8 @@ func (midi *Midi) printBeepNotation(deltaTime int, noteCode byte) {
 	}
 }
 
-// Variable length value parser
-func (midi *Midi) variableLengthValue(data []byte) (value int32, byteSize int) {
+// VariableLengthValue parses variable length value used in MIDI
+func VariableLengthValue(data []byte) (value int32, byteSize int) {
 
 	// byte1    byte2    byte3    byte4
 	// 00000000 00000000 00000000 00000000
@@ -391,7 +432,7 @@ func (midi *Midi) mixTracks(events []*MidiEvent) {
 
 	if trackNum++; trackNum > 1 {
 		// play other tracks with computer voice
-		midi.music.piano.ComputerVoice(true)
+		//midi.music.piano.ComputerVoice(true)
 	}
 	if midi.OutputBuf == nil {
 		// first track
@@ -440,7 +481,7 @@ func (midi *Midi) Play() {
 			//fmt.Printf("%d:%02X ", i, chunk.Data[i])
 			isEvent = !isEvent
 			if !isEvent {
-				deltaTime, byteSize = midi.variableLengthValue(chunk.Data[i:])
+				deltaTime, byteSize = VariableLengthValue(chunk.Data[i:])
 				i += byteSize - 1
 				timer += int(deltaTime)
 				//fmt.Print(deltaTime, " ")
@@ -500,7 +541,7 @@ func (midi *Midi) Play() {
 				}
 
 				event = &MidiEvent{
-					Type:       MidiEventMidi,
+					Type:       MidiEventTrack,
 					Delta:      delta,
 					Note:       note,
 					NoteNumber: noteNumber,
@@ -561,7 +602,7 @@ func (midi *Midi) Play() {
 
 				delta := quarterNote / tickDiv * int(deltaTime)
 				event = &MidiEvent{
-					Type:       MidiEventMidi,
+					Type:       MidiEventTrack,
 					Delta:      delta,
 					Start:      timer,
 					Note:       note,
@@ -593,7 +634,7 @@ func (midi *Midi) Play() {
 			// SysEx events
 			switch chunk.Data[i] {
 			case 0xF0: // SysEx
-				msgLength, byteSize = midi.variableLengthValue(chunk.Data[i+1:])
+				msgLength, byteSize = VariableLengthValue(chunk.Data[i+1:])
 				msg := i + 1 + byteSize
 				message := chunk.Data[msg : msg+int(msgLength)]
 				_ = message
@@ -601,7 +642,7 @@ func (midi *Midi) Play() {
 				//fmt.Printf("\nmessage=%s length=%d\n", message, msgLength)
 
 			case 0xF7: // Escape sequences
-				msgLength, byteSize = midi.variableLengthValue(chunk.Data[i+1:])
+				msgLength, byteSize = VariableLengthValue(chunk.Data[i+1:])
 				msg := i + 1 + byteSize
 				message := chunk.Data[msg : msg+int(msgLength)]
 				_ = message
@@ -610,7 +651,7 @@ func (midi *Midi) Play() {
 
 			case 0xFF: // Meta event
 				msgType := chunk.Data[i+1]
-				msgLength, byteSize = midi.variableLengthValue(chunk.Data[i+2:])
+				msgLength, byteSize = VariableLengthValue(chunk.Data[i+2:])
 				msg := i + 2 + byteSize
 				message := chunk.Data[msg : msg+int(msgLength)]
 				_ = message
