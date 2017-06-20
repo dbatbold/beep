@@ -14,6 +14,44 @@ $ $GOPATH/bin/beep -m demo  # play demo music by Mozart
 
 [Play demo with piano voice&nbsp; ▶](http://angiud.com/beep/demo-mozart-k33b-piano.mp3)
 
+Library
+=======
+
+```go
+package main
+
+import (
+    "bufio"
+    "strings"
+    "github.com/dbatbold/beep"
+)
+
+func main() {
+    music := beep.NewMusic("")
+    volume := 100
+
+    beep.OpenSoundDevice("default")
+    beep.InitSoundDevice()
+    beep.PrintSheet = true
+    defer beep.CloseSoundDevice()
+
+    musicScore := `
+        VP SA8 SR9
+        A9HRDE cc DScszs|DEc DQzDE[|cc DScszs|DEc DQz DE[|vv DSvcsc|DEvs ]v|cc DScszs|VN
+        A3HLDE [n z,    |cHRq HLz, |[n z,    |cHRq HLz,  |sl z,    |]m   pb|z, ]m    |
+        
+        A9HRDE cz [c|ss DSsz]z|DEs] ps|DSsz][ z][p|DEpDQ[ [|VN
+        A3HLDE [n ov|]m [n    |  pb ic|  n,   lHRq|HLnc DQ[|
+    `
+
+    reader := bufio.NewReader(strings.NewReader(musicScore))
+    go beep.PlayMusicNotes(reader, volume)
+    music.Wait()
+    beep.FlushSoundBuffer()
+}
+
+```
+
 Building
 ========
 ```
