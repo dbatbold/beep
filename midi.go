@@ -18,7 +18,7 @@ type MidiChunk struct {
 // Midi - MIDI file
 type Midi struct {
 	Chunks     []*MidiChunk
-	Tracks     []*MidiChunk
+	Tracks     []*MidiChunk // voice tracks
 	Format     int
 	Ntracks    int // number of tracks
 	TickDiv    int // if 15th bit is 0 - (h.m.s.frames) resolution of a quarter note, 1 - metric (bar.beat)
@@ -34,6 +34,10 @@ const (
 	MidiEventMidi = iota
 	MidiEventSysEx
 	MidiEventMeta
+)
+
+var (
+	trackNum int
 )
 
 // MidiEvent - MIDI event
@@ -223,7 +227,7 @@ func ParseMidi(music *Music, filename string, printKeyboard bool) (*Midi, error)
 						i += 2
 					}
 					if lastKey >= 21 && lastKey <= 108 {
-						keys[lastKey] = ' '
+						keys[lastKey-21] = ' '
 					}
 					if note >= 21 && note <= 108 {
 						keys[note-21] = midiNoteMap[note][2]
@@ -385,6 +389,10 @@ func (midi *Midi) mixTracks(events []*MidiEvent) {
 		}
 	}
 
+	if trackNum++; trackNum > 1 {
+		// play other tracks with computer voice
+		midi.music.piano.ComputerVoice(true)
+	}
 	if midi.OutputBuf == nil {
 		// first track
 		midi.OutputBuf = bufWave
@@ -511,7 +519,11 @@ func (midi *Midi) Play() {
 					velocity = chunk.Data[i+2]
 					i += 2
 				}
-				noteName := midiNoteMap[noteNumber]
+				noteName, found := midiNoteMap[noteNumber]
+				if !found {
+					fmt.Println("Invalid note name:", noteNumber)
+					continue
+				}
 				if velocity == 0 {
 					// NoteOn event with 0 velocity is same as NoteOff event. This can determine the note duration.
 					noteOnEvent := midiNoteOnMap[noteNumber]

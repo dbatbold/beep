@@ -55,11 +55,6 @@ Batbold Dashzeveg 2014-12-31`
 )
 
 func main() {
-	defer func() {
-		if r := recover(); r != nil {
-			fmt.Println("Error:", r)
-		}
-	}()
 	flag.Parse()
 
 	help := *flagHelp
