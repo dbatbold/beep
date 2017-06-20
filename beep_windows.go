@@ -23,7 +23,7 @@ var (
 	wavehdrLast *C.WAVEHDR
 )
 
-func OpenSoundDevice(device string) {
+func OpenSoundDevice(device string) error {
 	var wfx C.WAVEFORMATEX
 
 	wfx.wFormatTag = C.WAVE_FORMAT_PCM
@@ -35,13 +35,17 @@ func OpenSoundDevice(device string) {
 
 	res := C.waveOutOpen(&hwaveout, C.WAVE_MAPPER, &wfx, 0, 0, C.CALLBACK_NULL)
 	if res != C.MMSYSERR_NOERROR {
-		fmt.Fprintln(os.Stderr, "Error: waveOutOpen:", winmmErrorText(res))
-		os.Exit(1)
+		err := fmt.Errorf("waveOutOpen: %v\n", winmmErrorText(res))
+		fmt.Fprintln(os.Stderr, err)
+		return err
 	}
+
+	return nil
 }
 
-func InitSoundDevice() {
+func InitSoundDevice() error {
 	wavehdrLast = nil
+	return nil
 }
 
 // Playback sends stereo wave buffer to sound device

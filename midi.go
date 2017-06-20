@@ -18,12 +18,15 @@ type MidiChunk struct {
 // Midi - MIDI file
 type Midi struct {
 	Chunks     []*MidiChunk
+	Tracks     []*MidiChunk
 	Format     int
 	Ntracks    int // number of tracks
 	TickDiv    int // if 15th bit is 0 - (h.m.s.frames) resolution of a quarter note, 1 - metric (bar.beat)
 	Playing    bool
 	OutputFile *os.File
 	OutputBuf  []int16
+
+	music *Music
 }
 
 // MIDI events
@@ -85,8 +88,10 @@ var (
 )
 
 // ParseMidi parses MIDI file
-func ParseMidi(filename string, printKeyboard bool) (*Midi, error) {
-	midi := &Midi{}
+func ParseMidi(music *Music, filename string, printKeyboard bool) (*Midi, error) {
+	midi := &Midi{
+		music: music,
+	}
 	data, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return nil, err
@@ -117,18 +122,22 @@ func ParseMidi(filename string, printKeyboard bool) (*Midi, error) {
 		}
 	}
 
-	var keys [88]byte
-	var piano [88]byte
-	var notes = "CcDEeFfGgAaB"
-	var byteSize int
-	var deltaTime int32
-	var msgLength int32
-	var lastKey byte
-	var note byte
-	var velocity byte
+	var (
+		keys      [88]byte
+		piano     [88]byte
+		notes     = "CcDEeFfGgAaB"
+		byteSize  int
+		deltaTime int32
+		msgLength int32
+		lastKey   byte
+		note      byte
+		velocity  byte
+	)
+
 	piano[0] = 'A'
 	piano[1] = 'a'
 	piano[2] = 'B'
+
 	for i := range piano {
 		if i > 2 {
 			piano[i] = byte(notes[(i-3)%12])
@@ -163,6 +172,7 @@ func ParseMidi(filename string, printKeyboard bool) (*Midi, error) {
 			//fmt.Printf("Format: %d, Ntracks: %d, TickDiv: %d\n", midi.Format, midi.Ntracks, midi.TickDiv)
 
 		case "MTrk": // track chunk
+			midi.Tracks = append(midi.Tracks, chunk)
 			var isEvent = true
 			chunkSize := len(chunk.Data)
 			for i := 0; i < chunkSize; i++ {
@@ -184,6 +194,7 @@ func ParseMidi(filename string, printKeyboard bool) (*Midi, error) {
 				}
 				channel := cbyte & 0x0F
 				_ = channel
+
 				switch statusByte {
 				case 0x80: // note off
 					if runningStatus {
@@ -329,10 +340,19 @@ func (midi *Midi) variableLengthValue(data []byte) (value int32, byteSize int) {
 	return value, byteSize
 }
 
-func (midi *Midi) playEvents(music *Music, events []*MidiEvent) {
+func (midi *Midi) playTracks() {
+	if midi.Playing {
+		midi.music.WaitLine()
+	}
+	go midi.music.Playback(midi.OutputBuf, midi.OutputBuf)
+	midi.Playing = true
+}
+
+func (midi *Midi) mixTracks(events []*MidiEvent) {
 	var bufsize int
 	//var count = len(events)
-	var voice Voice = music.piano
+	var voice Voice = midi.music.piano
+
 	sustain := &Sustain{
 		attack:  8,
 		decay:   4,
@@ -340,6 +360,7 @@ func (midi *Midi) playEvents(music *Music, events []*MidiEvent) {
 		release: 9,
 		buf:     make([]int16, quarterNote),
 	}
+
 	for _, event := range events {
 		bufsize += event.Delta
 		if event.Note.velocity > 0 {
@@ -354,6 +375,7 @@ func (midi *Midi) playEvents(music *Music, events []*MidiEvent) {
 			}
 		}
 	}
+
 	bufWave := make([]int16, bufsize)
 	var start int
 	for _, event := range events {
@@ -363,25 +385,22 @@ func (midi *Midi) playEvents(music *Music, events []*MidiEvent) {
 		}
 	}
 
-	if len(music.output) > 0 {
-		midi.OutputBuf = append(midi.OutputBuf, bufWave...)
+	if midi.OutputBuf == nil {
+		// first track
+		midi.OutputBuf = bufWave
 	} else {
-		if midi.Playing {
-			music.WaitLine()
-		}
-		go music.Playback(bufWave, bufWave)
-		midi.Playing = true
+		mixSoundWave(midi.OutputBuf, bufWave)
 	}
 }
 
-// Play - plays MIDI
-func (midi *Midi) Play(music *Music) {
+// Play all MIDI tracks at same time
+func (midi *Midi) Play() {
 	if midi.TickDiv < 0 {
 		fmt.Println("Metric TickDiv is not supported.")
 		return
 	}
-	if music.piano == nil {
-		music.piano = NewPiano()
+	if midi.music.piano == nil {
+		midi.music.piano = NewPiano()
 	}
 	var (
 		tickDiv    = midi.TickDiv
@@ -398,16 +417,14 @@ func (midi *Midi) Play(music *Music) {
 	)
 
 	fmt.Println("TickDiv:", tickDiv)
-	fmt.Println("Tracks:", midi.Ntracks)
+	fmt.Println("Tracks:", len(midi.Tracks))
 	fmt.Println("Format:", midi.Format)
-	if len(music.output) > 0 {
+
+	if len(midi.music.output) > 0 {
 		fmt.Print("Saving ... ")
 	}
 
-	for _, chunk := range midi.Chunks {
-		if chunk.Type != "MTrk" {
-			continue
-		}
+	for _, chunk := range midi.Tracks {
 		chunkSize := len(chunk.Data)
 		var isEvent = true
 		//fmt.Println("\nCHUNK")
@@ -427,6 +444,7 @@ func (midi *Midi) Play(music *Music) {
 				statusByte = lastStatus
 				//fmt.Printf("runningStatus %02X\n", statusByte)
 			}
+
 			switch statusByte {
 			case 0x80: // Note Off message
 				if runningStatus {
@@ -448,6 +466,7 @@ func (midi *Midi) Play(music *Music) {
 				}
 				hand := noteName[1]
 				key := rune(noteName[2])
+
 				switch hand {
 				case '0': // octave 0
 					handLevel = 1000
@@ -461,6 +480,7 @@ func (midi *Midi) Play(music *Music) {
 					fmt.Println("Invalid hand level:", handLevel)
 				}
 				delta := quarterNote / tickDiv * int(deltaTime)
+
 				note := &Note{
 					key:       handLevel + key,
 					volume:    int(SampleAmp16bit) / 4 * 3,
@@ -470,6 +490,7 @@ func (midi *Midi) Play(music *Music) {
 					tempo:     4,
 					velocity:  0,
 				}
+
 				event = &MidiEvent{
 					Type:       MidiEventMidi,
 					Delta:      delta,
@@ -502,6 +523,7 @@ func (midi *Midi) Play(music *Music) {
 				}
 				hand := noteName[1]
 				key := rune(noteName[2])
+
 				switch hand {
 				case '0': // octave 0
 					handLevel = 1000
@@ -514,6 +536,7 @@ func (midi *Midi) Play(music *Music) {
 				default:
 					fmt.Println("Invalid hand level:", handLevel)
 				}
+
 				note := &Note{
 					key:       handLevel + key,
 					volume:    int(SampleAmp16bit) / 4 * 3,
@@ -523,6 +546,7 @@ func (midi *Midi) Play(music *Music) {
 					tempo:     4,
 					velocity:  int(velocity),
 				}
+
 				delta := quarterNote / tickDiv * int(deltaTime)
 				event = &MidiEvent{
 					Type:       MidiEventMidi,
@@ -534,11 +558,6 @@ func (midi *Midi) Play(music *Music) {
 				//fmt.Printf("Note On: %d %s %s v=%d\n", deltaTime, noteName, string(event.Note.duration), velocity)
 				midiNoteOnMap[noteNumber] = event
 				events = append(events, event)
-				if (len(events) > 100 && event.Note.velocity == 0) || len(events) > 125 {
-					// play 100 notes and prepare next 100 while playing
-					midi.playEvents(music, events)
-					events = nil
-				}
 
 			case 0xA0: // aftertouch
 				i += 2
@@ -598,18 +617,21 @@ func (midi *Midi) Play(music *Music) {
 		}
 
 		if events != nil {
-			midi.playEvents(music, events)
-			if len(music.output) == 0 {
-				music.WaitLine()
-			}
+			midi.mixTracks(events)
+			events = nil
 		}
 	}
 
-	if len(music.output) > 0 {
+	if len(midi.music.output) == 0 {
+		midi.playTracks()
+		midi.music.WaitLine()
+	}
+
+	if len(midi.music.output) > 0 {
 		// save to WAVE file
 		var err error
 		opt := os.O_WRONLY | os.O_TRUNC | os.O_CREATE
-		midi.OutputFile, err = os.OpenFile(music.output, opt, 0644)
+		midi.OutputFile, err = os.OpenFile(midi.music.output, opt, 0644)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "Error opening to output file:", err)
 			os.Exit(1)
@@ -633,6 +655,6 @@ func (midi *Midi) Play(music *Music) {
 			fmt.Fprintln(os.Stderr, "Error writing to output file:", err)
 			os.Exit(1)
 		}
-		fmt.Println(len(buf16), "bytes to", music.output)
+		fmt.Println(len(buf16), "bytes to", midi.music.output)
 	}
 }

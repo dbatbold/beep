@@ -24,33 +24,38 @@ var (
 )
 
 // OpenSoundDevice opens hardware sound device
-func OpenSoundDevice(device string) {
+func OpenSoundDevice(device string) error {
 	code := C.snd_pcm_open(
 		&pcmHandle,
 		C.CString(device),
 		C.SND_PCM_STREAM_PLAYBACK,
 		0)
 	if code < 0 {
-		fmt.Println("snd_pcm_open:", strerror(code))
-		os.Exit(1)
+		err := fmt.Errorf("snd_pcm_open: %v\n", strerror(code))
+		fmt.Fprintln(os.Stderr, err)
+		return err
 	}
 	C.snd_pcm_drop(pcmHandle)
+
+	return nil
 }
 
 // InitSoundDevice initialize sound device
-func InitSoundDevice() {
+func InitSoundDevice() error {
 	var sampleFormat C.snd_pcm_format_t = C.SND_PCM_FORMAT_S8
 	if sample16bit {
 		sampleFormat = C.SND_PCM_FORMAT_S16
 	}
 
 	if code := C.snd_pcm_hw_params_malloc(&pcmHwParams); code < 0 {
-		fmt.Println("snd_pcm_hw_params_malloc:", strerror(code))
-		os.Exit(1)
+		err := fmt.Errorf("snd_pcm_hw_params_malloc: %v\n", strerror(code))
+		fmt.Fprintln(os.Stderr, err)
+		return err
 	}
 	if code := C.snd_pcm_hw_params_any(pcmHandle, pcmHwParams); code < 0 {
-		fmt.Println("snd_pcm_hw_params_any:", strerror(code))
-		os.Exit(1)
+		err := fmt.Errorf("snd_pcm_hw_params_any: %v\n", strerror(code))
+		fmt.Fprintln(os.Stderr, err)
+		return err
 	}
 
 	// C.SND_PCM_ACCESS_RW_NONINTERLEAVED - is not working with PulseAudio
@@ -63,14 +68,18 @@ func InitSoundDevice() {
 		1,
 		500000)
 	if code < 0 {
-		fmt.Println("snd_pcm_set_params:", strerror(code))
-		os.Exit(1)
+		err := fmt.Errorf("snd_pcm_set_params: %v\n", strerror(code))
+		fmt.Fprintln(os.Stderr, err)
+		return err
 	}
 	code = C.snd_pcm_prepare(pcmHandle)
 	if code < 0 {
-		fmt.Println("snd_pcm_prepare:", strerror(code))
-		os.Exit(1)
+		err := fmt.Errorf("snd_pcm_prepare: %v\n", strerror(code))
+		fmt.Fprintln(os.Stderr, err)
+		return err
 	}
+
+	return nil
 }
 
 // Playback sends stereo wave buffer to sound device
@@ -82,10 +91,6 @@ func (m *Music) Playback(buf1, buf2 []int16) {
 		buf1 = append(buf1, rest...)
 		//buf2 = append(buf2, rest...)
 	}
-
-	// Go 1.6 cgocheck fix: Can't pass Go pointer to C function
-	//C.cbuf[0] = unsafe.Pointer(&buf1[0])
-	//C.cbuf[1] = unsafe.Pointer(&buf2[0])
 
 	// Changing to single channel interleaved buffer format for PulseAudio
 	buf := unsafe.Pointer(&buf1[0])

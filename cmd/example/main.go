@@ -6,6 +6,7 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/dbatbold/beep"
@@ -24,8 +25,12 @@ func main() {
 		beep.PrintSheet = true
 	}
 
-	beep.OpenSoundDevice("default")
-	beep.InitSoundDevice()
+	if err := beep.OpenSoundDevice("default"); err != nil {
+		log.Fatal(err)
+	}
+	if err := beep.InitSoundDevice(); err != nil {
+		log.Fatal(err)
+	}
 	defer beep.CloseSoundDevice()
 
 	musicScore := `

@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"log"
 	"math"
 	"os"
 	"strings"
@@ -108,8 +109,12 @@ func main() {
 
 	music = beep.NewMusic(*flagOutput)
 
-	beep.OpenSoundDevice(device)
-	beep.InitSoundDevice()
+	if err := beep.OpenSoundDevice(device); err != nil {
+		log.Fatal(err)
+	}
+	if err := beep.InitSoundDevice(); err != nil {
+		log.Fatal(err)
+	}
 	defer beep.CloseSoundDevice()
 
 	if lineBeep {
@@ -150,7 +155,7 @@ func main() {
 	}
 
 	if len(midiNote) > 0 {
-		parseMidiNote(midiNote)
+		parseMidiNote(music, midiNote)
 		return
 	}
 
@@ -164,17 +169,17 @@ func main() {
 
 // Play a MIDI file
 func parseMidiBeep(music *beep.Music, filename string) {
-	midi, err := beep.ParseMidi(filename, false)
+	midi, err := beep.ParseMidi(music, filename, false)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 	} else {
-		midi.Play(music)
+		midi.Play()
 	}
 }
 
 // Parses a MIDI file and print notes
-func parseMidiNote(filename string) {
-	_, err := beep.ParseMidi(filename, true)
+func parseMidiNote(music *beep.Music, filename string) {
+	_, err := beep.ParseMidi(music, filename, true)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 	}
