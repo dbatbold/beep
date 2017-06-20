@@ -103,6 +103,8 @@ To play music with beep, music score needs to be converted into text. Beep uses 
 ```
 $ beep -play 'H0,l.HLq2w3er5t6y7ui9o0p[=]azsxcfvgbnjmk,l.HRq2w3er5t6y7ui9o0p[=]azsxcfvgbnjmk,l.H7q2w3er5t6y7ui'
 ```
+[Play all piano notes &nbsp; ▶](http://angiud.com/beep/piano-notes.mp3)
+
 Uppercase "H" letter is a control key that changes the current octave. Lowercase letters are notes. Using all control keys shown below are used to convert musical notation.
 ```
 Piano key map:
