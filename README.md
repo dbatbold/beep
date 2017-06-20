@@ -2,7 +2,7 @@ beep
 ====
 
 A beeper for alerting the end of a long running command execution.
-Beep can also play a MIDI file or music text score with natural voices. To play a demo music, run:<br>
+Beep can also play a MIDI file or text music score with natural voices. To play a demo music, run:<br>
 
 ```
 $ export GOPATH=$PWD/beep
