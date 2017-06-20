@@ -2,12 +2,13 @@ beep
 ====
 
 A beeper for alerting the end of a long running command execution.
-Beep can also play a MIDI file or music sheet files with natural voices. To play a demo music, run:<br>
+Beep can also play a MIDI file or music score with natural voices. To play a demo music, run:<br>
 
 ```
-$ go get -u github.com/dbatbold/beep
+$ export GOPATH=$PWD/beep
+$ go get -u github.com/dbatbold/beep/cmd/beep
 $ $GOPATH/bin/beep          # play beep sound
-$ $GOPATH/bin/beep -vd      # download natural voices
+$ $GOPATH/bin/beep -vd      # download natural voice files
 $ $GOPATH/bin/beep -m demo  # play demo music by Mozart
 ```
 
@@ -18,16 +19,17 @@ Building
 ```
 On Linux:
  $ apt-get install golang libasound2-dev  # for Debian and Ubuntu
- $ git clone http://github.com/dbatbold/beep
- $ cd beep
- $ go build
- $ strip beep  # optional
- $ cp beep /usr/bin/  # as root
+ $ export GOPATH=$PWD/beep
+ $ go get github.com/dbatbold/beep/cmd/beep
+ $ cp $GOPATH/bin/beep /usr/local/bin/  # as root
 
 On Windows: (requires MinGW, Go compiler from golang.org)
- C:\> cd beep
+ Run CMD,
+ C:\> set GOPATH=\beep
+ C:\> go get github.com/dbatbold/beep/cmd/beep
+ C:\> cd \beep
  C:\beep> build.bat
- C:\beep> copy beep.exe \windows\system32
+ C:\beep> copy bin\beep.exe \windows\system32
 ```
 [![Build Status](https://travis-ci.org/dbatbold/beep.svg?branch=master)](https://travis-ci.org/dbatbold/beep)
 
@@ -59,7 +61,7 @@ beep [options]
 Beep notation
 =============
 
-To play music with beep, music notation needs to be converted into text that a computer program can read. Beep uses its own notation called beep notation. All piano octaves are divided into computer keyboard keys with similar layout. All 88 piano keys can be written as below.
+To play music with beep, music score needs to be converted into text. Beep uses its own music notation called beep notation. All music octaves are divided into computer keyboard keys similar to piano key layout. All 88 piano keys can be written as below.
 ```
 H0,l.HLq2w3er5t6y7ui9o0p[=]azsxcfvgbnjmk,l.HRq2w3er5t6y7ui9o0p[=]azsxcfvgbnjmk,l.H7q2w3er5t6y7ui
 ```
