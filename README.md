@@ -14,8 +14,8 @@ $ $GOPATH/bin/beep -m demo  # play demo music by Mozart
 
 [Play demo with piano voice&nbsp; ▶](http://angiud.com/beep/demo-mozart-k33b-piano.mp3)
 
-Library Usage Example
-=====================
+Library Usage
+=============
 
 ```go
 package main
