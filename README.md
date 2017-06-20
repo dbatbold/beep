@@ -61,13 +61,13 @@ On Linux:
  $ go get -u -v github.com/dbatbold/beep/cmd/beep
  $ cp $GOPATH/bin/beep /usr/local/bin/  # as root
 
-On Windows: (requires MinGW, Go compiler from golang.org)
- Run CMD,
- C:\> set GOPATH=\beep
- C:\> go get -u -v github.com/dbatbold/beep/cmd/beep
- C:\> cd \beep
- C:\beep> build.bat
- C:\beep> copy bin\beep.exe \windows\system32
+On Windows: Requires git (git-scm.com), MinGW and Go compiler (golang.org)
+ Run Git Bash,
+ $ export GOPATH=$PWD/beep
+ $ go get -u -v -d github.com/dbatbold/beep/cmd/beep
+ $ cd beep
+ $ ./build.bat
+ $ cp bin/beep.exe /c/Windows/System32
 ```
 [![Build Status](https://travis-ci.org/dbatbold/beep.svg?branch=master)](https://travis-ci.org/dbatbold/beep)
 
