@@ -45,7 +45,7 @@ func main() {
     `
 
     reader := bufio.NewReader(strings.NewReader(musicScore))
-    go beep.PlayMusicNotes(music, reader, volume)
+    go music.Play(reader, volume)
     music.Wait()
     beep.FlushSoundBuffer()
 }

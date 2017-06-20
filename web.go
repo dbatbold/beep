@@ -136,7 +136,7 @@ func (w *Web) servePlay(res http.ResponseWriter, req *http.Request) {
 	InitSoundDevice()
 	notation := bytes.NewBuffer([]byte(request.Notation))
 	reader := bufio.NewReader(notation)
-	go PlayMusicNotes(w.music, reader, 100)
+	go w.music.Play(reader, 100)
 	w.music.Wait()
 }
 
@@ -283,7 +283,7 @@ func (w *Web) serveExportWave(res http.ResponseWriter, req *http.Request) {
 	reader := bufio.NewReader(notation)
 	w.music.output = filepath.Join(HomeDir(), "export", request.Output)
 	os.MkdirAll(filepath.Dir(w.music.output), 0755)
-	go PlayMusicNotes(w.music, reader, 100)
+	go w.music.Play(reader, 100)
 	w.music.Wait()
 
 	type exportWaveResponse struct {

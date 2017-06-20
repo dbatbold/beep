@@ -73,8 +73,8 @@ func InitSoundDevice() {
 	}
 }
 
-// Playback sends wave buffer to sound device
-func Playback(music *Music, buf1, buf2 []int16) {
+// Playback sends stereo wave buffer to sound device
+func (m *Music) Playback(buf1, buf2 []int16) {
 	bufsize := len(buf1)
 	if bufsize < SampleRate {
 		// prevent buffer underrun
@@ -94,7 +94,7 @@ func Playback(music *Music, buf1, buf2 []int16) {
 		n := C.snd_pcm_writei(pcmHandle, buf, C.snd_pcm_uframes_t(bufsize))
 		written := int(n)
 		if written < 0 {
-			if music.stopping {
+			if m.stopping {
 				break
 			}
 			// error
@@ -126,7 +126,7 @@ func Playback(music *Music, buf1, buf2 []int16) {
 			bufsize -= written
 		*/
 	}
-	music.linePlayed <- true // notify that playback is done
+	m.linePlayed <- true // notify that playback is done
 }
 
 // FlushSoundBuffer flushes sound buffer

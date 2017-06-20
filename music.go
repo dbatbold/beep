@@ -3,13 +3,9 @@ package beep
 import (
 	"bufio"
 	"bytes"
-	"flag"
 	"fmt"
-	"io"
-	"math"
 	"os"
 	"strings"
-	"time"
 )
 
 // BeepNotation description
@@ -209,22 +205,22 @@ func (c *Chord) Reset() {
 	c.buf = nil
 }
 
-// PlayMusicNotes plays music sheet from reader
-func PlayMusicNotes(music *Music, reader *bufio.Reader, volume100 int) {
-	music.playing = true
+// Play music score from reader
+func (m *Music) Play(reader *bufio.Reader, volume100 int) {
+	m.playing = true
 	defer func() {
-		music.played <- true
-		if music.stopping {
-			music.stopped <- true
+		m.played <- true
+		if m.stopping {
+			m.stopped <- true
 		}
-		music.playing = false
+		m.playing = false
 	}()
 
 	volume := int(SampleAmp16bit * (float64(volume100) / 100.0))
-	outputFileName := music.output
+	outputFileName := m.output
 
-	if music.piano == nil {
-		music.piano = NewPiano()
+	if m.piano == nil {
+		m.piano = NewPiano()
 	}
 
 	var outputFile *os.File
@@ -234,7 +230,7 @@ func PlayMusicNotes(music *Music, reader *bufio.Reader, volume100 int) {
 	if len(outputFileName) > 0 {
 		if outputFileName == "-" {
 			outputFile = os.Stdout
-			music.quietMode = true
+			m.quietMode = true
 		} else {
 			opt := os.O_WRONLY | os.O_TRUNC | os.O_CREATE
 			outputFile, err = os.OpenFile(outputFileName, opt, 0644)
@@ -246,7 +242,7 @@ func PlayMusicNotes(music *Music, reader *bufio.Reader, volume100 int) {
 		defer outputFile.Close()
 	}
 
-	if music.quietMode {
+	if m.quietMode {
 		PrintSheet = false
 		PrintNotes = false
 	}
@@ -289,7 +285,7 @@ func PlayMusicNotes(music *Music, reader *bufio.Reader, volume100 int) {
 		dotted       bool
 		rest         rune
 		ctrl         rune
-		voice        Voice = music.piano // default voice is piano
+		voice        Voice = m.piano // default voice is piano
 		sustainType  rune
 		hand         = 'R' // default is middle C octave
 		handLevel    rune
@@ -392,15 +388,15 @@ func PlayMusicNotes(music *Music, reader *bufio.Reader, volume100 int) {
 						case 'D': // default voice
 							voice.ComputerVoice(true)
 						case 'P':
-							voice = music.piano
+							voice = m.piano
 							if voice.NaturalVoiceFound() {
 								voice.ComputerVoice(false)
 							}
 						case 'V':
-							if music.violin == nil {
-								music.violin = NewViolin()
+							if m.violin == nil {
+								m.violin = NewViolin()
 							}
-							voice = music.violin
+							voice = m.violin
 							voice.ComputerVoice(false)
 						}
 					}
@@ -489,7 +485,7 @@ func PlayMusicNotes(music *Music, reader *bufio.Reader, volume100 int) {
 						chord.Reset()
 					} else {
 						if PrintNotes {
-							fmt.Printf("%v-", music.piano.keyNoteMap[note.key])
+							fmt.Printf("%v-", m.piano.keyNoteMap[note.key])
 						}
 						continue
 					}
@@ -501,11 +497,11 @@ func PlayMusicNotes(music *Music, reader *bufio.Reader, volume100 int) {
 					os.Exit(1)
 				}
 				if PrintNotes {
-					fmt.Printf("%v ", music.piano.keyNoteMap[note.key])
+					fmt.Printf("%v ", m.piano.keyNoteMap[note.key])
 				}
 			} else {
 				voiceName := strings.Split(fmt.Sprintf("%T", voice), ".")[1]
-				noteName := music.piano.keyNoteMap[note.key]
+				noteName := m.piano.keyNoteMap[note.key]
 				fmt.Printf("%s: Invalid note: %s (%s)\n", voiceName, keystr, noteName)
 			}
 		}
@@ -534,10 +530,10 @@ func PlayMusicNotes(music *Music, reader *bufio.Reader, volume100 int) {
 		if outputFile == nil {
 			if len(bufWave) > 0 {
 				if waitNext {
-					music.WaitLine() // wait until previous line is done playing
+					m.WaitLine() // wait until previous line is done playing
 				}
 				// prepare next line while playing
-				go Playback(music, bufWave, bufWave)
+				go m.Playback(bufWave, bufWave)
 				if PrintSheet {
 					fmt.Println(line)
 				}
@@ -559,12 +555,12 @@ func PlayMusicNotes(music *Music, reader *bufio.Reader, volume100 int) {
 		}
 		clearBuffer(sustain.buf)
 		count++
-		if music.stopping {
+		if m.stopping {
 			break
 		}
 	}
 	if waitNext {
-		music.WaitLine()
+		m.WaitLine()
 	}
 
 	if outputFile != nil {
@@ -737,119 +733,6 @@ func raiseNote(buf []int16, ratio float64) {
 		volume += tick
 		if SampleAmp16bit <= volume {
 			break
-		}
-	}
-}
-
-// PlayBeep plays default beep wave sound
-func PlayBeep(music *Music, volume, duration, count int, freq float64) {
-	bar := SampleAmp16bit * (float64(volume) / 100.0)
-	samples := int(SampleRate64 * (float64(duration) / 1000.0))
-	rest := 0
-	if count > 1 {
-		rest = (SampleRate / 20) * 4 // 200ms
-	}
-	buf := make([]int16, samples+rest)
-	var last int16
-	var fade = 1024
-	if samples < fade {
-		fade = 1
-	}
-	for i := range buf {
-		if i < samples-fade {
-			buf[i] = int16(bar * math.Sin(float64(i)*freq))
-			last = buf[i]
-		} else {
-			if last > 0 {
-				last -= 31
-			} else {
-				last += 31
-			}
-			buf[i] = last
-		}
-	}
-	InitSoundDevice()
-	for i := 0; i < count; i++ {
-		go Playback(music, buf, buf)
-		music.WaitLine()
-	}
-	FlushSoundBuffer()
-}
-
-// PlayPerLine plays beep per line read from Stdin
-func PlayPerLine(music *Music, volume int, freq float64) {
-	buf := make([]int16, SampleRate/5)
-	bar := SampleAmp16bit * (float64(volume) / 100.0)
-	gap := SampleRate / 6
-	var last int16
-	for i := range buf {
-		if i < gap {
-			buf[i] = int16(bar * math.Sin(float64(i)*freq))
-			last = buf[i]
-		} else {
-			if last > 0 {
-				last -= 31
-			} else {
-				last += 31
-			}
-			buf[i] = last
-		}
-	}
-	reader := bufio.NewReader(os.Stdin)
-	for {
-		line, isPrefix, err := reader.ReadLine()
-		if err != nil {
-			break
-		}
-		fmt.Print(string(line))
-		if !isPrefix {
-			fmt.Println()
-			go Playback(music, buf, buf)
-			music.WaitLine()
-		}
-	}
-	FlushSoundBuffer()
-}
-
-// PlayMusicSheet reads music sheet files from argument. If no file is given, reads Stdin.
-func PlayMusicSheet(music *Music, volume int) {
-	var files []io.Reader
-	for _, arg := range flag.Args() {
-		if strings.HasPrefix(arg, "-") {
-			fmt.Fprintf(os.Stderr, "Error: misplaced switch: '%s'\n", arg)
-			os.Exit(1)
-		}
-		if arg == "demo" {
-			demo := bytes.NewBuffer([]byte(DemoMusic))
-			files = append(files, demo)
-			continue
-		}
-		file, err := os.Open(arg)
-		if err != nil {
-			fmt.Fprintln(os.Stderr, "Error:", err)
-			continue
-		}
-		files = append(files, file)
-	}
-	if len(files) == 0 {
-		files = append(files, os.Stdin)
-	}
-	for i, file := range files {
-		reader := bufio.NewReader(file)
-		if i > 0 {
-			fmt.Println()
-			time.Sleep(time.Second * 1)
-		}
-		InitSoundDevice()
-		go PlayMusicNotes(music, reader, volume)
-		music.Wait()
-		FlushSoundBuffer()
-	}
-	for _, file := range files {
-		if file != os.Stdin {
-			if closer, ok := file.(io.ReadCloser); ok {
-				closer.Close()
-			}
 		}
 	}
 }

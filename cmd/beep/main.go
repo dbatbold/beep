@@ -2,10 +2,14 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"flag"
 	"fmt"
+	"io"
+	"math"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/dbatbold/beep"
 )
@@ -109,12 +113,12 @@ func main() {
 	defer beep.CloseSoundDevice()
 
 	if lineBeep {
-		beep.PlayPerLine(music, volume, freq)
+		playPerLine(music, volume, freq)
 		return
 	}
 
 	if playMusic {
-		beep.PlayMusicSheet(music, volume)
+		playMusicScore(music, volume)
 		return
 	}
 
@@ -155,7 +159,7 @@ func main() {
 		return
 	}
 
-	beep.PlayBeep(music, volume, duration, count, freq)
+	playBeep(music, volume, duration, count, freq)
 }
 
 // Play a MIDI file
@@ -178,7 +182,113 @@ func parseMidiNote(filename string) {
 
 func playMusicNotesFromCL(music *beep.Music, musicNotes string, volume int) {
 	reader := bufio.NewReader(strings.NewReader(musicNotes))
-	go beep.PlayMusicNotes(music, reader, volume)
+	go music.Play(reader, volume)
 	music.Wait()
+	beep.FlushSoundBuffer()
+}
+
+func playMusicScore(music *beep.Music, volume int) {
+	var files []io.Reader
+	for _, fname := range flag.Args() {
+		if fname == "demo" {
+			demo := bytes.NewBuffer([]byte(beep.DemoMusic))
+			files = append(files, demo)
+			continue
+		}
+		file, err := os.Open(fname)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "Error:", err)
+			os.Exit(1)
+		}
+		files = append(files, file)
+	}
+	if len(files) == 0 {
+		files = append(files, os.Stdin)
+	}
+	for i, file := range files {
+		reader := bufio.NewReader(file)
+		if i > 0 {
+			fmt.Println()
+			time.Sleep(time.Second)
+		}
+		beep.InitSoundDevice()
+		go music.Play(reader, volume)
+		music.Wait()
+		beep.FlushSoundBuffer()
+	}
+	for _, file := range files {
+		if file != os.Stdin {
+			if closer, ok := file.(io.ReadCloser); ok {
+				closer.Close()
+			}
+		}
+	}
+}
+
+func playBeep(music *beep.Music, volume, duration, count int, freq float64) {
+	bar := beep.SampleAmp16bit * (float64(volume) / 100.0)
+	samples := int(beep.SampleRate64 * (float64(duration) / 1000.0))
+	rest := 0
+	if count > 1 {
+		rest = (beep.SampleRate / 20) * 4 // 200ms
+	}
+	buf := make([]int16, samples+rest)
+	var last int16
+	var fade = 1024
+	if samples < fade {
+		fade = 1
+	}
+	for i := range buf {
+		if i < samples-fade {
+			buf[i] = int16(bar * math.Sin(float64(i)*freq))
+			last = buf[i]
+		} else {
+			if last > 0 {
+				last -= 31
+			} else {
+				last += 31
+			}
+			buf[i] = last
+		}
+	}
+	beep.InitSoundDevice()
+	for i := 0; i < count; i++ {
+		go music.Playback(buf, buf)
+		music.WaitLine()
+	}
+	beep.FlushSoundBuffer()
+}
+
+func playPerLine(music *beep.Music, volume int, freq float64) {
+	buf := make([]int16, beep.SampleRate/5)
+	bar := beep.SampleAmp16bit * (float64(volume) / 100.0)
+	gap := beep.SampleRate / 6
+	var last int16
+	for i := range buf {
+		if i < gap {
+			buf[i] = int16(bar * math.Sin(float64(i)*freq))
+			last = buf[i]
+		} else {
+			if last > 0 {
+				last -= 31
+			} else {
+				last += 31
+			}
+			buf[i] = last
+		}
+	}
+	reader := bufio.NewReader(os.Stdin)
+	for {
+		line, isPrefix, err := reader.ReadLine()
+		if err != nil {
+			break
+		}
+		fmt.Print(string(line))
+		if !isPrefix {
+			fmt.Println()
+			go music.Playback(buf, buf)
+			music.WaitLine()
+		}
+	}
 	beep.FlushSoundBuffer()
 }

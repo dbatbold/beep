@@ -44,7 +44,8 @@ func InitSoundDevice() {
 	wavehdrLast = nil
 }
 
-func Playback(music *Music, buf1, buf2 []int16) {
+// Playback sends stereo wave buffer to sound device
+func (m *Music) Playback(buf1, buf2 []int16) {
 	bufWave := make([]int16, len(buf1)*2)
 	for i, bar := range buf1 {
 		bufWave[i*2] = bar
@@ -70,7 +71,7 @@ func Playback(music *Music, buf1, buf2 []int16) {
 		}
 	}
 
-	if !music.stopping {
+	if !m.stopping {
 		res = C.waveOutWrite(hwaveout, wavehdr, C.UINT(C.wavehdrsize))
 		if res != C.MMSYSERR_NOERROR {
 			fmt.Fprintln(os.Stderr, "Error: waveOutWrite:", winmmErrorText(res))
@@ -97,7 +98,7 @@ func Playback(music *Music, buf1, buf2 []int16) {
 
 	wavehdrLast = wavehdr
 
-	music.linePlayed <- true // notify that playback is done
+	m.linePlayed <- true // notify that playback is done
 }
 
 func FlushSoundBuffer() {

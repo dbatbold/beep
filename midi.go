@@ -369,7 +369,7 @@ func (midi *Midi) playEvents(music *Music, events []*MidiEvent) {
 		if midi.Playing {
 			music.WaitLine()
 		}
-		go Playback(music, bufWave, bufWave)
+		go music.Playback(bufWave, bufWave)
 		midi.Playing = true
 	}
 }
