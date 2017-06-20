@@ -6,7 +6,7 @@ Beep can also play a MIDI file or text music score with natural voices. To play 
 
 ```
 $ export GOPATH=$PWD/beep
-$ go get -u github.com/dbatbold/beep/cmd/beep
+$ go get -u -v github.com/dbatbold/beep/cmd/beep
 $ $GOPATH/bin/beep          # play beep sound
 $ $GOPATH/bin/beep -vd      # download natural voice files
 $ $GOPATH/bin/beep -m demo  # play demo music by Mozart
@@ -58,13 +58,13 @@ Building from Source
 On Linux:
  $ apt-get install golang libasound2-dev  # for Debian and Ubuntu
  $ export GOPATH=$PWD/beep
- $ go get github.com/dbatbold/beep/cmd/beep
+ $ go get -u -v github.com/dbatbold/beep/cmd/beep
  $ cp $GOPATH/bin/beep /usr/local/bin/  # as root
 
 On Windows: (requires MinGW, Go compiler from golang.org)
  Run CMD,
  C:\> set GOPATH=\beep
- C:\> go get github.com/dbatbold/beep/cmd/beep
+ C:\> go get -u -v github.com/dbatbold/beep/cmd/beep
  C:\> cd \beep
  C:\beep> build.bat
  C:\beep> copy bin\beep.exe \windows\system32
@@ -101,7 +101,7 @@ Beep notation
 
 To play music with beep, music score needs to be converted into text. Beep uses its own music notation called beep notation. All music octaves are divided into computer keyboard keys similar to piano key layout. All 88 piano keys can be written as below.
 ```
-H0,l.HLq2w3er5t6y7ui9o0p[=]azsxcfvgbnjmk,l.HRq2w3er5t6y7ui9o0p[=]azsxcfvgbnjmk,l.H7q2w3er5t6y7ui
+$ beep -play 'H0,l.HLq2w3er5t6y7ui9o0p[=]azsxcfvgbnjmk,l.HRq2w3er5t6y7ui9o0p[=]azsxcfvgbnjmk,l.H7q2w3er5t6y7ui'
 ```
 Uppercase "H" letter is a control key that changes the current octave. Lowercase letters are notes. Using all control keys shown below are used to convert musical notation.
 ```
@@ -209,7 +209,7 @@ A3HLDE z,  ]m    |[n   ov|]m  [n    |pb   ic|nz     sc  |DQn      [RQ|
 ```
 [Play with default voice&nbsp; ▶](http://angiud.com/beep/demo-mozart-k33b.mp3)<br>
 [Play with natural piano voice&nbsp; ▶](http://angiud.com/beep/demo-mozart-k33b-piano.mp3)<br>
-[View music sheet](http://imslp.org/images/1/15/TN-Mozart%2C_Wofgang_Amadeus-NMA_09_27_Band_02_I_01_KV_33b.jpg)
+[View music score](http://imslp.org/images/1/15/TN-Mozart%2C_Wofgang_Amadeus-NMA_09_27_Band_02_I_01_KV_33b.jpg)
 
 Natural Voices
 ==============
