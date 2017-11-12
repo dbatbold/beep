@@ -18,8 +18,9 @@ import (
 
 // Web params
 type Web struct {
-	music *Music
-	tmpl  *template.Template
+	music    *Music
+	tmpl     *template.Template
+	handlers map[string]http.HandlerFunc
 }
 
 // StartWebServer starts beep web server
@@ -64,6 +65,17 @@ func NewWeb(music *Music) *Web {
 		music: music,
 		tmpl:  template.Must(template.New("tmpl").Parse(webTemplates)),
 	}
+	w.handlers = map[string]http.HandlerFunc{
+		"/":              w.serveHome,
+		"/play":          w.servePlay,
+		"/stop":          w.serveStop,
+		"/search":        w.serveSearch,
+		"/loadSheet":     w.serveLoadSheet,
+		"/saveSheet":     w.serveSaveSheet,
+		"/voices":        w.serveVoices,
+		"/downloadVoice": w.serveDownloadVoice,
+		"/exportWave":    w.serveExportWave,
+	}
 	return w
 }
 
@@ -86,29 +98,11 @@ func (w *Web) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 	defer req.Body.Close()
-	switch path {
-	case "/":
-		w.serveHome(res, req)
-	case "/play":
-		w.servePlay(res, req)
-	case "/stop":
-		w.serveStop(res, req)
-	case "/search":
-		w.serveSearch(res, req)
-	case "/loadSheet":
-		w.serveLoadSheet(res, req)
-	case "/saveSheet":
-		w.serveSaveSheet(res, req)
-	case "/voices":
-		w.serveVoices(res, req)
-	case "/downloadVoice":
-		w.serveDownloadVoice(res, req)
-	case "/exportWave":
-		w.serveExportWave(res, req)
-	default:
-		w.execTemplate("header", nil, res)
-		w.execTemplate("pageNotFound", req.URL.Path, res)
+	hf := w.handlers[path]
+	if hf == nil {
+		hf = http.NotFound
 	}
+	hf.ServeHTTP(res, req)
 }
 
 // Serves home page

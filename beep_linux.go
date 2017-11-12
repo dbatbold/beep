@@ -1,4 +1,4 @@
-// +build linux
+// +build linux_
 
 package beep
 
@@ -24,7 +24,7 @@ var (
 )
 
 // OpenSoundDevice opens hardware sound device
-func OpenSoundDevice(device string) error {
+func OpenSoundDevice_(device string) error {
 	code := C.snd_pcm_open(
 		&pcmHandle,
 		C.CString(device),
@@ -41,7 +41,7 @@ func OpenSoundDevice(device string) error {
 }
 
 // InitSoundDevice initialize sound device
-func InitSoundDevice() error {
+func InitSoundDevice_() error {
 	var sampleFormat C.snd_pcm_format_t = C.SND_PCM_FORMAT_S8
 	if sample16bit {
 		sampleFormat = C.SND_PCM_FORMAT_S16
@@ -83,7 +83,7 @@ func InitSoundDevice() error {
 }
 
 // Playback sends stereo wave buffer to sound device
-func (m *Music) Playback(buf1, buf2 []int16) {
+func (m *Music) Playback_(buf1, buf2 []int16) {
 	bufsize := len(buf1)
 	if bufsize < SampleRate {
 		// prevent buffer underrun
@@ -135,14 +135,14 @@ func (m *Music) Playback(buf1, buf2 []int16) {
 }
 
 // FlushSoundBuffer flushes sound buffer
-func FlushSoundBuffer() {
+func FlushSoundBuffer_() {
 	if pcmHandle != nil {
 		C.snd_pcm_drain(pcmHandle)
 	}
 }
 
 // StopPlayBack stops play back
-func StopPlayBack() {
+func StopPlayBack_() {
 	if pcmHandle != nil {
 		C.snd_pcm_drop(pcmHandle)
 	}
@@ -161,7 +161,7 @@ func CloseSoundDevice() {
 }
 
 // SendBell send bell sound to console
-func SendBell() {
+func SendBell_() {
 	bell := []byte{7}
 	os.Stdout.Write(bell)
 
