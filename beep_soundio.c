@@ -6,8 +6,9 @@
 
 #include "beep_soundio.h"
 
-double latency = 0.2;
-int sample_rate = 44100;
+static struct SoundIo *soundio;
+static struct SoundIoDevice *soundioDev;
+static struct SoundIoOutStream *outStream;
 
 static void (*write_sample)(char *ptr, double sample);
 static char buf[1024];
@@ -21,7 +22,7 @@ char *open_sound_device(void) {
 		snprintf(buf, sizeof buf, "output device not found");
 		return buf;
 	}
-	
+
 	soundioDev = soundio_get_output_device(soundio, i);
 	if (!soundioDev)
 		return "unable to get output device";
@@ -45,8 +46,8 @@ char *open_stream() {
 	outStream->write_callback = write_callback;
 	outStream->underflow_callback = underflow_callback;
 	outStream->name = "beep";
-	outStream->software_latency = latency;
-	outStream->sample_rate = sample_rate;
+	outStream->software_latency = 0.1;
+	outStream->sample_rate = 44100;
 	outStream->format = SoundIoFormatS16LE;
 
 	write_sample = write_sample_s16le;
@@ -63,15 +64,7 @@ char *init_sound_device(char *os) {
 	if (!soundio)
 		return "failed to initialize sound device";
 
-	enum SoundIoBackend backend = SoundIoBackendNone;
-	if (!strcmp(os, "linux"))
-		backend = SoundIoBackendPulseAudio; // SoundIoBackendAlsa
-	else if (!strcmp(os, "darwin"))
-		backend = SoundIoBackendCoreAudio;
-	else if (!strcmp(os, "windows"))
-		backend = SoundIoBackendWasapi;
-
-	int err = soundio_connect_backend(soundio, backend);
+	int err = soundio_connect(soundio);
 	if (err) {
 		snprintf(buf, sizeof buf,
 			"unalbe to connect to backend: %s", soundio_strerror(err));
@@ -83,8 +76,7 @@ char *init_sound_device(char *os) {
 	return 0;
 }
 
-static void write_callback(struct SoundIoOutStream *outstream,
-	int frame_count_min, int frame_count_max) {
+static void write_callback(struct SoundIoOutStream *outstream, int frame_count_min, int frame_count_max) {
 
     double float_sample_rate = outstream->sample_rate;
     struct SoundIoChannelArea *areas;
@@ -94,18 +86,20 @@ static void write_callback(struct SoundIoOutStream *outstream,
 	if (sound_buf_len - sound_frame < frames_left)
 		frames_left = sound_buf_len - sound_frame;
 
-	for (;;) {
-		//printf("frames_left=%i\n", frames_left);
-		if (frames_left <= 0) {
-			break;
-		}
+	//printf("frames_left=%i\n", frames_left);
+	if (frames_left < 1) {
+		soundio_wakeup(soundio);
+		return;
+	}
 
+	for (;;) {
 		int frame_count = frames_left;
-		//printf("frame_count=%i\n", frame_count);
 		if ((err = soundio_outstream_begin_write(outstream, &areas, &frame_count))) {
 			fprintf(stderr, "unrecoverable stream error: %s\n", soundio_strerror(err));
 			exit(1);
 		}
+		if (!frame_count)
+			break;
 
 		const struct SoundIoChannelLayout *layout = &outstream->layout;
 
@@ -129,9 +123,8 @@ static void write_callback(struct SoundIoOutStream *outstream,
 		//printf("frame_count=%i, frames_left=%i\n", frame_count, frames_left);
 
 		frames_left -= frame_count;
-		if (frames_left <= 0) {
+		if (frames_left <= 0)
 			break;
-		}
 	}
 }
 
@@ -148,21 +141,33 @@ void playback(short *buf1, short *buf2, int buf_size) {
 		char *s = open_stream();
 		if (s) {
 			fprintf(stderr, "failed to open stream: %s\n", s);
-			return;
+			exit(1);
 		}
-
 		int err = soundio_outstream_start(outStream);
 		if (err) {
 			fprintf(stderr, "failed to start stream: %s\n", soundio_strerror(err));
 			return;
 		}
 	}
+
+	soundio_wait_events(soundio);
+	printf("soundio_wait_events end\n");
 }
 
 void stop_playback() {
+	soundio_wakeup(soundio);
 	soundio_outstream_destroy(outStream);
 	outStream = 0;
-	//printf("stop_playback\n");
+}
+
+void flush_sound_buffer() {
+	soundio_wait_events(soundio);
+	soundio_flush_events(soundio);
+}
+
+void close_sound_device() {
+	soundio_device_unref(soundioDev);
+	soundio_destroy(soundio);
 }
 
 static void write_sample_s16le(char *ptr, double sample) {

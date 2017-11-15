@@ -38,20 +38,19 @@ func (m *Music) Playback(buf1, buf2 []int16) {
 	bufLen := len(buf1)
 	C.playback(buf, buf, C.int(bufLen))
 
-	frame := time.Duration(bufLen / SampleRate)
-	timer := time.NewTimer(frame*time.Second + 10*time.Millisecond)
-	select {
-	case <-timer.C:
-	case <-m.stopped:
-		fmt.Println("S")
-	}
+	//frame := time.Duration(bufLen / SampleRate)
+	//timer := time.NewTimer(frame*time.Second + 10*time.Millisecond)
+	//select {
+	//case <-timer.C:
+	//case <-m.stopped:
+	//	fmt.Println("S")
+	//}
 	m.linePlayed <- true
 }
 
 // FlushSoundBuffer flushes sound buffer
 func FlushSoundBuffer() {
-	C.soundio_wait_events(C.soundio)
-	C.soundio_flush_events(C.soundio)
+	C.flush_sound_buffer()
 	time.Sleep(time.Second / 2)
 }
 
@@ -62,8 +61,7 @@ func StopPlayBack() {
 
 // CloseSoundDevice closes sound device
 func CloseSoundDevice() {
-	C.soundio_device_unref(C.soundioDev)
-	C.soundio_destroy(C.soundio)
+	C.close_sound_device()
 }
 
 // HomeDir returns user's home directory
