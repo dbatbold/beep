@@ -39,7 +39,7 @@ var (
 	flagMidiPlay  = flag.String("mp", "", "play MIDI file")
 	flagMidiNote  = flag.String("mn", "", "parses MIDI file and print notes")
 	flagPlayNotes = flag.String("play", "", "play notes from command argument")
-	flagBattery   = flag.Bool("battery", false, "monitor battery and alert low capacity")
+	flagBattery   = flag.Bool("battery", false, "monitor battery and alert low charge level")
 
 	music *beep.Music
 )

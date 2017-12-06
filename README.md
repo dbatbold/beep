@@ -100,6 +100,7 @@ beep [options]
   -mp=file: play MIDI file
   -mn=file: parses MIDI file and print notes
   -play=notes: play notes from command argument
+  -battery: monitor battery and alert low charge level
 ```
 Beep notation
 =============
