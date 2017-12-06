@@ -12,6 +12,7 @@ import "C"
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"os/user"
 	"time"
@@ -159,4 +160,9 @@ func HomeDir() string {
 		home = usr.HomeDir
 	}
 	return home + `\_beep`
+}
+
+// BatteryLevel return battery charge level.
+func BatteryLevel() (int, error) {
+	return 0, io.EOF
 }

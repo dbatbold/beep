@@ -279,6 +279,9 @@ Usage Examples
  # alarm for download completion
  $ curl -O http://host.com/bigfile.tgz; beep -c 4 -f 1000
  
+ # monitor battery and alarm low level
+ $ beep -battery
+ 
  # beep for every text file found under home
  $ find ~ -name '*.txt' | beep -l
  

@@ -12,9 +12,14 @@ void *cbuf[2];
 import "C"
 
 import (
+	"bufio"
 	"fmt"
+	"io"
+	"log"
 	"os"
 	"os/user"
+	"strconv"
+	"strings"
 	"unsafe"
 )
 
@@ -187,4 +192,35 @@ func HomeDir() string {
 		home = usr.HomeDir
 	}
 	return home + "/.beep"
+}
+
+// BatteryLevel return battery charge level.
+func BatteryLevel() (int, error) {
+	const prefix = "POWER_SUPPLY_CAPACITY="
+	var uevent *os.File
+	for i := 0; i <= 3; i++ {
+		fname := fmt.Sprintf("/sys/class/power_supply/BAT%d/uevent", i)
+		file, err := os.Open(fname)
+		if err != nil {
+			log.Println(err)
+			continue
+		}
+		defer file.Close()
+		uevent = file
+		break
+	}
+	if uevent == nil {
+		return 0, io.EOF
+	}
+	scanner := bufio.NewScanner(uevent)
+	var level int
+	err := io.EOF
+	for scanner.Scan() {
+		line := scanner.Text()
+		if strings.HasPrefix(line, prefix) {
+			level, err = strconv.Atoi(strings.Split(line, prefix)[1])
+			break
+		}
+	}
+	return level, err
 }

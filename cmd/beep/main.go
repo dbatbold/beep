@@ -39,6 +39,7 @@ var (
 	flagMidiPlay  = flag.String("mp", "", "play MIDI file")
 	flagMidiNote  = flag.String("mn", "", "parses MIDI file and print notes")
 	flagPlayNotes = flag.String("play", "", "play notes from command argument")
+	flagBattery   = flag.Bool("battery", false, "monitor battery and alert low capacity")
 
 	music *beep.Music
 )
@@ -157,6 +158,24 @@ func main() {
 	if len(musicNotes) > 0 {
 		playMusicNotesFromCL(music, musicNotes, volume)
 		return
+	}
+
+	if *flagBattery {
+		for {
+			level, err := beep.BatteryLevel()
+			if err == io.EOF {
+				log.Println("OS not supported")
+				os.Exit(1)
+			}
+			fmt.Printf("Battery %d%%\n", level)
+			if level < 10 {
+				fmt.Println("Battery is low")
+				playBeep(music, volume, duration, 3, freq)
+				time.Sleep(time.Second * 60)
+			} else {
+				time.Sleep(time.Second * 300)
+			}
+		}
 	}
 
 	playBeep(music, volume, duration, count, freq)

@@ -279,7 +279,8 @@ func ParseMidi(music *Music, filename string, printKeyboard bool) (*Midi, error)
 					msg := i + 1 + byteSize
 					message := chunk.Data[msg : msg+int(msgLength)]
 					i += byteSize + int(msgLength)
-					fmt.Printf("Track=%d, SysEx Message=%q length=%d\n", message, msgLength)
+					fmt.Printf("Track=%d, SysEx Message=%q length=%d\n",
+						len(midi.Tracks), message, msgLength)
 					continue
 
 				case MidiEventMeta:
