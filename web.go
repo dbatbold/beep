@@ -335,7 +335,7 @@ func DownloadVoiceFiles(music *Music, writer io.Writer, names []string) {
 		if !strings.HasSuffix(name, ".zip") {
 			name += ".zip"
 		}
-		url := "https://bmrust.com/dl/beep/voices/" + name
+		url := "http://bmrust.com/dl/beep/voices/" + name
 		fmt.Fprintf(writer, "Downloading '%s'", url)
 
 		// locate file

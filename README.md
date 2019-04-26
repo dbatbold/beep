@@ -12,7 +12,7 @@ $ $GOPATH/bin/beep -vd      # download natural voice files
 $ $GOPATH/bin/beep -m demo  # play demo music by Mozart
 ```
 
-[Play demo with piano voice&nbsp; ▶](https://bmrust.com/dl/beep/demo-mozart-k33b-piano.mp3)
+[Play demo with piano voice&nbsp; ▶](http://bmrust.com/dl/beep/demo-mozart-k33b-piano.mp3)
 
 Library Usage
 =============
@@ -74,7 +74,7 @@ On Windows: Requires git (git-scm.com), MinGW and Go compiler (golang.org)
  $ ./build.bat
  $ cp bin/beep.exe /c/Windows/System32
 ```
-[![Build Status](https://travis-ci.org/dbatbold/beep.svg?branch=master)](https://travis-ci.org/dbatbold/beep)
+[![Build Status](http://travis-ci.org/dbatbold/beep.svg?branch=master)](http://travis-ci.org/dbatbold/beep)
 
 Usage
 =====
@@ -109,7 +109,7 @@ To play music with beep, music score needs to be converted into text. Beep uses 
 ```
 $ beep -play 'H0,l.HLq2w3er5t6y7ui9o0p[=]azsxcfvgbnjmk,l.HRq2w3er5t6y7ui9o0p[=]azsxcfvgbnjmk,l.H7q2w3er5t6y7ui'
 ```
-[Play all piano notes &nbsp; ▶](https://bmrust.com/dl/beep/piano-notes.mp3)
+[Play all piano notes &nbsp; ▶](http://bmrust.com/dl/beep/piano-notes.mp3)
 
 Uppercase "H" letter is a control key that changes the current octave. Lowercase letters are notes. Using all control keys shown below are used to convert musical notation.
 ```
@@ -215,8 +215,8 @@ A3HLDE DEcHRq HLvHRw|HLbHRe HLvw|cHRq   HLic|[n  ]m    |z,   |]m  |zn   z,  |sl 
 A9HRDE REc DScszs|DEcz [c|REs DSsz]z|DEs] ps|DSsz][ z][p|DE[DSitDQrRQ|VN
 A3HLDE z,  ]m    |[n   ov|]m  [n    |pb   ic|nz     sc  |DQn      [RQ|
 ```
-[Play with default voice&nbsp; ▶](https://bmrust.com/dl/beep/demo-mozart-k33b.mp3)<br>
-[Play with natural piano voice&nbsp; ▶](https://bmrust.com/dl/beep/demo-mozart-k33b-piano.mp3)<br>
+[Play with default voice&nbsp; ▶](http://bmrust.com/dl/beep/demo-mozart-k33b.mp3)<br>
+[Play with natural piano voice&nbsp; ▶](http://bmrust.com/dl/beep/demo-mozart-k33b-piano.mp3)<br>
 [View music score](http://imslp.org/images/1/15/TN-Mozart%2C_Wofgang_Amadeus-NMA_09_27_Band_02_I_01_KV_33b.jpg)
 
 Natural Voices
@@ -236,8 +236,8 @@ Voice files can also be downloaded manually. Move the files to location below af
 downloading:
 
 **Voice files:**<br>
- Piano voice: [piano.zip](https://bmrust.com/dl/beep/voices/piano.zip) (13MB)<br>
- Violin voice: [violin.zip](https://bmrust.com/dl/beep/voices/piano.zip) (6.9MB)<br>
+ Piano voice: [piano.zip](http://bmrust.com/dl/beep/voices/piano.zip) (13MB)<br>
+ Violin voice: [violin.zip](http://bmrust.com/dl/beep/voices/piano.zip) (6.9MB)<br>
 
 **Voice file location:**<br>
  Windows: ```C:\Users\{username}\_beep\voices\``` <br>
@@ -266,7 +266,7 @@ $ beep -w :4444
 ```
 
 **Screenshot:**<br>
-![alt tag](https://bmrust.com/dl/beep/beep-web.png?1)
+![alt tag](http://bmrust.com/dl/beep/beep-web.png?1)
 
 Usage Examples
 ==============
