@@ -5,11 +5,10 @@ Beep sound library and utility for alerting end of a long running command execut
 Beep can also play a MIDI file or text music score with natural voices. To play a demo music, run:<br>
 
 ```
-$ export GOPATH=$PWD/beep
-$ go get -u -v github.com/dbatbold/beep/cmd/beep
-$ $GOPATH/bin/beep          # play beep sound
-$ $GOPATH/bin/beep -vd      # download natural voice files
-$ $GOPATH/bin/beep -m demo  # play demo music by Mozart
+$ GOPATH=$PWD/beep go get github.com/dbatbold/beep/cmd/beep
+$ beep/bin/beep          # play beep sound
+$ beep/bin/beep -vd      # download natural voice files
+$ beep/bin/beep -m demo  # play demo music by Mozart
 ```
 
 [Play demo with piano voice&nbsp; ▶](http://bmrust.com/dl/beep/demo-mozart-k33b-piano.mp3)
@@ -62,9 +61,9 @@ Building from Source
 ```
 On Linux:
  $ apt-get install golang libasound2-dev  # for Debian and Ubuntu
- $ export GOPATH=$PWD/beep
- $ go get -u -v github.com/dbatbold/beep/cmd/beep
- $ cp $GOPATH/bin/beep /usr/local/bin/  # as root
+ $ apk add alsa-lib-dev                   # for Alpine linux
+ $ go build ./cmd/beep
+ $ cp beep /usr/local/bin/  # as root
 
 On Windows: Requires git (git-scm.com), MinGW and Go compiler (golang.org)
  Run Git Bash,
