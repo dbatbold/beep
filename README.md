@@ -1,8 +1,8 @@
 beep
 ====
 
-Beep sound library and utility for alerting end of a long running command execution.
-Beep can also play a MIDI file or text music score with natural voices. To play a demo music, run:<br>
+Beep is a sound library and utility for alerting end of a long running command execution.
+Beep can also play a MIDI file/URL or text music score with natural voices. To play a demo music, run:<br>
 
 ```
 $ GOPATH=$PWD/beep go get github.com/dbatbold/beep/cmd/beep
@@ -27,7 +27,7 @@ import (
 )
 
 func main() {
-    music := beep.NewMusic("") // output can be file as "music.wav"
+    music := beep.NewMusic("") // output can be a file "music.wav"
     volume := 100
 
     if err := beep.OpenSoundDevice("default"); err != nil {
@@ -96,7 +96,8 @@ beep [options]
   -w: start beep web server
   -a ip:port: web server address (default 127.0.0.1:4444)
   -vd [name ..]: download voice files, if no names given, downloads all voices
-  -mp=file: play MIDI file
+  -mp=file: play a MIDI file
+  -mu=URL: play a MIDI file from URL
   -mn=file: parses MIDI file and print notes
   -play=notes: play notes from command argument
   -battery: monitor battery and alert low charge level
@@ -316,14 +317,20 @@ Usage Examples
  $ beep -m sheet1.txt sheet2.txt demo
  C:\>beep -m sheet.txt
 
+ # play music sheet from URL
+ $ beep -url 'http://bmrust.com/dl/beep/k333-1.txt'
+
  # generate 528Hz sine wave for 60 seconds (wine glass frequency)
  $ beep -f 528 -t 60000
  
  # middle C note
  $ beep -f 261.625565 -t 1500
  
- # play MIDI file
+ # play a MIDI file
  $ beep -mp music.mid
+ 
+ # play a MIDI file from URL
+ $ beep -mu 'https://www.guitarist.com/media/midi/classical/bach/jesu.mid'
  
  # print notes with keyboard from MIDI file
  $ beep -mn music.mid

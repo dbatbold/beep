@@ -3,6 +3,7 @@ package beep
 import (
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -110,11 +111,11 @@ var (
 )
 
 // ParseMidi parses MIDI file
-func ParseMidi(music *Music, filename string, printKeyboard bool) (*Midi, error) {
+func ParseMidi(music *Music, file io.Reader, printKeyboard bool) (*Midi, error) {
 	midi := &Midi{
 		music: music,
 	}
-	data, err := ioutil.ReadFile(filename)
+	data, err := ioutil.ReadAll(file)
 	if err != nil {
 		return nil, err
 	}

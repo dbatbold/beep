@@ -6,8 +6,8 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"log"
 	"math"
+	"net/http"
 	"os"
 	"strings"
 	"time"
@@ -37,8 +37,10 @@ var (
 	flagWebIP     = flag.String("a", "127.0.0.1:4444", "web server address")
 	flagVoiceDl   = flag.Bool("vd", false, "download voice files, by default downloads all voices")
 	flagMidiPlay  = flag.String("mp", "", "play MIDI file")
+	flagMidiURL   = flag.String("mu", "", "play MIDI from URL")
 	flagMidiNote  = flag.String("mn", "", "parses MIDI file and print notes")
 	flagPlayNotes = flag.String("play", "", "play notes from command argument")
+	flagPlayURL   = flag.String("url", "", "play notes from URL")
 	flagBattery   = flag.Bool("battery", false, "monitor battery and alert low charge level")
 
 	music *beep.Music
@@ -71,8 +73,10 @@ func main() {
 	webServer := *flagWeb
 	downloadVoices := *flagVoiceDl
 	midiPlay := *flagMidiPlay
+	midiURL := *flagMidiURL
 	midiNote := *flagMidiNote
 	musicNotes := *flagPlayNotes
+	musicURL := *flagPlayURL
 
 	beep.PrintSheet = !*flagQuiet
 	beep.PrintNotes = *flagNotes
@@ -106,10 +110,12 @@ func main() {
 	music = beep.NewMusic(*flagOutput)
 
 	if err := beep.OpenSoundDevice(device); err != nil {
-		log.Fatal(err)
+		fmt.Println("failed to open sound device:", err)
+		os.Exit(1)
 	}
 	if err := beep.InitSoundDevice(); err != nil {
-		log.Fatal(err)
+		fmt.Println("failed to initialize sound device:", err)
+		os.Exit(1)
 	}
 	defer beep.CloseSoundDevice()
 
@@ -146,17 +152,23 @@ func main() {
 	}
 
 	if len(midiPlay) > 0 {
-		parseMidiBeep(music, midiPlay)
+		parseMidiBeep(music, midiPlay, false)
 		return
 	}
-
 	if len(midiNote) > 0 {
-		parseMidiNote(music, midiNote)
+		parseMidiBeep(music, midiNote, true)
 		return
 	}
-
+	if len(midiURL) > 0 {
+		parseMidiURL(music, midiURL)
+		return
+	}
 	if len(musicNotes) > 0 {
 		playMusicNotesFromCL(music, musicNotes, volume)
+		return
+	}
+	if len(musicURL) > 0 {
+		playMusicNotesFromURL(music, musicURL, volume)
 		return
 	}
 
@@ -164,7 +176,7 @@ func main() {
 		for {
 			level, err := beep.BatteryLevel()
 			if err == io.EOF {
-				log.Println("OS not supported")
+				fmt.Println("OS not supported")
 				os.Exit(1)
 			}
 			fmt.Printf("Battery %d%%\n", level)
@@ -182,25 +194,75 @@ func main() {
 }
 
 // Play a MIDI file
-func parseMidiBeep(music *beep.Music, filename string) {
-	midi, err := beep.ParseMidi(music, filename, false)
+func parseMidiBeep(music *beep.Music, filename string, print bool) {
+	file, err := os.Open(filename)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		fmt.Println("failed to open MIDI file:", err)
+		os.Exit(1)
+	}
+	defer file.Close()
+	midi, err := beep.ParseMidi(music, file, print)
+	if err != nil {
+		fmt.Println("failed to play MIDI file:", err)
+		os.Exit(1)
 	} else {
 		midi.Play()
 	}
 }
 
-// Parses a MIDI file and print notes
-func parseMidiNote(music *beep.Music, filename string) {
-	_, err := beep.ParseMidi(music, filename, true)
+// Play a MIDI from URL
+func parseMidiURL(music *beep.Music, urlpath string) {
+	req, err := http.NewRequest("GET", urlpath, nil)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		fmt.Println("failed to create request:", err)
+		os.Exit(1)
+	}
+	client := http.Client{}
+	res, err := client.Do(req)
+	if err != nil {
+		fmt.Printf("failed to fetch file from %q: %v\n", urlpath, err)
+		os.Exit(1)
+	}
+	if res.StatusCode != 200 {
+		fmt.Printf("failed to fetch file from %q %s: %v\n",
+			urlpath, res.Status, err)
+		os.Exit(1)
+	}
+	defer res.Body.Close()
+	midi, err := beep.ParseMidi(music, res.Body, false)
+	if err != nil {
+		fmt.Printf("failed to play midi from %q: %v\n", urlpath, err)
+	} else {
+		midi.Play()
 	}
 }
 
 func playMusicNotesFromCL(music *beep.Music, musicNotes string, volume int) {
 	reader := bufio.NewReader(strings.NewReader(musicNotes))
+	go music.Play(reader, volume)
+	music.Wait()
+	beep.FlushSoundBuffer()
+}
+
+func playMusicNotesFromURL(music *beep.Music, urlpath string, volume int) {
+	req, err := http.NewRequest("GET", urlpath, nil)
+	if err != nil {
+		fmt.Println("failed to create request:", err)
+		os.Exit(1)
+	}
+	client := http.Client{}
+	res, err := client.Do(req)
+	if err != nil {
+		fmt.Printf("failed to fetch file from %q: %v\n", urlpath, err)
+		os.Exit(1)
+	}
+	if res.StatusCode != 200 {
+		fmt.Printf("failed to fetch file from %q %s: %v\n",
+			urlpath, res.Status, err)
+		os.Exit(1)
+	}
+	defer res.Body.Close()
+	reader := bufio.NewReader(res.Body)
 	go music.Play(reader, volume)
 	music.Wait()
 	beep.FlushSoundBuffer()
