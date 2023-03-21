@@ -280,7 +280,7 @@ A4HLDW C2ci     |C2n[     |C2vo     |C2bp              |C2,z|
 Natural Voices
 ==============
 
-Beep uses computer generated voices, if no voice files exist.
+Beep uses computer generated voices if no voice files exist.
 A voice file is a ZIP file that contains sound samples of all notes that the
 music instrument can play. By downloading and placing voice files in specific locations can improve music sound quality.
 
@@ -321,6 +321,8 @@ then open your browser and navigate to ```http://localhost:4444```. If the web i
 needs to be accessible from other computers, run:
 ```
 $ beep -w :4444
+or
+$ beep -w -a 0.0.0.0:4444  # for public access
 ```
 
 **Screenshot:**<br>
