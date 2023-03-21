@@ -415,6 +415,7 @@ func (midi *Midi) mixTracks(events []*MidiEvent) {
 				event.Note.duration = 'E'
 			}
 			event.Note.volume = int(float32(SampleAmp16bit) * (float32(event.Note.velocity) / 127))
+			event.Note.measure()
 			if voice.GetNote(event.Note, sustain) {
 				voice.SustainNote(event.Note, sustain)
 			} else {

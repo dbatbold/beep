@@ -229,16 +229,15 @@ func (p *Piano) GetNote(note *Note, sustain *Sustain) (found bool) {
 		}
 	}
 
-	// clean note
-	trimWave(buf)
-
 	// measure note
-
 	if n := note.samples - len(buf); n > 0 {
 		// expand buffer
 		buf = append(buf, make([]int16, n)...)
 	}
 	buf = buf[:note.samples]
+
+	// clean note
+	trimWave(buf)
 
 	// release note
 	releaseNote(buf, 0, 0.99)
