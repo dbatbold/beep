@@ -28,7 +28,7 @@ var (
 	flagDevice    = flag.String("d", "default", "audio device, Linux example: hw:0,0")
 	flagLine      = flag.Bool("l", false, "beep per line from stdin")
 	flagMusic     = flag.Bool("m", false, "play music notes from stdin (see beep notation)")
-	flagPrintDemo = flag.Bool("p", false, "print demo music sheet (Mozart K33b)")
+	flagPrintDemo = flag.Int("p", 0, "print demo music sheet by number")
 	flagBell      = flag.Bool("b", false, "send bell to PC speaker")
 	flagQuiet     = flag.Bool("q", false, "quiet stdout while playing music")
 	flagNotes     = flag.Bool("n", false, "print notes while playing music")
@@ -68,7 +68,7 @@ func main() {
 	device := *flagDevice
 	lineBeep := *flagLine
 	playMusic := *flagMusic
-	printDemo := *flagPrintDemo
+	printDemoSheet := *flagPrintDemo
 	writeBell := *flagBell
 	webServer := *flagWeb
 	downloadVoices := *flagVoiceDl
@@ -91,9 +91,15 @@ func main() {
 		)
 		return
 	}
-	if printDemo {
-		fmt.Print(beep.DemoMusic)
-		return
+	if printDemoSheet > 0 {
+		for i, sheet := range beep.BuiltinMusic {
+			if printDemoSheet == i+1 {
+				fmt.Print(sheet.Notation)
+				return
+			}
+		}
+		fmt.Fprintf(os.Stderr, fmt.Sprintf("Demo music sheet must be 1-%d.\n", len(beep.BuiltinMusic)))
+		os.Exit(1)
 	}
 	if volume < 1 || volume > 100 {
 		volume = 100
@@ -102,7 +108,7 @@ func main() {
 		duration = 250
 	}
 	if freqHertz < 1 || freqHertz > beep.SampleRate64/2 {
-		fmt.Fprintf(os.Stderr, "Invalid frequency. Must be 1-22050")
+		fmt.Fprintf(os.Stderr, "Invalid frequency. Must be 1-22050.\n")
 		os.Exit(1)
 	}
 	freq := beep.HertzToFreq(freqHertz)
@@ -272,8 +278,16 @@ func playMusicScore(music *beep.Music, volume int) {
 	var files []io.Reader
 	for _, fname := range flag.Args() {
 		if fname == "demo" {
-			demo := bytes.NewBuffer([]byte(beep.DemoMusic))
-			files = append(files, demo)
+			fname = "demo1"
+		}
+		for i, sheet := range beep.BuiltinMusic {
+			if fname == fmt.Sprintf("demo%d", i+1) {
+				demo := bytes.NewBuffer([]byte(sheet.Notation))
+				files = append(files, demo)
+				fname = ""
+			}
+		}
+		if len(fname) == 0 {
 			continue
 		}
 		file, err := os.Open(fname)

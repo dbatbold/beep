@@ -52,7 +52,7 @@ Beep notation:
  H7     - octave 7, 8 keys
 
  Tempo:
- T#     - where # is 0-9, default is 4
+ T#     - where # is 0-9, default is 4 (1 unit speeds up/down by 4%)
 
  Sustain:
  SA#    - attack level, where # is 0-9, default is 8
@@ -139,6 +139,7 @@ type Note struct {
 	tempo     int
 	buf       []int16
 	velocity  int
+	samples   int
 }
 
 // Sustain params
@@ -246,14 +247,6 @@ func (m *Music) Play(reader *bufio.Reader, volume100 int) {
 		PrintSheet = false
 		PrintNotes = false
 	}
-
-	// rest buffer map
-	bufRH := wholeRest[:wholeNote/2]
-	bufRQ := wholeRest[:wholeNote/4]
-	bufRE := wholeRest[:wholeNote/8]
-	bufRS := wholeRest[:wholeNote/16]
-	bufRT := wholeRest[:wholeNote/32]
-	bufRI := wholeRest[:wholeNote/64]
 
 	// sustain state
 	sustain := &Sustain{
@@ -407,33 +400,14 @@ func (m *Music) Play(reader *bufio.Reader, volume100 int) {
 					}
 				}
 				if rest > 0 {
-					var bufRest []int16
-					switch rest {
-					case 'W':
-						bufRest = wholeRest
-					case 'H':
-						bufRest = bufRH
-					case 'Q':
-						bufRest = bufRQ
-					case 'E':
-						bufRest = bufRE
-					case 'S':
-						bufRest = bufRS
-					case 'T':
-						bufRest = bufRT
-					case 'I':
-						bufRest = bufRI
-					}
+					bufRest := restNote(rest, dotted, tempo)
 					if bufRest != nil {
 						if voice.NaturalVoice() {
-							buf := make([]int16, len(bufRest))
 							releaseNote(sustain.buf, 0, sustain.Ratio())
-							mixSoundWave(buf, sustain.buf)
-							bufWave = append(bufWave, buf...)
+							mixSoundWave(bufRest, sustain.buf)
 							clearBuffer(sustain.buf)
-						} else {
-							bufWave = append(bufWave, bufRest...)
 						}
+						bufWave = append(bufWave, bufRest...)
 					}
 					rest = 0
 				}
@@ -457,7 +431,9 @@ func (m *Music) Play(reader *bufio.Reader, volume100 int) {
 				duration:  duration,
 				dotted:    dotted,
 				tempo:     tempo,
+				samples:   0,
 			}
+			note.measure()
 			if voice.GetNote(note, sustain) {
 				dotted = false
 				if chord.number > 0 {
@@ -584,6 +560,37 @@ func (m *Music) Play(reader *bufio.Reader, volume100 int) {
 	}
 }
 
+// measure sets the number of samples for the node
+func (n *Note) measure() {
+	var samples int
+	length := wholeNote + (wholeNote / 100 * 4 * (4 - n.tempo)) // 4% per tempo unit
+	switch n.duration {
+	case 'W':
+		samples = length
+	case 'H':
+		samples = length / 2
+	case 'Q':
+		samples = length / 4
+	case 'E':
+		samples = length / 8
+	case 'S':
+		samples = length / 16
+	case 'T':
+		samples = length / 32
+	case 'I':
+		samples = length / 64
+	}
+
+	if samples > 0 {
+		// Apply dot measure
+		if n.dotted {
+			samples += samples / 2
+		}
+	}
+
+	n.samples = samples
+}
+
 // Reads next line from music sheet
 func nextMusicLine(reader *bufio.Reader) (string, bool) {
 	var buf bytes.Buffer
@@ -658,12 +665,13 @@ func clearBuffer(buf []int16) {
 	}
 }
 
-// Trims sharp edge from wave for smooth play
-func trimWave(buf []int16) []int16 {
+// Removes sharp edge at the end of waveform
+func trimWave(buf []int16) {
 	if len(buf) == 0 {
-		return buf
+		return
 	}
-	cut := len(buf) - 1
+	bufsize := len(buf)
+	cut := bufsize - 1
 	var last int16
 	for i := range buf {
 		if i == 0 {
@@ -688,8 +696,9 @@ func trimWave(buf []int16) []int16 {
 			break
 		}
 	}
-	buf = buf[:cut]
-	return buf
+	for i := cut; i < bufsize; i++ {
+		buf[i] = 0
+	}
 }
 
 func releaseNote(buf []int16, duration int, ratio float64) {
@@ -735,4 +744,32 @@ func raiseNote(buf []int16, ratio float64) {
 			break
 		}
 	}
+}
+
+// Returns rest note buffer with tempo
+func restNote(rest rune, dotted bool, tempo int) []int16 {
+	var samples int
+	length := wholeNote + (wholeNote / 100 * 4 * (4 - tempo)) // 4% per tempo unit
+	switch rest {
+	case 'W':
+		samples = length
+	case 'H':
+		samples = length / 2
+	case 'Q':
+		samples = length / 4
+	case 'E':
+		samples = length / 8
+	case 'S':
+		samples = length / 16
+	case 'T':
+		samples = length / 32
+	case 'I':
+		samples = length / 64
+	}
+
+	if dotted {
+		samples += samples / 2
+	}
+
+	return make([]int16, samples)
 }

@@ -127,7 +127,8 @@ func NewViolin() *Violin {
 				if len(buf16) < wholeNote {
 					fmt.Fprintln(os.Stderr, "Sample note duration must be 90112 samples long.")
 				}
-				v.keyNatMap[key] = trimWave(buf16)
+				trimWave(buf16)
+				v.keyNatMap[key] = buf16
 			} else {
 				fmt.Fprintln(os.Stderr, "Unknown note name in voice file:", noteName)
 			}
@@ -169,7 +170,8 @@ func (v *Violin) generateNote(key rune, duration int) []int16 {
 		timer2 += tick2
 		timer3 += tick3
 	}
-	return trimWave(buf)
+	trimWave(buf)
+	return buf
 }
 
 // GetNote prepares note wave form
@@ -185,64 +187,37 @@ func (v *Violin) GetNote(note *Note, sustain *Sustain) (found bool) {
 		return
 	}
 
-	divide := 1
-	switch note.duration {
-	case 'H':
-		divide = 2
-	case 'Q':
-		divide = 4
-	case 'E':
-		divide = 8
-	case 'S':
-		divide = 16
-	case 'T':
-		divide = 32
-	case 'I':
-		divide = 64
-	}
-
 	buf := make([]int16, len(bufNote))
 	copy(buf, bufNote) // get a copy of the note
 	applyNoteVolume(buf, note.volume, note.amplitude)
-	bufsize := len(buf)
-	cut := bufsize
 
-	if note.tempo < 4 && bufsize > 1024 {
-		// slow tempo
-		releaseNote(buf, 0, 0.7)
-		for t := 0; t < 4-note.tempo; t++ {
-			if v.NaturalVoice() {
-				buf = append(buf, wholeRest[:1024]...)
-			} else {
-				buf = append(buf, trimWave(buf[:1024])...)
-			}
+	// Sustain note
+	if note.duration == 'W' {
+		// Whole note
+		if v.NaturalVoice() {
+			// sustain current note
+			copyBuffer(sustain.buf, buf[len(buf)/3:])
 		}
-	}
-	if note.tempo > 4 {
-		// fast tempo
-		releaseNote(buf, 0, 0.7)
-		for t := 0; t < note.tempo-4 && cut > 1024; t++ {
-			if 1024 < len(buf[:cut]) {
-				cut -= 1024
-			}
-		}
-		buf = trimWave(buf[:cut])
-	}
-	//sustRatio := float64(sustain.sustain) / 10.0
-	if divide > 1 {
-		cut = len(buf) / divide
-		if note.dotted {
-			cut += cut / 2
-		}
-		bufDiv := trimWave(buf[:cut])
-		buf = bufDiv
 	} else {
-		// whole note
-		if note.dotted {
-			dotBuf := make([]int16, halfNote)
-			buf = append(buf, dotBuf...)
+		if v.NaturalVoice() {
+			// sustain current note
+			copyBuffer(sustain.buf, buf[note.samples:])
 		}
 	}
+
+	// clean note
+	trimWave(buf)
+
+	// measure note
+
+	if n := note.samples - len(buf); n > 0 {
+		// expand buffer
+		buf = append(buf, make([]int16, n)...)
+	}
+	buf = buf[:note.samples]
+
+	// release note
+	releaseNote(buf, 0, 0.99)
 
 	note.buf = buf
 

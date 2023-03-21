@@ -1,17 +1,19 @@
 beep
 ====
 
-Beep is a sound library and utility for alerting end of a long running command execution.
-Beep can also play a MIDI file/URL or text music score with natural voices. To play a demo music, run:<br>
+Beep is a sound utility initially developed for alerting the end of a long running command execution.
+Now beep can also play a MIDI file/URL or text music score with natural voices. To play demo music, run:<br>
 
 ```
 $ GOPATH=$PWD/beep go get github.com/dbatbold/beep/cmd/beep
-$ beep/bin/beep          # play beep sound
-$ beep/bin/beep -vd      # download natural voice files
-$ beep/bin/beep -m demo  # play demo music by Mozart
+$ beep/bin/beep           # play beep sound
+$ beep/bin/beep -vd       # download natural voice files
+$ beep/bin/beep -m demo1  # play demo music by Mozart
+$ beep/bin/beep -m demo2  # play Passacaglia - Handel Halvorsen
 ```
 
-[Play demo with piano voice&nbsp; ▶](http://bmrust.com/dl/beep/demo-mozart-k33b-piano.mp3)
+[Play demo #1 with piano voice&nbsp; ▶](http://bmrust.com/dl/beep/demo-mozart-k33b-piano.mp3)
+[Play demo #2 with piano voice&nbsp; ▶](http://bmrust.com/dl/beep/passacaglia-handel-halvorsen-piano.mp3)<br>
 
 Library Usage
 =============
@@ -86,7 +88,7 @@ beep [options]
   -h: print help
   -l: beep per line from stdin
   -m: play music from sheet file, reads stdin if no arguments given (see beep notation)
-  -p: print demo music sheet (Mozart K33b)
+  -p=0: print demo music sheet by number (1-2)
   -t=250: beep time duration in millisecond (1-60000)
   -v=100: volume (1-100)
   -b: send bell to PC speaker
@@ -155,7 +157,7 @@ Control keys:
  H7     - octave 7, 8 keys
 
  Tempo:
- T#     - where # is 0-9, default is 4
+ T#     - where # is 0-9, default is 4 (1 unit speeds up/down by 4%)
 
  Sustain:
  SA#    - attack level, where # is 0-9, default is 8
@@ -218,6 +220,60 @@ A3HLDE z,  ]m    |[n   ov|]m  [n    |pb   ic|nz     sc  |DQn      [RQ|
 [Play with default voice&nbsp; ▶](http://bmrust.com/dl/beep/demo-mozart-k33b.mp3)<br>
 [Play with natural piano voice&nbsp; ▶](http://bmrust.com/dl/beep/demo-mozart-k33b-piano.mp3)<br>
 [View music score](http://imslp.org/images/1/15/TN-Mozart%2C_Wofgang_Amadeus-NMA_09_27_Band_02_I_01_KV_33b.jpg)
+
+```
+# Passacaglia - Handel Halvorsen
+VP T5 SA9 SD9 SS9 SR9
+# DQ - 130
+A6HRDE RERERERE RERERERE|RERERERE RERERERE|icxc   zc]c  |[cpc   ocic    |VN
+A4HLDE z,HReq   yqeq    |HLz,HReq yqeq    |HLz,HReq yqeq|HLov,n HRwHLn,n|
+# 5
+A6HRDE uxzx     ]x[x        |pxox ixux    |yz]z      [zpz        |oziz uzyz    |DQz DEa= DQDDa DEz|VN
+A4HLDE pmHRwHL. HRtHL.HRwHL.|icmb HRqHLbmb|[nmHRqHL, HRrHL,HRqHL,|ov,[ HRwHLn,n|pb  .k   HReHLk .k|
+# 10
+A6HRDW z          |DEcioi   pi[i|]izi   xici    |xuiu     oupu        |[u]u zuxu    |VN
+A4HLDE z,HReq yqeq|HLz,HReq yqeq|HLov,n HRwHLn,n|]mHRwHL. HRtHL.HRwHL.|icmb HRqHLbmb|
+# 15
+A6HRDE zyuy     iyoy        |py[y ]yzy    |DQz DEa= DQDDa DEz|DWz        |DEcH7qHR.H7q  HR,H7qHRmH7q|VN
+A4HLDE pbHRqHL, HRrHL,HRqHL,|ov,n HRwHLn,n|pb  .k   HReHLk .k|z,HReq yqeq|z,HReq yqeq               |
+# 20   8
+A6HRDE nH7qHRbH7q HRvH7qHRcH7q|HRx.,.   m.n.        |b.v. c.x.    |z,m,      n,b,        |v,c, x,z,    |VN
+A4HLDE ov,n       HRwHLn,n    |pmHRwHL. HRtHL.HRwHL.|icmb HRqHLbmb|[nmHRqHL, HRrHL,HRqHL,|ov,[ HRwHLn,n|
+# 25   8
+A6HRDQ , DEkj DQDDk DE,|DW,        |DEH7qHRcvc bcnc|mc,c   .cH7qHRc|.xcx     vxbx        |VN
+A4HLDE pb.k   HReHLk .k|z,HReq yqeq|HLz,HReq   yqeq|HLov,n HRwHLn,n|]mHRwHL. HRtHL.HRwHL.|
+# 30   8
+A6HRDE nxmx ,x.x    |.zxz     czvz        |bznz mz,z    |DQ, DEkj DQDDk DE,|DW,        |VN
+A4HLDE icmb HRqHLbmb|pbHRqHL, HRrHL,HRqHL,|ov,n HRwHLn,n|pb  .k   HReHLk .k|z,HReq yqeq|
+# 35
+A6HRDE iici   xizi|]i[i   pioi    |uuxu     zu]u        |[upu ouiu    |yyzy     ]y[y        |VN
+A4HLDE z,HReq yqeq|HLov,n HRwHLn,n|pbHRqHL, HRrHL,HRqHL,|icmb HRqHLbmb|pbHRqHL, HRrHL,HRqHL,|
+# 40                                               # 8va---------------------------
+A6HRDE pyoy iyuy    |DQy DE65 DQDD6 DEy|DWy        |DEcH7qHRx. z,]m|[npb   ovic    |VN
+A4HLDE ov,n HRwHLn,n|pb.k     HReHLk .k|z,HReq yqeq|HLz,HReq   yqeq|HLov,n HRwHLn,n|
+# 45   8
+A6HRDE x.z,   ]m[n|pbov   icux    |yzt]     r[ep        |woqi uHL.HRyHL,|HRDQy DE65 DQDD6 DEy|VN
+A4HLDE z,HReq yqeq|HLov,n HRwHLn,n|]mHRwHL. HRtHL.HRwHL.|ob,n ,n,n      |pb.k       HReHLk .k|
+# 50
+A6HRDW y          |DEicxc   zc]c|[cpc   ocic    |uxzx     ]x[x        |pxox ixux    |VN
+A4HLDE z,HReq yqeq|HLz,HReq yqeq|HLov,n HRwHLn,n|pmHRwHL. HRtHL.HRwHL.|icmb HRqHLbmb|
+# 55
+A6HRDE yz]z      [zpz        |oziz uzyz    |DQz DEa= DQDDa DEz|DWz        |DEcioi   pi[i|VN
+A4HLDE [nmHRqHL, HRrHL,HRqHL,|ov,[ HRwHLn,n|pb  .k   HReHLk .k|z,HReq yqeq|HLz,HReq yqeq|
+# 60
+A6HRDE ]izi xici    |xuiu     oupu        |[u]u zuxu    |zyuy     iyoy        |py[y ]yzy    |VN
+A4HLDE ov,n HRwHLn,n|]mHRwHL. HRtHL.HRwHL.|icmb HRqHLbmb|pbHRqHL, HRrHL,HRqHL,|ov,n HRwHLn,n|
+# 65
+A6HRDQ z DEa= DQDDa DEz  |DWz        |DEicxc zc]c|[cpc ocic|uxzx  ]x[x|VN
+A4HLDE pb  .k   HReHLk .k|z,HReq yqeq|HLDWC2,z   |C2vo     |C2m]      |
+# 70
+T3
+A6HRDE pxox ixux|yz]z [zpz|oziz uzyz|DQz DEa= DQDDa DEz|DWz |VN
+A4HLDW C2ci     |C2n[     |C2vo     |C2bp              |C2,z|
+```
+[Play with default voice&nbsp; ▶](http://bmrust.com/dl/beep/passacaglia-handel-halvorsen.mp3)<br>
+[Play with natural piano voice&nbsp; ▶](http://bmrust.com/dl/beep/passacaglia-handel-halvorsen-piano.mp3)<br>
+[View music score](https://azmusicfest.org/app/uploads/Passacaglia-Handel-Halvorsen-Pianistos-2.pdf)
 
 Natural Voices
 ==============
@@ -319,6 +375,7 @@ Usage Examples
 
  # play music sheet from URL
  $ beep -url 'http://bmrust.com/dl/beep/k333-1.txt'
+ $ beep -url 'http://bmrust.com/dl/beep/passacaglia-handel-halvorsen.txt'
 
  # generate 528Hz sine wave for 60 seconds (wine glass frequency)
  $ beep -f 528 -t 60000
