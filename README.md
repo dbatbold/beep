@@ -5,11 +5,11 @@ Beep is a sound utility initially developed for alerting the end of a long runni
 Now beep can also play a MIDI file/URL or text music score with natural voices. To play demo music, run:<br>
 
 ```
-$ GOPATH=$PWD/beep go get github.com/dbatbold/beep/cmd/beep
-$ beep/bin/beep           # play beep sound
-$ beep/bin/beep -vd       # download natural voice files
-$ beep/bin/beep -m demo1  # play demo music by Mozart
-$ beep/bin/beep -m demo2  # play Passacaglia - Handel Halvorsen
+$ go install github.com/dbatbold/beep/cmd/beep@latest
+$ ~/go/bin/beep           # play beep sound
+$ ~/go/bin/beep -vd       # download natural voice files
+$ ~/go/bin/beep -m demo1  # play demo music by Mozart
+$ ~/go/bin/beep -m demo2  # play Passacaglia - Handel Halvorsen
 ```
 
 [Play demo #1 with piano voice&nbsp; ▶](http://bmrust.com/dl/beep/demo-mozart-k33b-piano.mp3)<br>
