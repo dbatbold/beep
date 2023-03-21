@@ -179,6 +179,7 @@ func (w *Web) serveLoadSheet(res http.ResponseWriter, req *http.Request) {
 	w.jsonRequest(request, req)
 	type loadSheetResponse struct {
 		Name     string
+		URL      string
 		Notation string
 	}
 	sheet := &Sheet{
@@ -191,6 +192,7 @@ func (w *Web) serveLoadSheet(res http.ResponseWriter, req *http.Request) {
 	}
 	response := loadSheetResponse{
 		Name:     filepath.Join(sheet.Dir, sheet.Name),
+		URL:      sheet.URL,
 		Notation: sheet.Notation,
 	}
 	w.jsonResponse(response, res)
@@ -405,7 +407,8 @@ var webTemplates = `{{define "header"}}
 {{define "/"}}
 	<script src='js/home.js'></script>
 	<div style='padding:10px'>
-		<b>Beep notation:</b> <span id='sheetName'></span><br>
+		<b>Beep notation:</b> <span id='sheetName'></span>&nbsp;
+		<a id='sheetUrl' target='_blank' style='color:blue'></a><br>
 		<textarea id='notation' style='width:99%;height:450px;font-family:monospace;font-size:12px'
 			spellcheck='false'>{{.Demo}}</textarea>
 		<div style='padding-top:6px'>
@@ -539,6 +542,8 @@ window.onload = function() {
 }
 function newSheet() {
 	ids.sheetName.innerText = ''
+	ids.sheetUrl.href = ''
+	ids.sheetUrl.innerText = ''
 	ids.notation.value = ''
 	ids.result.innerHTML = ''
 	ids.notation.focus()
@@ -606,6 +611,8 @@ function loadSheet(name) {
 	ajax.onready = function(data) {
 		var jres = this.jsonResp()
 		ids.sheetName.innerHTML = jres.Name
+		ids.sheetUrl.href = jres.URL
+		ids.sheetUrl.innerText = jres.URL ? 'Music sheet' : ''
 		ids.notation.value = jres.Notation
 		document.body.scrollTop = 0
 	}

@@ -15,14 +15,16 @@ type Sheet struct {
 	Name     string
 	Dir      string
 	Notation string
+	URL      string
 	file     *os.File
 }
 
 // NewSheet returns new music sheet
-func NewSheet(name, dir, notation string) *Sheet {
+func NewSheet(name, dir, notation, url string) *Sheet {
 	s := &Sheet{
 		Name:     name,
 		Dir:      dir,
+		URL:      url,
 		Notation: notation,
 	}
 	return s
@@ -61,6 +63,7 @@ func (s *Sheet) Load() error {
 		if sheet.ID == sheetID {
 			s.ID = sheet.ID
 			s.Dir = sheet.Dir
+			s.URL = sheet.URL
 			s.Notation = sheet.Notation
 			return nil
 		}
@@ -116,12 +119,13 @@ func sheetSearch(keyword string) []string {
 	return names
 }
 
-// BuiltinMusic stores builin music scores
+// BuiltinMusic stores built-in music scores
 var BuiltinMusic = []*Sheet{
 	{
 		ID:   1,
 		Name: "mozart-k33b-klavierstuck-in-f.txt",
 		Dir:  "beep",
+		URL:  "http://imslp.org/images/1/15/TN-Mozart%2C_Wofgang_Amadeus-NMA_09_27_Band_02_I_01_KV_33b.jpg",
 		Notation: `# Mozart K33b
 VP SA8 SR9
 A9HRDE cc DScszs|DEc DQzDE[|cc DScszs|DEc DQz DE[|vv DSvcsc|DEvs ]v|cc DScszs|VN
@@ -153,6 +157,7 @@ A3HLDE z,  ]m    |[n   ov|]m  [n    |pb   ic|nz     sc  |DQn      [RQ|
 		ID:   2,
 		Name: "passacaglia-handel-halvorsen.txt",
 		Dir:  "beep",
+		URL:  "https://azmusicfest.org/app/uploads/Passacaglia-Handel-Halvorsen-Pianistos-2.pdf",
 		Notation: `# Passacaglia - Handel Halvorsen
 VP T5 SA9 SD9 SS9 SR9
 # DQ - 130
