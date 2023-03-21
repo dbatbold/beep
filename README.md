@@ -75,7 +75,7 @@ On Windows: Requires git (git-scm.com), MinGW and Go compiler (golang.org)
  $ ./build.bat
  $ cp bin/beep.exe /c/Windows/System32
 ```
-[![Build Status](http://travis-ci.org/dbatbold/beep.svg?branch=master)](http://travis-ci.org/dbatbold/beep)
+[![CI](https://github.com/dbatbold/beep/actions/workflows/ci.yml/badge.svg)](https://github.com/dbatbold/beep/actions/workflows/ci.yml)
 
 Usage
 =====
