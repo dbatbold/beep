@@ -12,7 +12,7 @@ $ beep/bin/beep -m demo1  # play demo music by Mozart
 $ beep/bin/beep -m demo2  # play Passacaglia - Handel Halvorsen
 ```
 
-[Play demo #1 with piano voice&nbsp; ▶](http://bmrust.com/dl/beep/demo-mozart-k33b-piano.mp3)
+[Play demo #1 with piano voice&nbsp; ▶](http://bmrust.com/dl/beep/demo-mozart-k33b-piano.mp3)<br>
 [Play demo #2 with piano voice&nbsp; ▶](http://bmrust.com/dl/beep/passacaglia-handel-halvorsen-piano.mp3)<br>
 
 Library Usage
@@ -188,8 +188,8 @@ Control keys:
  #      - a line comment
  ##     - start or end of a block comment
 ```
-Demo Music
-==========
+Demo music #1
+=============
 ```
 # Mozart K33b
 VP SA8 SR9
@@ -221,6 +221,8 @@ A3HLDE z,  ]m    |[n   ov|]m  [n    |pb   ic|nz     sc  |DQn      [RQ|
 [Play with natural piano voice&nbsp; ▶](http://bmrust.com/dl/beep/demo-mozart-k33b-piano.mp3)<br>
 [View music score](http://imslp.org/images/1/15/TN-Mozart%2C_Wofgang_Amadeus-NMA_09_27_Band_02_I_01_KV_33b.jpg)
 
+Demo music #2
+=============
 ```
 # Passacaglia - Handel Halvorsen
 VP T5 SA9 SD9 SS9 SR9
