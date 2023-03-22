@@ -16,5 +16,7 @@ jobs:
         go-version: 1.x
     - name: Install dependencies
       run: sudo apt-get install libasound2-dev
+    - name: Test
+      run: go test -v
     - name: Build
-      run: go build -v ./cmd/beep
+      run: go build ./cmd/beep
