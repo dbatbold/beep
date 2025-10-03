@@ -67,6 +67,11 @@ On Linux:
  $ go build ./cmd/beep
  $ cp beep /usr/local/bin/  # as root
 
+On macOS:
+ $ brew install go  # if not already installed
+ $ go build ./cmd/beep
+ $ cp beep /usr/local/bin/
+
 On Windows: Requires git (git-scm.com), MinGW and Go compiler (golang.org)
  Run Git Bash,
  $ export GOPATH=$PWD/beep
