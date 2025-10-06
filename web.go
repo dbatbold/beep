@@ -43,14 +43,13 @@ func StartWebServer(music *Music, address string) {
 	}
 
 	bind := fmt.Sprintf("%s:%d", ip, port)
+	web := NewWeb(music)
+	music.quietMode = true
 	if len(ip) == 0 {
 		fmt.Println("Listening on port", port)
 	} else {
 		fmt.Printf("Listening on http://%s/\n", bind)
 	}
-
-	web := NewWeb(music)
-	music.quietMode = true
 	err = http.ListenAndServe(bind, web)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "Unable to start web server:", err)
@@ -128,6 +127,9 @@ func (w *Web) servePlay(res http.ResponseWriter, req *http.Request) {
 	if w.music.playing {
 		return
 	}
+	if w.music.stopping {
+		return
+	}
 	type playRequest struct {
 		Notation string
 	}
@@ -148,9 +150,9 @@ func (w *Web) serveStop(res http.ResponseWriter, req *http.Request) {
 	w.music.stopping = w.music.playing
 	go StopPlayBack()
 	if w.music.playing {
-		<-w.music.stopped
+		<-w.music.stopped // wait until Music.Play() exits
 	}
-	w.music.stopping = false
+	FlushSoundBuffer()
 }
 
 // Search sheet names

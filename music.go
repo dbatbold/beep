@@ -186,7 +186,7 @@ func NewMusic(output string) *Music {
 
 // Wait until sheet is played
 func (m *Music) Wait() {
-	<-m.played
+	<-m.played // wait until player is done
 }
 
 // WaitLine waits until line is played
@@ -210,10 +210,11 @@ func (c *Chord) Reset() {
 func (m *Music) Play(reader *bufio.Reader, volume100 int) {
 	m.playing = true
 	defer func() {
-		m.played <- true
 		if m.stopping {
 			m.stopped <- true
+			m.stopping = false
 		}
+		m.played <- true
 		m.playing = false
 	}()
 
@@ -475,6 +476,9 @@ func (m *Music) Play(reader *bufio.Reader, volume100 int) {
 				if PrintNotes {
 					fmt.Printf("%v ", m.piano.keyNoteMap[note.key])
 				}
+				if m.stopping {
+					break
+				}
 			} else {
 				voiceName := strings.Split(fmt.Sprintf("%T", voice), ".")[1]
 				noteName := m.piano.keyNoteMap[note.key]
@@ -508,6 +512,9 @@ func (m *Music) Play(reader *bufio.Reader, volume100 int) {
 				if waitNext {
 					m.WaitLine() // wait until previous line is done playing
 				}
+				if m.stopping {
+					break
+				}
 				// prepare next line while playing
 				go m.Playback(bufWave, bufWave)
 				if PrintSheet {
@@ -535,7 +542,7 @@ func (m *Music) Play(reader *bufio.Reader, volume100 int) {
 			break
 		}
 	}
-	if waitNext {
+	if waitNext && !m.stopping {
 		m.WaitLine()
 	}
 
