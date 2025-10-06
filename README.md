@@ -58,14 +58,20 @@ func main() {
 
 ```
 
-Building from Source
+Building from source
 ====================
 ```
 On Linux:
  $ apt-get install golang libasound2-dev  # for Debian and Ubuntu
- $ apk add alsa-lib-dev                   # for Alpine linux
+ $ apk add alsa-lib-dev                   # for Alpinelinux
  $ go build ./cmd/beep
- $ cp beep /usr/local/bin/  # as root
+ $ sodo cp beep /usr/local/bin/
+ $ beep -c 3 # test
+
+On MacOS:
+ $ brew install go
+ $ go build ./cmd/beep
+ $ ./beep -c 3 # test
 
 On Windows: Requires git (git-scm.com), MinGW and Go compiler (golang.org)
  Run Git Bash,
